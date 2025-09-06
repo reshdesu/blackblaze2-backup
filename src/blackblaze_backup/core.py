@@ -7,7 +7,7 @@ Separated from GUI for better testability
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import boto3
 import keyring
@@ -20,7 +20,7 @@ class CredentialManager:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 
-    def save_credentials(self, credentials: Dict[str, str]) -> bool:
+    def save_credentials(self, credentials: dict[str, str]) -> bool:
         """Save credentials securely to system keyring"""
         try:
             # Generate encryption key
@@ -43,7 +43,7 @@ class CredentialManager:
             self.logger.error(f"Error saving credentials: {str(e)}")
             return False
 
-    def load_credentials(self) -> Optional[Dict[str, str]]:
+    def load_credentials(self) -> Optional[dict[str, str]]:
         """Load credentials from system keyring"""
         try:
             encrypted_data = keyring.get_password("blackblaze_backup", "credentials")
@@ -64,7 +64,7 @@ class CredentialManager:
             self.logger.error(f"Error loading credentials: {str(e)}")
             return None
 
-    def validate_credentials(self, credentials: Dict[str, str]) -> Tuple[bool, str]:
+    def validate_credentials(self, credentials: dict[str, str]) -> tuple[bool, str]:
         """Validate credentials by testing connection to BackBlaze B2"""
         try:
             s3_client = boto3.client(
@@ -95,7 +95,7 @@ class BackupManager:
         self.cancelled = True
         self.logger.info("Backup cancellation requested")
 
-    def get_files_to_backup(self, folder_path: str) -> List[Path]:
+    def get_files_to_backup(self, folder_path: str) -> list[Path]:
         """Get all files in a folder that need to be backed up"""
         folder_path_obj = Path(folder_path)
         if not folder_path_obj.exists():
@@ -122,7 +122,7 @@ class BackupManager:
             self.logger.error(f"Error uploading {file_path}: {str(e)}")
             return False
 
-    def create_s3_client(self, credentials: Dict[str, str]):
+    def create_s3_client(self, credentials: dict[str, str]):
         """Create and return an S3 client"""
         return boto3.client(
             "s3",
@@ -137,7 +137,7 @@ class BackupConfig:
     """Configuration management for backup operations"""
 
     def __init__(self):
-        self.folders_to_backup: Dict[str, str] = {}
+        self.folders_to_backup: dict[str, str] = {}
         self.single_bucket_mode = False
         self.single_bucket_name = ""
 
@@ -156,14 +156,14 @@ class BackupConfig:
         if enabled:
             self.single_bucket_name = bucket_name
 
-    def get_backup_plan(self) -> Dict[str, str]:
+    def get_backup_plan(self) -> dict[str, str]:
         """Get the final backup plan with folder->bucket mappings"""
         if self.single_bucket_mode:
             return dict.fromkeys(self.folders_to_backup.keys(), self.single_bucket_name)
         else:
             return self.folders_to_backup.copy()
 
-    def validate_config(self) -> Tuple[bool, str]:
+    def validate_config(self) -> tuple[bool, str]:
         """Validate the backup configuration"""
         if not self.folders_to_backup:
             return False, "No folders selected for backup"
@@ -190,7 +190,7 @@ class BackupProgressTracker:
         self.current_folder = ""
         self.current_file = ""
 
-    def start_backup(self, folders: Dict[str, str]):
+    def start_backup(self, folders: dict[str, str]):
         """Initialize progress tracking for a backup operation"""
         self.total_folders = len(folders)
         self.completed_folders = 0
@@ -251,7 +251,7 @@ class BackupService:
         self.progress_tracker = BackupProgressTracker()
         self.logger = logging.getLogger(__name__)
 
-    def set_credentials(self, credentials: Dict[str, str]) -> Tuple[bool, str]:
+    def set_credentials(self, credentials: dict[str, str]) -> tuple[bool, str]:
         """Set and validate credentials"""
         is_valid, message = self.credential_manager.validate_credentials(credentials)
         if is_valid:
@@ -270,7 +270,7 @@ class BackupService:
         """Configure bucket backup mode"""
         self.config.set_single_bucket_mode(single_bucket, bucket_name)
 
-    def validate_backup_config(self) -> Tuple[bool, str]:
+    def validate_backup_config(self) -> tuple[bool, str]:
         """Validate the current backup configuration"""
         return self.config.validate_config()
 

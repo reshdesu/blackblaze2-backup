@@ -6,7 +6,6 @@ import hashlib
 import mimetypes
 import os
 from pathlib import Path
-from typing import Tuple
 
 
 def get_file_hash(file_path: Path, algorithm: str = "md5") -> str:
@@ -77,7 +76,7 @@ def sanitize_bucket_name(name: str) -> str:
     return sanitized or "backup-bucket"
 
 
-def validate_folder_path(path: str) -> Tuple[bool, str]:
+def validate_folder_path(path: str) -> tuple[bool, str]:
     """Validate if a path is a valid folder"""
     try:
         folder_path = Path(path)

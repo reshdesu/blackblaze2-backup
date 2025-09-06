@@ -7,7 +7,6 @@ Creates test data and runs comprehensive tests before release
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 
 class TestDataCreator:
@@ -121,7 +120,7 @@ class TestDataCreator:
         unicode_file.write_text(unicode_content)
         self.test_files.append(unicode_file)
 
-    def get_file_summary(self) -> Dict:
+    def get_file_summary(self) -> dict:
         """Get summary of created test files"""
         total_size = sum(f.stat().st_size for f in self.test_files)
         return {
@@ -132,7 +131,7 @@ class TestDataCreator:
             "directory_structure": self._get_directory_structure(),
         }
 
-    def _get_file_types(self) -> Dict[str, int]:
+    def _get_file_types(self) -> dict[str, int]:
         """Count files by extension"""
         extensions = {}
         for file_path in self.test_files:
@@ -140,7 +139,7 @@ class TestDataCreator:
             extensions[ext] = extensions.get(ext, 0) + 1
         return extensions
 
-    def _get_directory_structure(self) -> List[str]:
+    def _get_directory_structure(self) -> list[str]:
         """Get directory structure as list"""
         structure = []
         for file_path in sorted(self.test_files):

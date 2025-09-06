@@ -66,9 +66,10 @@ def temp_folder_with_files():
 @pytest.fixture
 def mock_keyring():
     """Mock keyring for testing"""
-    with patch("keyring.set_password") as mock_set, patch(
-        "keyring.get_password"
-    ) as mock_get:
+    with (
+        patch("keyring.set_password") as mock_set,
+        patch("keyring.get_password") as mock_get,
+    ):
         yield mock_set, mock_get
 
 

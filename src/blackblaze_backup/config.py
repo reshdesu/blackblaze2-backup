@@ -4,7 +4,7 @@ Configuration management for BlackBlaze B2 Backup Tool
 
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 
 class Config:
@@ -20,7 +20,7 @@ class Config:
         # Ensure config directory exists
         self.config_dir.mkdir(exist_ok=True)
 
-    def get_default_config(self) -> Dict[str, Any]:
+    def get_default_config(self) -> dict[str, Any]:
         """Get default configuration"""
         return {
             "app": {
@@ -41,7 +41,7 @@ class Config:
             },
         }
 
-    def load_config(self) -> Dict[str, Any]:
+    def load_config(self) -> dict[str, Any]:
         """Load configuration from file"""
         if self.config_file.exists():
             try:
@@ -54,7 +54,7 @@ class Config:
         else:
             return self.get_default_config()
 
-    def save_config(self, config: Dict[str, Any]) -> bool:
+    def save_config(self, config: dict[str, Any]) -> bool:
         """Save configuration to file"""
         try:
             with open(self.config_file, "w") as f:
