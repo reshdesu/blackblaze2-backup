@@ -112,7 +112,12 @@ class BackupManager:
         return f"{folder_name}/{relative_path}".replace("\\", "/")
 
     def should_upload_file(
-        self, s3_client, file_path: Path, bucket_name: str, s3_key: str, incremental: bool = True
+        self,
+        s3_client,
+        file_path: Path,
+        bucket_name: str,
+        s3_key: str,
+        incremental: bool = True,
     ) -> bool:
         """Check if file should be uploaded (incremental backup logic)"""
         # If incremental backup is disabled, always upload
@@ -123,19 +128,22 @@ class BackupManager:
             # Check if file exists in S3
             try:
                 response = s3_client.head_object(Bucket=bucket_name, Key=s3_key)
-                s3_size = response.get('ContentLength', 0)
-                s3_etag = response.get('ETag', '').strip('"')
+                s3_size = response.get("ContentLength", 0)
+                s3_etag = response.get("ETag", "").strip('"')
 
                 # Get local file info
                 local_size = file_path.stat().st_size
 
                 # If sizes are different, definitely need to upload
                 if local_size != s3_size:
-                    self.logger.debug(f"File size changed: {file_path.name} ({local_size} vs {s3_size})")
+                    self.logger.debug(
+                        f"File size changed: {file_path.name} ({local_size} vs {s3_size})"
+                    )
                     return True
 
                 # If sizes are same, check hash for more accuracy
                 from .utils import get_file_hash
+
                 local_hash = get_file_hash(file_path, "md5")
 
                 # S3 ETag is usually MD5 hash for single-part uploads
@@ -154,7 +162,9 @@ class BackupManager:
 
         except Exception as e:
             # If we can't check, err on the side of uploading
-            self.logger.warning(f"Could not check file status for {file_path.name}: {e}")
+            self.logger.warning(
+                f"Could not check file status for {file_path.name}: {e}"
+            )
             return True
 
     def upload_file(
@@ -325,7 +335,11 @@ class BackupService:
         return self.config.validate_config()
 
     def execute_backup(
-        self, progress_callback=None, status_callback=None, error_callback=None, incremental=True
+        self,
+        progress_callback=None,
+        status_callback=None,
+        error_callback=None,
+        incremental=True,
     ) -> bool:
         """Execute the backup operation with callbacks for progress updates"""
         try:
@@ -376,7 +390,11 @@ class BackupService:
 
                     # Check if file needs to be uploaded (incremental backup)
                     should_upload = self.backup_manager.should_upload_file(
-                        s3_client, file_path, bucket_name, s3_key, incremental=incremental
+                        s3_client,
+                        file_path,
+                        bucket_name,
+                        s3_key,
+                        incremental=incremental,
                     )
 
                     if should_upload:
@@ -400,7 +418,9 @@ class BackupService:
                     else:
                         # File unchanged, skip upload but still count as completed
                         if status_callback:
-                            status_callback(f"Skipping unchanged: {Path(file_path).name}")
+                            status_callback(
+                                f"Skipping unchanged: {Path(file_path).name}"
+                            )
                         self.progress_tracker.complete_file()
                         if progress_callback:
                             progress_callback(

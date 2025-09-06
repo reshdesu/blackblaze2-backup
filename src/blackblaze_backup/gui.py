@@ -100,7 +100,12 @@ class ScheduleDialog(QDialog):
 
     def on_frequency_changed(self, frequency):
         """Handle frequency selection change"""
-        if frequency in ["Hourly", "Every 1 minute", "Every 5 minutes", "Every 15 minutes"]:
+        if frequency in [
+            "Hourly",
+            "Every 1 minute",
+            "Every 5 minutes",
+            "Every 15 minutes",
+        ]:
             # Hide time selection for frequent backups
             self.time_label.hide()
             self.time_edit.hide()
@@ -128,7 +133,13 @@ class ScheduleDialog(QDialog):
             "interval_hours": frequency_map[self.frequency_combo.currentText()],
             "time": (
                 self.time_edit.time().toString("hh:mm")
-                if self.frequency_combo.currentText() not in ["Hourly", "Every 1 minute", "Every 5 minutes", "Every 15 minutes"]
+                if self.frequency_combo.currentText()
+                not in [
+                    "Hourly",
+                    "Every 1 minute",
+                    "Every 5 minutes",
+                    "Every 15 minutes",
+                ]
                 else None
             ),
             "run_background": True,  # Always run in background since app always minimizes
@@ -260,6 +271,7 @@ class BlackBlazeBackupApp(QMainWindow):
             config_file = Path.home() / ".blackblaze_backup" / "incremental_backup.json"
             if config_file.exists():
                 import json
+
                 with open(config_file) as f:
                     config = json.load(f)
                     self.incremental_backup_check.setChecked(
@@ -452,9 +464,13 @@ class BlackBlazeBackupApp(QMainWindow):
         options_layout = QVBoxLayout(options_group)
 
         # Incremental backup checkbox
-        self.incremental_backup_check = QCheckBox("Enable incremental backup (only upload changed files)")
+        self.incremental_backup_check = QCheckBox(
+            "Enable incremental backup (only upload changed files)"
+        )
         self.incremental_backup_check.setChecked(True)  # Default to enabled
-        self.incremental_backup_check.setToolTip("When enabled, only files that have changed will be uploaded, making backups faster and more efficient.")
+        self.incremental_backup_check.setToolTip(
+            "When enabled, only files that have changed will be uploaded, making backups faster and more efficient."
+        )
         options_layout.addWidget(self.incremental_backup_check)
 
         layout.addWidget(options_group)
@@ -658,7 +674,9 @@ class BlackBlazeBackupApp(QMainWindow):
 
         # Start backup worker with incremental setting
         incremental_enabled = self.incremental_backup_check.isChecked()
-        self.backup_worker = BackupWorker(self.backup_service, incremental=incremental_enabled)
+        self.backup_worker = BackupWorker(
+            self.backup_service, incremental=incremental_enabled
+        )
         self.backup_worker.progress_updated.connect(self.update_progress)
         self.backup_worker.status_updated.connect(self.update_status)
         self.backup_worker.error_occurred.connect(self.handle_error)
@@ -828,7 +846,10 @@ class BlackBlazeBackupApp(QMainWindow):
         self.save_schedule_config()
 
         # Show status message instead of popup
-        self.statusBar().showMessage("Automatic backups disabled. You can re-enable them using the Schedule button.", 5000)
+        self.statusBar().showMessage(
+            "Automatic backups disabled. You can re-enable them using the Schedule button.",
+            5000,
+        )
 
     def load_schedule_config(self):
         """Load schedule configuration from file"""
