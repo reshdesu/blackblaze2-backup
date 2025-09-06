@@ -440,9 +440,10 @@ class BlackBlazeBackupApp(QMainWindow):
         controls_layout.addWidget(schedule_btn)
 
         # Disable schedule button
-        disable_schedule_btn = QPushButton("Disable Automatic Backups")
-        disable_schedule_btn.clicked.connect(self.disable_schedule)
-        controls_layout.addWidget(disable_schedule_btn)
+        self.disable_schedule_btn = QPushButton("Disable Automatic Backups")
+        self.disable_schedule_btn.clicked.connect(self.disable_schedule)
+        self.disable_schedule_btn.setEnabled(False)  # Initially disabled
+        controls_layout.addWidget(self.disable_schedule_btn)
 
         layout.addLayout(controls_layout)
 
@@ -860,6 +861,9 @@ class BlackBlazeBackupApp(QMainWindow):
 
             with open(config_file, "w") as f:
                 json.dump(self.schedule_config, f, indent=2)
+            
+            # Update button state after saving schedule
+            self.update_schedule_status()
         except Exception as e:
             self.logger.error(f"Error saving schedule config: {e}")
 
@@ -973,7 +977,12 @@ class BlackBlazeBackupApp(QMainWindow):
         if not self.schedule_config or not self.schedule_config.get("enabled", False):
             self.schedule_status.setText("No scheduled backups configured")
             self.schedule_status.setStyleSheet("color: #666; font-style: italic;")
+            # Disable the disable button when no schedule is active
+            self.disable_schedule_btn.setEnabled(False)
             return
+        
+        # Enable the disable button when schedule is active
+        self.disable_schedule_btn.setEnabled(True)
 
         frequency = self.schedule_config.get("interval_hours", 24)
         time_str = self.schedule_config.get("time")
