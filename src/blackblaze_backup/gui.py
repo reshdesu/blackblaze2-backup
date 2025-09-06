@@ -820,35 +820,22 @@ class BlackBlazeBackupApp(QMainWindow):
 
     def disable_schedule(self):
         """Disable automatic backups"""
-        reply = QMessageBox.question(
-            self,
-            "Disable Automatic Backups",
-            "Are you sure you want to disable automatic backups?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No,
-        )
+        # Clear schedule config
+        self.schedule_config = None
         
-        if reply == QMessageBox.Yes:
-            # Clear schedule config
-            self.schedule_config = None
-            
-            # Stop the timer
-            if self.schedule_timer:
-                self.schedule_timer.stop()
-                self.schedule_timer = None
-            
-            # Update status
-            self.update_schedule_status()
-            
-            # Save the disabled state
-            self.save_schedule_config()
-            
-            QMessageBox.information(
-                self,
-                "Automatic Backups Disabled",
-                "Automatic backups have been disabled.\n"
-                "You can re-enable them anytime using the Schedule button.",
-            )
+        # Stop the timer
+        if self.schedule_timer:
+            self.schedule_timer.stop()
+            self.schedule_timer = None
+        
+        # Update status
+        self.update_schedule_status()
+        
+        # Save the disabled state
+        self.save_schedule_config()
+        
+        # Show status message instead of popup
+        self.statusBar().showMessage("Automatic backups disabled. You can re-enable them using the Schedule button.", 5000)
 
     def load_schedule_config(self):
         """Load schedule configuration from file"""
