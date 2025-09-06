@@ -48,11 +48,12 @@ jobs:
         source .venv/bin/activate
         pytest tests/test_core.py -v --cov=src/blackblaze_backup --cov-report=xml
     
-    - name: Run GUI tests (Ubuntu only)
-      if: matrix.python-version == '3.12'
-      run: |
-        source .venv/bin/activate
-        pytest tests/test_gui.py -v --cov=src/blackblaze_backup --cov-append
+    # GUI tests disabled in CI due to headless environment limitations
+    # - name: Run GUI tests (Ubuntu only)
+    #   if: matrix.python-version == '3.12'
+    #   run: |
+    #     source .venv/bin/activate
+    #     pytest tests/test_gui.py -v --cov=src/blackblaze_backup --cov-append
     
     - name: Run comprehensive test suite (Ubuntu only)
       if: matrix.python-version == '3.12'
