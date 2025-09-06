@@ -13,7 +13,7 @@ if %errorlevel% neq 0 (
 REM Create virtual environment and install dependencies
 uv venv
 call .venv\Scripts\activate.bat
-uv pip install PySide6 boto3 botocore cryptography keyring pyinstaller
+uv pip install -e ".[build]"
 
 REM Create executable
 pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" main.py

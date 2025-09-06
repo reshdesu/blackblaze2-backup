@@ -1,0 +1,194 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v2
+      with:
+        version: "latest"
+    
+    - name: Install dependencies
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install -e ".[dev]"
+    
+    - name: Run linting
+      run: |
+        source .venv/bin/activate
+        flake8 src/ tests/
+        black --check src/ tests/
+        mypy src/
+    
+    - name: Run unit tests
+      run: |
+        source .venv/bin/activate
+        pytest tests/test_core.py -v --cov=src/blackblaze_backup --cov-report=xml
+    
+    - name: Run GUI tests (Ubuntu only)
+      if: matrix.python-version == '3.12'
+      run: |
+        source .venv/bin/activate
+        pytest tests/test_gui.py -v --cov=src/blackblaze_backup --cov-append
+    
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.12'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  build:
+    name: Build Executables
+    runs-on: ${{ matrix.os }}
+    needs: test
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v2
+      with:
+        version: "latest"
+    
+    - name: Install dependencies
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install -e ".[build]"
+    
+    - name: Build executable (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        source .venv/bin/activate
+        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" main.py
+    
+    - name: Build executable (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        .venv\Scripts\activate
+        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" main.py
+    
+    - name: Upload Ubuntu executable
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: blackblaze-backup-ubuntu
+        path: dist/BlackBlaze-Backup-Tool
+    
+    - name: Upload Windows executable
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: blackblaze-backup-windows
+        path: dist/BlackBlaze-Backup-Tool.exe
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v2
+      with:
+        version: "latest"
+    
+    - name: Install dependencies
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install -e ".[dev]"
+    
+    - name: Run security scan
+      run: |
+        source .venv/bin/activate
+        pip install safety bandit
+        safety check
+        bandit -r src/ -f json -o bandit-report.json
+    
+    - name: Upload security report
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-report
+        path: bandit-report.json
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [test, build, security]
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Download Ubuntu executable
+      uses: actions/download-artifact@v3
+      with:
+        name: blackblaze-backup-ubuntu
+        path: ./releases/ubuntu
+    
+    - name: Download Windows executable
+      uses: actions/download-artifact@v3
+      with:
+        name: blackblaze-backup-windows
+        path: ./releases/windows
+    
+    - name: Create release archive
+      run: |
+        mkdir -p release-assets
+        cp releases/ubuntu/BlackBlaze-Backup-Tool release-assets/
+        cp releases/windows/BlackBlaze-Backup-Tool.exe release-assets/
+        cd release-assets
+        zip -r ../blackblaze-backup-${{ github.event.release.tag_name }}.zip .
+    
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./blackblaze-backup-${{ github.event.release.tag_name }}.zip
+        asset_name: blackblaze-backup-${{ github.event.release.tag_name }}.zip
+        asset_content_type: application/zip
