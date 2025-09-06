@@ -67,6 +67,8 @@ class ScheduleDialog(QDialog):
         self.frequency_combo = QComboBox()
         self.frequency_combo.addItems(
             [
+                "Test (1 minute)",
+                "Test (5 minutes)",
                 "Hourly",
                 "Daily",
                 "Every 2 days",
@@ -97,8 +99,8 @@ class ScheduleDialog(QDialog):
 
     def on_frequency_changed(self, frequency):
         """Handle frequency selection change"""
-        if frequency == "Hourly":
-            # Hide time selection for hourly backups
+        if frequency in ["Hourly", "Test (1 minute)", "Test (5 minutes)"]:
+            # Hide time selection for hourly and test backups
             self.time_label.hide()
             self.time_edit.hide()
         else:
@@ -109,6 +111,8 @@ class ScheduleDialog(QDialog):
     def get_schedule_config(self):
         """Get the schedule configuration"""
         frequency_map = {
+            "Test (1 minute)": 0.017,  # 1 minute = 1/60 hours
+            "Test (5 minutes)": 0.083,  # 5 minutes = 5/60 hours
             "Hourly": 1,
             "Daily": 24,
             "Every 2 days": 48,
@@ -122,7 +126,7 @@ class ScheduleDialog(QDialog):
             "interval_hours": frequency_map[self.frequency_combo.currentText()],
             "time": (
                 self.time_edit.time().toString("hh:mm")
-                if self.frequency_combo.currentText() != "Hourly"
+                if self.frequency_combo.currentText() not in ["Hourly", "Test (1 minute)", "Test (5 minutes)"]
                 else None
             ),
             "run_background": True,  # Always run in background since app always minimizes
@@ -954,10 +958,15 @@ class BlackBlazeBackupApp(QMainWindow):
             if (now - last_run).total_seconds() < interval_hours * 3600:
                 return
 
-        # For hourly backups, run every hour regardless of time
-        if interval_hours == 1:
+        # For hourly and test backups, run based on interval regardless of time
+        if interval_hours <= 1:
             # Start scheduled backup
-            self.logger.info("Starting scheduled hourly backup")
+            if interval_hours == 0.017:  # Test mode (1 minute)
+                self.logger.info("Starting scheduled test backup (1 minute)")
+            elif interval_hours == 0.083:  # Test mode (5 minutes)
+                self.logger.info("Starting scheduled test backup (5 minutes)")
+            else:  # Hourly
+                self.logger.info("Starting scheduled hourly backup")
             self.start_backup()
             last_run_file.touch()
             return
