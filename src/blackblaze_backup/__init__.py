@@ -16,7 +16,16 @@ from .core import (
     BackupService,
     CredentialManager,
 )
-from .gui import BlackBlazeBackupApp, main
+
+# Import GUI components only when available (avoid CI issues)
+try:
+    from .gui import BlackBlazeBackupApp, main
+    _GUI_AVAILABLE = True
+except ImportError:
+    # GUI not available (e.g., in CI environment without Qt)
+    BlackBlazeBackupApp = None
+    main = None
+    _GUI_AVAILABLE = False
 
 __all__ = [
     "BackupService",
@@ -24,10 +33,12 @@ __all__ = [
     "BackupConfig",
     "BackupProgressTracker",
     "CredentialManager",
-    "BlackBlazeBackupApp",
-    "main",
     "__version__",
     "__author__",
     "__email__",
     "__description__",
 ]
+
+# Add GUI components to __all__ only if available
+if _GUI_AVAILABLE:
+    __all__.extend(["BlackBlazeBackupApp", "main"])
