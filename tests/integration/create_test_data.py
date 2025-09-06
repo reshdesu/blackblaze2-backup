@@ -4,44 +4,44 @@ BlackBlaze B2 Backup Tool - Test Suite
 Creates test data and runs comprehensive tests before release
 """
 
-import os
-import sys
-import tempfile
-import shutil
-from pathlib import Path
-from typing import List, Dict
 import json
-import csv
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List
+
 
 class TestDataCreator:
     """Creates comprehensive test data for backup testing"""
-    
+
     def __init__(self, base_path: str = None):
-        self.base_path = Path(base_path) if base_path else Path.home() / "Documents" / "blackblaze-test-backup"
+        self.base_path = (
+            Path(base_path)
+            if base_path
+            else Path.home() / "Documents" / "blackblaze-test-backup"
+        )
         self.test_files = []
-        
+
     def create_test_structure(self) -> Path:
         """Create comprehensive test folder structure"""
         print(f"🔧 Creating test data structure at: {self.base_path}")
-        
+
         # Create main directory
         self.base_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Create nested directories
         subdirs = ["documents", "images", "archives", "logs", "config"]
         for subdir in subdirs:
             (self.base_path / subdir).mkdir(exist_ok=True)
-        
+
         # Create test files
         self._create_root_files()
         self._create_nested_files()
         self._create_large_files()
         self._create_special_files()
-        
+
         print(f"✅ Test structure created with {len(self.test_files)} files")
         return self.base_path
-    
+
     def _create_root_files(self):
         """Create files in root directory"""
         files = {
@@ -51,12 +51,12 @@ class TestDataCreator:
             "app.log": self._get_log_content(),
             "sample.txt": self._get_sample_text_content(),
         }
-        
+
         for filename, content in files.items():
             file_path = self.base_path / filename
             file_path.write_text(content)
             self.test_files.append(file_path)
-    
+
     def _create_nested_files(self):
         """Create files in subdirectories"""
         nested_files = {
@@ -71,48 +71,56 @@ class TestDataCreator:
             "config/settings.ini": self._get_ini_content(),
             "config/database.conf": self._get_db_config_content(),
         }
-        
+
         for filepath, content in nested_files.items():
             file_path = self.base_path / filepath
             file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.write_text(content)
             self.test_files.append(file_path)
-    
+
     def _create_large_files(self):
         """Create larger files for performance testing"""
         # Create a larger text file
-        large_content = "This is a large test file for backup performance testing.\n" * 1000
+        large_content = (
+            "This is a large test file for backup performance testing.\n" * 1000
+        )
         large_file = self.base_path / "large_test_file.txt"
         large_file.write_text(large_content)
         self.test_files.append(large_file)
-        
+
         # Create a large JSON file
         large_json = {
-            "test_data": [{"id": i, "value": f"test_value_{i}", "timestamp": datetime.now().isoformat()} 
-                         for i in range(1000)]
+            "test_data": [
+                {
+                    "id": i,
+                    "value": f"test_value_{i}",
+                    "timestamp": datetime.now().isoformat(),
+                }
+                for i in range(1000)
+            ]
         }
         large_json_file = self.base_path / "documents" / "large_dataset.json"
         large_json_file.write_text(json.dumps(large_json, indent=2))
         self.test_files.append(large_json_file)
-    
+
     def _create_special_files(self):
         """Create files with special characters and edge cases"""
         # File with special characters in name
         special_file = self.base_path / "file-with-special-chars_123.txt"
         special_file.write_text("File with special characters in filename")
         self.test_files.append(special_file)
-        
+
         # Empty file
         empty_file = self.base_path / "empty_file.txt"
         empty_file.write_text("")
         self.test_files.append(empty_file)
-        
+
         # File with unicode content
         unicode_file = self.base_path / "unicode_test.txt"
         unicode_content = "Unicode test: café, naïve, résumé, 中文, العربية, русский"
         unicode_file.write_text(unicode_content)
         self.test_files.append(unicode_file)
-    
+
     def get_file_summary(self) -> Dict:
         """Get summary of created test files"""
         total_size = sum(f.stat().st_size for f in self.test_files)
@@ -121,17 +129,17 @@ class TestDataCreator:
             "total_size_bytes": total_size,
             "total_size_mb": round(total_size / (1024 * 1024), 2),
             "file_types": self._get_file_types(),
-            "directory_structure": self._get_directory_structure()
+            "directory_structure": self._get_directory_structure(),
         }
-    
+
     def _get_file_types(self) -> Dict[str, int]:
         """Count files by extension"""
         extensions = {}
         for file_path in self.test_files:
-            ext = file_path.suffix.lower() or 'no_extension'
+            ext = file_path.suffix.lower() or "no_extension"
             extensions[ext] = extensions.get(ext, 0) + 1
         return extensions
-    
+
     def _get_directory_structure(self) -> List[str]:
         """Get directory structure as list"""
         structure = []
@@ -139,7 +147,7 @@ class TestDataCreator:
             rel_path = file_path.relative_to(self.base_path)
             structure.append(str(rel_path))
         return structure
-    
+
     # Content generation methods
     def _get_readme_content(self) -> str:
         return """# BlackBlaze B2 Backup Test Files
@@ -165,22 +173,22 @@ Total: 20 test files across 6 directories
 
 Created: {datetime.now().isoformat()}
 """
-    
+
     def _get_config_content(self) -> str:
         config = {
             "app": {
                 "name": "BlackBlaze B2 Backup Tool",
                 "version": "1.0.0",
-                "test_mode": True
+                "test_mode": True,
             },
             "backup": {
                 "test_files": 20,
                 "test_folders": 6,
-                "created_at": datetime.now().isoformat()
-            }
+                "created_at": datetime.now().isoformat(),
+            },
         }
         return json.dumps(config, indent=2)
-    
+
     def _get_csv_content(self) -> str:
         return """Name,Age,City,Country,Occupation,Salary
 John Doe,30,New York,USA,Software Engineer,75000
@@ -193,7 +201,7 @@ Eve Davis,29,Paris,France,Architect,90000
 Frank Miller,31,Mumbai,India,Engineer,60000
 Grace Taylor,26,Sao Paulo,Brazil,Designer,50000
 Henry Chen,33,Shanghai,China,Developer,75000"""
-    
+
     def _get_log_content(self) -> str:
         return f"""2025-09-06 16:20:01 - INFO - BlackBlaze B2 Backup Tool started
 2025-09-06 16:20:02 - INFO - Loading configuration from config.json
@@ -211,7 +219,7 @@ Henry Chen,33,Shanghai,China,Developer,75000"""
 2025-09-06 16:20:14 - INFO - Total files uploaded: 20
 2025-09-06 16:20:15 - INFO - Total size: 45.2 KB
 2025-09-06 16:20:16 - INFO - Backup duration: 25 seconds"""
-    
+
     def _get_sample_text_content(self) -> str:
         return """This is a sample text file for testing the BlackBlaze B2 backup functionality.
 
@@ -228,7 +236,7 @@ This file is designed to test the robustness of the backup system
 when dealing with different types of content.
 
 End of sample file."""
-    
+
     def _get_project_docs_content(self) -> str:
         return """# Project Documentation
 
@@ -250,18 +258,18 @@ This document is used to test:
 
 ## Notes
 Created for backup functionality testing."""
-    
+
     def _get_yaml_content(self) -> str:
         return """api:
   version: "1.0.0"
   name: "BlackBlaze B2 Backup API"
-  
+
 endpoints:
   backup:
     method: POST
     path: "/api/backup"
     description: "Start backup process"
-  
+
   status:
     method: GET
     path: "/api/status"
@@ -271,7 +279,7 @@ authentication:
   type: "API Key"
   header: "X-API-Key"
 """
-    
+
     def _get_image_metadata_content(self) -> str:
         return """# Test Image Metadata
 
@@ -292,18 +300,21 @@ This metadata file tests:
 - Metadata backup functionality
 
 Note: This is a text file simulating image metadata for testing purposes."""
-    
+
     def _get_thumbnail_content(self) -> str:
-        return json.dumps({
-            "thumbnail": {
-                "width": 150,
-                "height": 150,
-                "format": "JPEG",
-                "size": "45KB",
-                "created": datetime.now().isoformat()
-            }
-        }, indent=2)
-    
+        return json.dumps(
+            {
+                "thumbnail": {
+                    "width": 150,
+                    "height": 150,
+                    "format": "JPEG",
+                    "size": "45KB",
+                    "created": datetime.now().isoformat(),
+                }
+            },
+            indent=2,
+        )
+
     def _get_archive_content(self) -> str:
         return """# Archive Test File
 
@@ -328,22 +339,37 @@ This file simulates an archive for backup testing.
 - Compression: 65% ratio
 
 This is a text file simulating archive metadata for testing purposes."""
-    
+
     def _get_manifest_content(self) -> str:
-        return json.dumps({
-            "backup_manifest": {
-                "version": "1.0.0",
-                "created_at": datetime.now().isoformat(),
-                "files": [
-                    {"path": "README.md", "size": 2048, "checksum": "abc123"},
-                    {"path": "config.json", "size": 1024, "checksum": "def456"},
-                    {"path": "sample_data.csv", "size": 3072, "checksum": "ghi789"}
-                ],
-                "total_files": 20,
-                "total_size": 45200
-            }
-        }, indent=2)
-    
+        return json.dumps(
+            {
+                "backup_manifest": {
+                    "version": "1.0.0",
+                    "created_at": datetime.now().isoformat(),
+                    "files": [
+                        {
+                            "path": "README.md",
+                            "size": 2048,
+                            "checksum": "abc123",
+                        },
+                        {
+                            "path": "config.json",
+                            "size": 1024,
+                            "checksum": "def456",
+                        },
+                        {
+                            "path": "sample_data.csv",
+                            "size": 3072,
+                            "checksum": "ghi789",
+                        },
+                    ],
+                    "total_files": 20,
+                    "total_size": 45200,
+                }
+            },
+            indent=2,
+        )
+
     def _get_error_log_content(self) -> str:
         return f"""2025-09-06 16:20:01 - ERROR - Failed to connect to endpoint
 2025-09-06 16:20:02 - WARNING - Retrying connection attempt 1
@@ -352,7 +378,7 @@ This is a text file simulating archive metadata for testing purposes."""
 2025-09-06 16:20:05 - ERROR - File upload failed: {self.base_path}/large_file.txt
 2025-09-06 16:20:06 - WARNING - Retrying upload attempt 2
 2025-09-06 16:20:07 - INFO - Upload successful after retry"""
-    
+
     def _get_debug_log_content(self) -> str:
         return f"""2025-09-06 16:20:01 - DEBUG - Initializing backup service
 2025-09-06 16:20:02 - DEBUG - Loading credentials from keyring
@@ -362,7 +388,7 @@ This is a text file simulating archive metadata for testing purposes."""
 2025-09-06 16:20:06 - DEBUG - Scanning directory: {self.base_path}
 2025-09-06 16:20:07 - DEBUG - Found 20 files to process
 2025-09-06 16:20:08 - DEBUG - Starting file upload process"""
-    
+
     def _get_ini_content(self) -> str:
         return """[app]
 name = BlackBlaze B2 Backup Tool
@@ -379,7 +405,7 @@ level = INFO
 file = backup.log
 max_size = 10MB
 """
-    
+
     def _get_db_config_content(self) -> str:
         return """# Database Configuration
 
@@ -404,30 +430,32 @@ database = 0
 password = redis_password
 """
 
+
 def main():
     """Main function to create test data"""
     print("🧪 BlackBlaze B2 Backup Tool - Test Data Creator")
     print("=" * 60)
-    
+
     # Create test data
     creator = TestDataCreator()
     test_path = creator.create_test_structure()
-    
+
     # Display summary
     summary = creator.get_file_summary()
-    print(f"\n📊 Test Data Summary:")
+    print("\n📊 Test Data Summary:")
     print(f"   📁 Total Files: {summary['total_files']}")
     print(f"   📏 Total Size: {summary['total_size_mb']} MB")
     print(f"   📂 File Types: {summary['file_types']}")
-    
-    print(f"\n📋 Directory Structure:")
-    for file_path in summary['directory_structure'][:10]:  # Show first 10
+
+    print("\n📋 Directory Structure:")
+    for file_path in summary["directory_structure"][:10]:  # Show first 10
         print(f"   - {file_path}")
-    if len(summary['directory_structure']) > 10:
+    if len(summary["directory_structure"]) > 10:
         print(f"   ... and {len(summary['directory_structure']) - 10} more files")
-    
+
     print(f"\n✅ Test data created successfully at: {test_path}")
     print("🚀 Ready for backup testing!")
+
 
 if __name__ == "__main__":
     main()

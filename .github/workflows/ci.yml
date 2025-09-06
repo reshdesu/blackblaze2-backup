@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
+        python-version: [3.9, "3.10", "3.11", "3.12"]
     
     steps:
     - name: Checkout code
@@ -39,9 +39,8 @@ jobs:
     - name: Run linting
       run: |
         source .venv/bin/activate
-        flake8 src/ tests/
-        black --check src/ tests/
-        mypy src/
+        ruff check src/ tests/
+        ruff format --check src/ tests/
     
     - name: Run unit tests
       run: |
@@ -111,14 +110,14 @@ jobs:
     
     - name: Upload Ubuntu executable
       if: matrix.os == 'ubuntu-latest'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: blackblaze-backup-ubuntu
         path: dist/BlackBlaze-Backup-Tool
     
     - name: Upload Windows executable
       if: matrix.os == 'windows-latest'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: blackblaze-backup-windows
         path: dist/BlackBlaze-Backup-Tool.exe
@@ -154,7 +153,7 @@ jobs:
         bandit -r src/ -f json -o bandit-report.json
     
     - name: Upload security report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-report
         path: bandit-report.json
@@ -170,13 +169,13 @@ jobs:
       uses: actions/checkout@v4
     
     - name: Download Ubuntu executable
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: blackblaze-backup-ubuntu
         path: ./releases/ubuntu
     
     - name: Download Windows executable
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: blackblaze-backup-windows
         path: ./releases/windows

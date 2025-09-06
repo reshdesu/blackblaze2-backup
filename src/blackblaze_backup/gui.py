@@ -4,64 +4,97 @@ BlackBlaze B2 Backup Tool - GUI Layer
 Uses the core business logic for testable architecture
 """
 
-import sys
 import logging
+import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
-    QPushButton, QLabel, QLineEdit, QTextEdit, QTreeWidget, QTreeWidgetItem,
-    QGroupBox, QCheckBox, QComboBox, QProgressBar, QMessageBox, QFileDialog,
-    QSplitter, QTabWidget, QFormLayout, QSpinBox, QFrame, QSystemTrayIcon,
-    QMenu, QDialog, QDialogButtonBox, QTimeEdit, QCalendarWidget
+from PySide6.QtCore import Qt, QThread, QTime, QTimer, Signal
+from PySide6.QtGui import (
+    QBrush,
+    QColor,
+    QFont,
+    QIcon,
+    QPainter,
+    QPen,
+    QPixmap,
 )
-from PySide6.QtCore import Qt, QThread, Signal, QTimer, QTime
-from PySide6.QtGui import QFont, QIcon, QPixmap, QAction, QPainter, QBrush, QPen, QColor
+from PySide6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFileDialog,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QSystemTrayIcon,
+    QTabWidget,
+    QTextEdit,
+    QTimeEdit,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from .core import BackupService
 
 
 class ScheduleDialog(QDialog):
     """Dialog for setting up scheduled backups"""
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Schedule Automatic Backups")
         self.setModal(True)
         self.resize(400, 300)
-        
+
         layout = QVBoxLayout(self)
-        
+
         # Schedule settings
         schedule_group = QGroupBox("Schedule Settings")
         schedule_layout = QFormLayout(schedule_group)
-        
+
         # Backup frequency
         self.frequency_combo = QComboBox()
-        self.frequency_combo.addItems([
-            "Hourly", "Daily", "Every 2 days", "Weekly", "Every 2 weeks", "Monthly"
-        ])
+        self.frequency_combo.addItems(
+            [
+                "Hourly",
+                "Daily",
+                "Every 2 days",
+                "Weekly",
+                "Every 2 weeks",
+                "Monthly",
+            ]
+        )
         self.frequency_combo.currentTextChanged.connect(self.on_frequency_changed)
         schedule_layout.addRow("Frequency:", self.frequency_combo)
-        
+
         # Backup time
         self.time_edit = QTimeEdit()
         self.time_edit.setTime(QTime(2, 0))  # Default to 2:00 AM
         self.time_label = QLabel("Time:")
         schedule_layout.addRow(self.time_label, self.time_edit)
-        
+
         layout.addWidget(schedule_group)
-        
+
         # Initialize the frequency change handler
         self.on_frequency_changed(self.frequency_combo.currentText())
-        
+
         # Buttons
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
-    
+
     def on_frequency_changed(self, frequency):
         """Handle frequency selection change"""
         if frequency == "Hourly":
@@ -72,7 +105,7 @@ class ScheduleDialog(QDialog):
             # Show time selection for other frequencies
             self.time_label.show()
             self.time_edit.show()
-    
+
     def get_schedule_config(self):
         """Get the schedule configuration"""
         frequency_map = {
@@ -81,47 +114,53 @@ class ScheduleDialog(QDialog):
             "Every 2 days": 48,
             "Weekly": 168,
             "Every 2 weeks": 336,
-            "Monthly": 720
+            "Monthly": 720,
         }
-        
+
         return {
             "enabled": True,  # Always enabled since we removed the checkbox
             "interval_hours": frequency_map[self.frequency_combo.currentText()],
-            "time": self.time_edit.time().toString("hh:mm") if self.frequency_combo.currentText() != "Hourly" else None,
-            "run_background": True  # Always run in background since app always minimizes
+            "time": (
+                self.time_edit.time().toString("hh:mm")
+                if self.frequency_combo.currentText() != "Hourly"
+                else None
+            ),
+            "run_background": True,  # Always run in background since app always minimizes
         }
 
 
 class BackupWorker(QThread):
     """Worker thread for handling backup operations"""
+
     progress_updated = Signal(int)
     status_updated = Signal(str)
     error_occurred = Signal(str)
     backup_completed = Signal(bool)
-    
+
     def __init__(self, backup_service: BackupService):
         super().__init__()
         self.backup_service = backup_service
-    
+
     def run(self):
         """Execute the backup process"""
+
         def progress_callback(value):
             self.progress_updated.emit(value)
-        
+
         def status_callback(message):
             self.status_updated.emit(message)
-        
+
         def error_callback(message):
             self.error_occurred.emit(message)
-        
+
         success = self.backup_service.execute_backup(
             progress_callback=progress_callback,
             status_callback=status_callback,
-            error_callback=error_callback
+            error_callback=error_callback,
         )
-        
+
         self.backup_completed.emit(success)
-    
+
     def cancel(self):
         """Cancel the backup operation"""
         self.backup_service.cancel_backup()
@@ -129,7 +168,7 @@ class BackupWorker(QThread):
 
 class BlackBlazeBackupApp(QMainWindow):
     """Main application window for BlackBlaze B2 Backup Tool"""
-    
+
     def __init__(self):
         super().__init__()
         try:
@@ -151,29 +190,29 @@ class BlackBlazeBackupApp(QMainWindow):
         except Exception as e:
             logging.error(f"Error initializing application: {e}")
             raise
-        
+
     def setup_logging(self):
         """Setup logging configuration"""
         logging.basicConfig(
             level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
+            format="%(asctime)s - %(levelname)s - %(message)s",
             handlers=[
-                logging.FileHandler('blackblaze_backup.log'),
-                logging.StreamHandler()
-            ]
+                logging.FileHandler("blackblaze_backup.log"),
+                logging.StreamHandler(),
+            ],
         )
         self.logger = logging.getLogger(__name__)
-    
+
     def setup_auto_save(self):
         """Setup automatic saving of configuration"""
         # Auto-save every 30 seconds
         self.auto_save_timer = QTimer()
         self.auto_save_timer.timeout.connect(self.auto_save_config)
         self.auto_save_timer.start(30000)  # 30 seconds
-        
+
         # Update credentials status
         self.update_credentials_status()
-    
+
     def auto_save_config(self):
         """Automatically save configuration"""
         try:
@@ -184,7 +223,7 @@ class BlackBlazeBackupApp(QMainWindow):
                 self.save_schedule_config()
         except Exception as e:
             self.logger.error(f"Error in auto-save: {e}")
-    
+
     def update_credentials_status(self):
         """Update credentials status display"""
         credentials = self.backup_service.credential_manager.load_credentials()
@@ -194,194 +233,195 @@ class BlackBlazeBackupApp(QMainWindow):
         else:
             self.credentials_status.setText("No credentials saved")
             self.credentials_status.setStyleSheet("color: #666; font-style: italic;")
-    
+
     def setup_ui(self):
         """Setup the user interface"""
         self.setWindowTitle("BlackBlaze B2 Backup Tool")
         self.setGeometry(100, 100, 650, 700)
-        
+
         # Set window icon
         icon_path = Path(__file__).parent / "icon.svg"
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
-        
+
         # Create central widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        
+
         # Create main layout
         main_layout = QVBoxLayout(central_widget)
-        
+
         # Create tab widget
         tab_widget = QTabWidget()
         main_layout.addWidget(tab_widget)
-        
+
         # Create tabs
         self.setup_credentials_tab(tab_widget)
         self.setup_folders_tab(tab_widget)
         self.setup_backup_tab(tab_widget)
-        
+
         # Add status bar
         self.statusBar().showMessage("Ready")
-        
-    
+
     def setup_credentials_tab(self, tab_widget):
         """Setup credentials configuration tab"""
         credentials_widget = QWidget()
         layout = QVBoxLayout(credentials_widget)
-        
+
         # Credentials group
         cred_group = QGroupBox("BackBlaze B2 S3 Credentials")
         cred_layout = QFormLayout(cred_group)
-        
+
         # Endpoint
         self.endpoint_edit = QLineEdit()
         self.endpoint_edit.setPlaceholderText("s3.us-west-001.backblazeb2.com")
         cred_layout.addRow("S3 Endpoint:", self.endpoint_edit)
-        
+
         # Access Key
         self.access_key_edit = QLineEdit()
         self.access_key_edit.setEchoMode(QLineEdit.Password)
         self.access_key_edit.setPlaceholderText("Your Application Key ID")
         cred_layout.addRow("Access Key ID:", self.access_key_edit)
-        
+
         # Secret Key
         self.secret_key_edit = QLineEdit()
         self.secret_key_edit.setEchoMode(QLineEdit.Password)
         self.secret_key_edit.setPlaceholderText("Your Application Key")
         cred_layout.addRow("Secret Access Key:", self.secret_key_edit)
-        
+
         # Region
         self.region_edit = QLineEdit()
         self.region_edit.setPlaceholderText("us-west-001")
         cred_layout.addRow("Region:", self.region_edit)
-        
+
         layout.addWidget(cred_group)
-        
+
         # Test connection button
         test_btn = QPushButton("Test Connection")
         test_btn.clicked.connect(self.test_connection)
         layout.addWidget(test_btn)
-        
+
         # Save credentials button
         save_btn = QPushButton("Save Credentials")
         save_btn.clicked.connect(self.save_credentials)
         layout.addWidget(save_btn)
-        
+
         # Load saved credentials
         load_btn = QPushButton("Load Saved Credentials")
         load_btn.clicked.connect(self.load_credentials)
         layout.addWidget(load_btn)
-        
+
         # Credentials status
         self.credentials_status = QLabel("No credentials saved")
         self.credentials_status.setStyleSheet("color: #666; font-style: italic;")
         layout.addWidget(self.credentials_status)
-        
+
         layout.addStretch()
         tab_widget.addTab(credentials_widget, "Credentials")
-    
+
     def setup_folders_tab(self, tab_widget):
         """Setup folder selection tab"""
         folders_widget = QWidget()
         layout = QVBoxLayout(folders_widget)
-        
+
         # Folder selection group
         folder_group = QGroupBox("Select Folders to Backup")
         folder_layout = QVBoxLayout(folder_group)
-        
+
         # Add folder button
         add_folder_btn = QPushButton("Add Folder")
         add_folder_btn.clicked.connect(self.add_folder)
         folder_layout.addWidget(add_folder_btn)
-        
+
         # Folder tree
         self.folder_tree = QTreeWidget()
         self.folder_tree.setHeaderLabels(["Folder Path", "Target Bucket"])
         folder_layout.addWidget(self.folder_tree)
-        
+
         # Remove folder button
         remove_folder_btn = QPushButton("Remove Selected Folder")
         remove_folder_btn.clicked.connect(self.remove_folder)
         folder_layout.addWidget(remove_folder_btn)
-        
+
         layout.addWidget(folder_group)
-        
+
         # Bucket configuration group
         bucket_group = QGroupBox("Bucket Configuration")
         bucket_layout = QVBoxLayout(bucket_group)
-        
+
         # Single bucket option
         self.single_bucket_check = QCheckBox("Use single bucket for all folders")
         self.single_bucket_check.setChecked(True)  # Default to single bucket mode
         self.single_bucket_check.toggled.connect(self.toggle_bucket_mode)
         bucket_layout.addWidget(self.single_bucket_check)
-        
+
         # Single bucket input
         single_bucket_layout = QHBoxLayout()
         single_bucket_layout.addWidget(QLabel("Bucket Name:"))
         self.single_bucket_edit = QLineEdit()
         self.single_bucket_edit.setPlaceholderText("my-backup-bucket")
-        self.single_bucket_edit.setText("blackblaze2-backup-testing")  # Default bucket name
+        self.single_bucket_edit.setText(
+            "blackblaze2-backup-testing"
+        )  # Default bucket name
         single_bucket_layout.addWidget(self.single_bucket_edit)
         bucket_layout.addLayout(single_bucket_layout)
-        
+
         layout.addWidget(bucket_group)
         layout.addStretch()
-        
+
         tab_widget.addTab(folders_widget, "Folders")
-    
+
     def setup_backup_tab(self, tab_widget):
         """Setup backup execution tab"""
         backup_widget = QWidget()
         layout = QVBoxLayout(backup_widget)
-        
+
         # Backup controls
         controls_layout = QHBoxLayout()
-        
+
         self.start_backup_btn = QPushButton("Start Backup")
         self.start_backup_btn.clicked.connect(self.start_backup)
         controls_layout.addWidget(self.start_backup_btn)
-        
+
         self.cancel_backup_btn = QPushButton("Cancel Backup")
         self.cancel_backup_btn.clicked.connect(self.cancel_backup)
         self.cancel_backup_btn.setEnabled(False)
         controls_layout.addWidget(self.cancel_backup_btn)
-        
+
         # Schedule button
         schedule_btn = QPushButton("Schedule Automatic Backups")
         schedule_btn.clicked.connect(self.show_schedule_dialog)
         controls_layout.addWidget(schedule_btn)
-        
+
         layout.addLayout(controls_layout)
-        
+
         # Schedule status display
         self.schedule_status = QLabel("No scheduled backups configured")
         self.schedule_status.setStyleSheet("color: #666; font-style: italic;")
         layout.addWidget(self.schedule_status)
-        
+
         # Progress bar
         self.progress_bar = QProgressBar()
         layout.addWidget(self.progress_bar)
-        
+
         # Status text
         self.status_text = QTextEdit()
         self.status_text.setMaximumHeight(200)
         self.status_text.setReadOnly(True)
         layout.addWidget(self.status_text)
-        
+
         # Log text
         log_group = QGroupBox("Backup Log")
         log_layout = QVBoxLayout(log_group)
-        
+
         self.log_text = QTextEdit()
         self.log_text.setReadOnly(True)
         log_layout.addWidget(self.log_text)
-        
+
         layout.addWidget(log_group)
-        
+
         tab_widget.addTab(backup_widget, "Backup")
-    
+
     def add_folder(self):
         """Add a folder to the backup list"""
         folder_path = QFileDialog.getExistingDirectory(self, "Select Folder to Backup")
@@ -389,37 +429,39 @@ class BlackBlazeBackupApp(QMainWindow):
             # Create tree item
             item = QTreeWidgetItem(self.folder_tree)
             item.setText(0, folder_path)
-            
+
             # Add bucket selection if not using single bucket
             if not self.single_bucket_check.isChecked():
                 bucket_name = f"backup-{Path(folder_path).name.lower()}"
                 item.setText(1, bucket_name)
                 # Make bucket name editable
                 item.setFlags(item.flags() | Qt.ItemIsEditable)
-            
+
             self.folder_tree.addTopLevelItem(item)
-            
+
             # Update backup service
             if self.single_bucket_check.isChecked():
                 bucket_name = self.single_bucket_edit.text()
             else:
                 bucket_name = item.text(1)
             self.backup_service.add_folder_to_backup(folder_path, bucket_name)
-            
+
             # Auto-save folder configuration
             self.save_folder_config()
-    
+
     def remove_folder(self):
         """Remove selected folder from backup list"""
         current_item = self.folder_tree.currentItem()
         if current_item:
             folder_path = current_item.text(0)
             self.backup_service.remove_folder_from_backup(folder_path)
-            self.folder_tree.takeTopLevelItem(self.folder_tree.indexOfTopLevelItem(current_item))
-            
+            self.folder_tree.takeTopLevelItem(
+                self.folder_tree.indexOfTopLevelItem(current_item)
+            )
+
             # Auto-save folder configuration
             self.save_folder_config()
-    
+
     def toggle_bucket_mode(self, checked):
         """Toggle between single and multiple bucket modes"""
         if checked:
@@ -435,52 +477,62 @@ class BlackBlazeBackupApp(QMainWindow):
                 folder_name = Path(item.text(0)).name.lower()
                 item.setText(1, f"backup-{folder_name}")
                 item.setFlags(item.flags() | Qt.ItemIsEditable)
-        
+
         # Update backup service
-        self.backup_service.configure_bucket_mode(checked, self.single_bucket_edit.text())
-        
+        self.backup_service.configure_bucket_mode(
+            checked, self.single_bucket_edit.text()
+        )
+
         # Auto-save folder configuration
         self.save_folder_config()
-    
+
     def test_connection(self):
         """Test connection to BackBlaze B2"""
         credentials = {
-            'endpoint': self.endpoint_edit.text().strip(),
-            'access_key': self.access_key_edit.text().strip(),
-            'secret_key': self.secret_key_edit.text().strip(),
-            'region': self.region_edit.text().strip()
+            "endpoint": self.endpoint_edit.text().strip(),
+            "access_key": self.access_key_edit.text().strip(),
+            "secret_key": self.secret_key_edit.text().strip(),
+            "region": self.region_edit.text().strip(),
         }
-        
+
         is_valid, message = self.backup_service.set_credentials(credentials)
-        
+
         if is_valid:
             QMessageBox.information(self, "Connection Test", message)
             self.logger.info("Connection test successful")
         else:
             QMessageBox.critical(self, "Connection Test Failed", message)
             self.logger.error(f"Connection test failed: {message}")
-    
+
     def save_credentials(self, silent=False):
         """Save credentials securely"""
         credentials = {
-            'endpoint': self.endpoint_edit.text().strip(),
-            'access_key': self.access_key_edit.text().strip(),
-            'secret_key': self.secret_key_edit.text().strip(),
-            'region': self.region_edit.text().strip()
+            "endpoint": self.endpoint_edit.text().strip(),
+            "access_key": self.access_key_edit.text().strip(),
+            "secret_key": self.secret_key_edit.text().strip(),
+            "region": self.region_edit.text().strip(),
         }
-        
+
         # Validate credentials before saving
-        is_valid, message = self.backup_service.credential_manager.validate_credentials(credentials)
+        is_valid, message = self.backup_service.credential_manager.validate_credentials(
+            credentials
+        )
         if not is_valid:
             if not silent:
-                QMessageBox.critical(self, "Invalid Credentials", f"Cannot save credentials: {message}")
+                QMessageBox.critical(
+                    self,
+                    "Invalid Credentials",
+                    f"Cannot save credentials: {message}",
+                )
             return False
-        
+
         success = self.backup_service.credential_manager.save_credentials(credentials)
-        
+
         if success:
             if not silent:
-                QMessageBox.information(self, "Credentials Saved", "Credentials saved securely!")
+                QMessageBox.information(
+                    self, "Credentials Saved", "Credentials saved securely!"
+                )
             # Auto-save folder configuration when credentials are saved
             self.save_folder_config()
             # Update credentials status
@@ -490,82 +542,96 @@ class BlackBlazeBackupApp(QMainWindow):
             if not silent:
                 QMessageBox.critical(self, "Save Failed", "Error saving credentials")
             return False
-    
+
     def load_credentials(self):
         """Load saved credentials"""
         credentials = self.backup_service.credential_manager.load_credentials()
-        
+
         if credentials:
             # Populate fields
-            self.endpoint_edit.setText(credentials['endpoint'])
-            self.access_key_edit.setText(credentials['access_key'])
-            self.secret_key_edit.setText(credentials['secret_key'])
-            self.region_edit.setText(credentials['region'])
-            
-            QMessageBox.information(self, "Credentials Loaded", "Credentials loaded successfully!")
+            self.endpoint_edit.setText(credentials["endpoint"])
+            self.access_key_edit.setText(credentials["access_key"])
+            self.secret_key_edit.setText(credentials["secret_key"])
+            self.region_edit.setText(credentials["region"])
+
+            QMessageBox.information(
+                self, "Credentials Loaded", "Credentials loaded successfully!"
+            )
         else:
-            QMessageBox.warning(self, "No Saved Credentials", "No saved credentials found.")
-    
+            QMessageBox.warning(
+                self, "No Saved Credentials", "No saved credentials found."
+            )
+
     def start_backup(self):
         """Start the backup process"""
         # Validate credentials
-        if not all([self.endpoint_edit.text(), self.access_key_edit.text(), 
-                   self.secret_key_edit.text(), self.region_edit.text()]):
-            QMessageBox.warning(self, "Missing Credentials", "Please configure your credentials first.")
+        if not all(
+            [
+                self.endpoint_edit.text(),
+                self.access_key_edit.text(),
+                self.secret_key_edit.text(),
+                self.region_edit.text(),
+            ]
+        ):
+            QMessageBox.warning(
+                self,
+                "Missing Credentials",
+                "Please configure your credentials first.",
+            )
             return
-        
+
         # Update backup service configuration
         self.backup_service.configure_bucket_mode(
             self.single_bucket_check.isChecked(),
-            self.single_bucket_edit.text()
+            self.single_bucket_edit.text(),
         )
-        
+
         # Validate backup configuration
         is_valid, message = self.backup_service.validate_backup_config()
         if not is_valid:
             QMessageBox.warning(self, "Invalid Configuration", message)
             return
-        
+
         # Start backup worker
         self.backup_worker = BackupWorker(self.backup_service)
         self.backup_worker.progress_updated.connect(self.update_progress)
         self.backup_worker.status_updated.connect(self.update_status)
         self.backup_worker.error_occurred.connect(self.handle_error)
         self.backup_worker.backup_completed.connect(self.backup_finished)
-        
+
         self.start_backup_btn.setEnabled(False)
         self.cancel_backup_btn.setEnabled(True)
         self.progress_bar.setValue(0)
         self.status_text.clear()
         self.log_text.clear()
-        
+
         self.backup_worker.start()
-    
+
     def cancel_backup(self):
         """Cancel the backup process"""
         if self.backup_worker and self.backup_worker.isRunning():
             self.backup_worker.cancel()
             self.backup_worker.wait()
-    
+
     def update_progress(self, value):
         """Update progress bar"""
         self.progress_bar.setValue(value)
-    
+
     def update_status(self, message):
         """Update status text"""
         self.status_text.append(message)
         self.logger.info(message)
-    
+
     def handle_error(self, error_message):
         """Handle backup errors"""
         self.status_text.append(f"ERROR: {error_message}")
         self.logger.error(error_message)
-    
+
     def backup_finished(self, success):
         """Handle backup completion"""
         self.start_backup_btn.setEnabled(True)
         self.cancel_backup_btn.setEnabled(False)
-        
+
         if success:
             self.statusBar().showMessage("✅ Backup completed successfully!", 10000)
             if self.tray_icon:
@@ -573,18 +639,20 @@ class BlackBlazeBackupApp(QMainWindow):
                     "Backup Complete",
                     "Backup completed successfully!",
                     QSystemTrayIcon.Information,
-                    5000
+                    5000,
                 )
         else:
-            self.statusBar().showMessage("❌ Backup failed. Check the log for details.", 10000)
+            self.statusBar().showMessage(
+                "❌ Backup failed. Check the log for details.", 10000
+            )
             if self.tray_icon:
                 self.tray_icon.showMessage(
                     "Backup Failed",
                     "Backup failed. Check logs for details.",
                     QSystemTrayIcon.Critical,
-                    5000
+                    5000,
                 )
-    
+
     def setup_system_tray(self):
         """Setup system tray icon - cross-platform solution for Windows 11 and Ubuntu"""
         # Check if system tray is available
@@ -593,9 +661,9 @@ class BlackBlazeBackupApp(QMainWindow):
             self.logger.info("Background operation will use window hiding instead")
             self.tray_icon = None
             return
-        
+
         self.logger.info("Setting up cross-platform system tray icon...")
-        
+
         # Create cross-platform compatible icon
         icon_path = Path(__file__).parent / "icon.svg"
         if icon_path.exists():
@@ -607,47 +675,47 @@ class BlackBlazeBackupApp(QMainWindow):
             pixmap.fill(Qt.transparent)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            
+
             # Draw blue circle with "B2" text
             painter.setBrush(QBrush(QColor("#2E86AB")))
             painter.setPen(QPen(QColor("#1E40AF"), 2))
             painter.drawEllipse(2, 2, 28, 28)
-            
+
             painter.setPen(QPen(QColor("white")))
             font = QFont("Arial", 12, QFont.Bold)
             painter.setFont(font)
             painter.drawText(pixmap.rect(), Qt.AlignCenter, "B2")
             painter.end()
-            
+
             icon = QIcon(pixmap)
-        
+
         # Create system tray icon
         self.tray_icon = QSystemTrayIcon(icon, self)
         self.tray_icon.setToolTip("BlackBlaze B2 Backup Tool")
-        
+
         # Create context menu
         menu = QMenu()
-        
+
         # Show/Hide window action
         self.show_action = menu.addAction("Show Window")
         self.show_action.triggered.connect(self.show_window)
-        
+
         # Start backup action
         start_backup_action = menu.addAction("Start Backup Now")
         start_backup_action.triggered.connect(self.start_backup)
-        
+
         # Schedule action
         schedule_action = menu.addAction("Schedule Backups")
         schedule_action.triggered.connect(self.show_schedule_dialog)
-        
+
         menu.addSeparator()
-        
+
         # Exit action
         exit_action = menu.addAction("Exit")
         exit_action.triggered.connect(self.force_exit)
-        
+
         self.tray_icon.setContextMenu(menu)
-        
+
         # Try to show the tray icon
         if self.tray_icon.show():
             self.logger.info("System tray icon created successfully")
@@ -655,21 +723,21 @@ class BlackBlazeBackupApp(QMainWindow):
             self.logger.error("Failed to show system tray icon")
             self.logger.info("Background operation will still work with window hiding")
             # Keep tray icon object for menu functionality even if not visible
-    
+
     def show_window(self):
         """Show and activate the main window"""
         self.logger.info("Showing window from tray menu")
         self.show()
         self.raise_()
         self.activateWindow()
-    
+
     def force_exit(self):
         """Force exit the application (bypass closeEvent)"""
         self.logger.info("Force exit requested from tray menu")
         if self.tray_icon:
             self.tray_icon.hide()
         QApplication.quit()
-    
+
     def show_schedule_dialog(self):
         """Show schedule dialog"""
         dialog = ScheduleDialog(self)
@@ -677,53 +745,55 @@ class BlackBlazeBackupApp(QMainWindow):
             self.schedule_config = dialog.get_schedule_config()
             self.save_schedule_config()
             self.setup_schedule_timer()
-            
-            if self.schedule_config.get('run_background', False):
+
+            if self.schedule_config.get("run_background", False):
                 QMessageBox.information(
-                    self, 
-                    "Background Mode", 
+                    self,
+                    "Background Mode",
                     "Scheduled backups will run in the background.\n"
-                    "You can minimize the window to system tray."
+                    "You can minimize the window to system tray.",
                 )
-    
+
     def load_schedule_config(self):
         """Load schedule configuration from file"""
         try:
             config_file = Path.home() / ".blackblaze_backup" / "schedule.json"
             if config_file.exists():
                 import json
-                with open(config_file, 'r') as f:
+
+                with open(config_file) as f:
                     self.schedule_config = json.load(f)
                 self.setup_schedule_timer()
         except Exception as e:
             self.logger.error(f"Error loading schedule config: {e}")
-    
+
     def save_schedule_config(self):
         """Save schedule configuration to file"""
         try:
             config_file = Path.home() / ".blackblaze_backup" / "schedule.json"
             config_file.parent.mkdir(exist_ok=True)
-            
+
             import json
-            with open(config_file, 'w') as f:
+
+            with open(config_file, "w") as f:
                 json.dump(self.schedule_config, f, indent=2)
         except Exception as e:
             self.logger.error(f"Error saving schedule config: {e}")
-    
+
     def load_credentials_automatically(self):
         """Automatically load saved credentials without user interaction"""
         try:
             credentials = self.backup_service.credential_manager.load_credentials()
             if credentials:
                 # Populate the credential fields
-                self.endpoint_edit.setText(credentials.get('endpoint', ''))
-                self.access_key_edit.setText(credentials.get('access_key', ''))
-                self.secret_key_edit.setText(credentials.get('secret_key', ''))
-                self.region_edit.setText(credentials.get('region', ''))
-                
+                self.endpoint_edit.setText(credentials.get("endpoint", ""))
+                self.access_key_edit.setText(credentials.get("access_key", ""))
+                self.secret_key_edit.setText(credentials.get("secret_key", ""))
+                self.region_edit.setText(credentials.get("region", ""))
+
                 # Automatically save credentials to ensure they're current (silent mode)
                 self.save_credentials(silent=True)
-                
+
                 self.logger.info("Credentials loaded and saved successfully")
                 return True
             else:
@@ -732,51 +802,56 @@ class BlackBlazeBackupApp(QMainWindow):
         except Exception as e:
             self.logger.error(f"Error loading credentials automatically: {e}")
             return False
-    
+
     def load_folder_config(self):
         """Load folder configuration from file"""
         try:
             config_file = Path.home() / ".blackblaze_backup" / "folders.json"
             if config_file.exists():
                 import json
-                with open(config_file, 'r') as f:
+
+                with open(config_file) as f:
                     folder_config = json.load(f)
-                
+
                 self.logger.info(f"Loading folder config: {folder_config}")
-                
+
                 # Restore folder selections
-                folders = folder_config.get('folders', [])
+                folders = folder_config.get("folders", [])
                 self.logger.info(f"Found {len(folders)} saved folders")
-                
+
                 for folder_path, bucket_name in folders:
                     item = QTreeWidgetItem(self.folder_tree)
                     item.setText(0, folder_path)
                     item.setText(1, bucket_name)
                     self.folder_tree.addTopLevelItem(item)
-                    
+
                     # Update backup service
                     self.backup_service.add_folder_to_backup(folder_path, bucket_name)
                     self.logger.info(f"Restored folder: {folder_path} -> {bucket_name}")
-                
+
                 # Restore bucket mode
-                single_bucket = folder_config.get('single_bucket', False)
-                bucket_name = folder_config.get('single_bucket_name', '')
+                single_bucket = folder_config.get("single_bucket", False)
+                bucket_name = folder_config.get("single_bucket_name", "")
                 self.single_bucket_check.setChecked(single_bucket)
                 self.single_bucket_edit.setText(bucket_name)
                 self.toggle_bucket_mode(single_bucket)
-                self.logger.info(f"Restored bucket mode: single={single_bucket}, name='{bucket_name}'")
+                self.logger.info(
+                    f"Restored bucket mode: single={single_bucket}, name='{bucket_name}'"
+                )
             else:
-                self.logger.info("No folder config file found, starting with empty configuration")
-                
+                self.logger.info(
+                    "No folder config file found, starting with empty configuration"
+                )
+
         except Exception as e:
             self.logger.error(f"Error loading folder config: {e}")
-    
+
     def save_folder_config(self):
         """Save folder configuration to file"""
         try:
             config_file = Path.home() / ".blackblaze_backup" / "folders.json"
             config_file.parent.mkdir(exist_ok=True)
-            
+
             # Collect folder data
             folders = []
             for i in range(self.folder_tree.topLevelItemCount()):
@@ -787,38 +862,39 @@ class BlackBlazeBackupApp(QMainWindow):
                 else:
                     bucket_name = item.text(1)
                 folders.append([folder_path, bucket_name])
-            
+
             folder_config = {
-                'folders': folders,
-                'single_bucket': self.single_bucket_check.isChecked(),
-                'single_bucket_name': self.single_bucket_edit.text()
+                "folders": folders,
+                "single_bucket": self.single_bucket_check.isChecked(),
+                "single_bucket_name": self.single_bucket_edit.text(),
             }
-            
+
             # Only save if we have folders or if this is a meaningful change
             # Don't overwrite existing folder data with empty data during startup
             if folders or not config_file.exists():
                 import json
-                with open(config_file, 'w') as f:
+
+                with open(config_file, "w") as f:
                     json.dump(folder_config, f, indent=2)
-                
+
                 self.logger.info(f"Saving folder config: {folder_config}")
                 self.logger.info(f"Saved {len(folders)} folders to configuration")
             else:
                 self.logger.debug("Skipping save of empty folder config during startup")
-                
+
         except Exception as e:
             self.logger.error(f"Error saving folder config: {e}")
-    
+
     def update_schedule_status(self):
         """Update the schedule status display"""
-        if not self.schedule_config or not self.schedule_config.get('enabled', False):
+        if not self.schedule_config or not self.schedule_config.get("enabled", False):
             self.schedule_status.setText("No scheduled backups configured")
             self.schedule_status.setStyleSheet("color: #666; font-style: italic;")
             return
-        
-        frequency = self.schedule_config.get('interval_hours', 24)
-        time_str = self.schedule_config.get('time')
-        
+
+        frequency = self.schedule_config.get("interval_hours", 24)
+        time_str = self.schedule_config.get("time")
+
         if frequency == 1:
             status_text = "Scheduled: Hourly backups"
             status_style = "color: #2E7D32; font-weight: bold;"
@@ -840,43 +916,44 @@ class BlackBlazeBackupApp(QMainWindow):
         else:
             status_text = f"Scheduled: Every {frequency} hours"
             status_style = "color: #2E7D32; font-weight: bold;"
-        
+
         self.schedule_status.setText(status_text)
         self.schedule_status.setStyleSheet(status_style)
-    
+
     def setup_schedule_timer(self):
         """Setup scheduled backup timer"""
         if self.schedule_timer:
             self.schedule_timer.stop()
-        
-        if not self.schedule_config or not self.schedule_config.get('enabled', False):
+
+        if not self.schedule_config or not self.schedule_config.get("enabled", False):
             self.update_schedule_status()
             return
-        
+
         # Check every minute for scheduled backups
         self.schedule_timer = QTimer()
         self.schedule_timer.timeout.connect(self.check_scheduled_backup)
         self.schedule_timer.start(60000)  # 1 minute
-        
+
         self.update_schedule_status()
         self.logger.info("Scheduled backups enabled")
-    
+
     def check_scheduled_backup(self):
         """Check if it's time for a scheduled backup"""
-        if not self.schedule_config or not self.schedule_config.get('enabled', False):
+        if not self.schedule_config or not self.schedule_config.get("enabled", False):
             return
-        
+
         import datetime
+
         now = datetime.datetime.now()
-        interval_hours = self.schedule_config.get('interval_hours', 24)
-        
+        interval_hours = self.schedule_config.get("interval_hours", 24)
+
         # Check if we haven't run recently (within the interval)
         last_run_file = Path.home() / ".blackblaze_backup" / "last_backup"
         if last_run_file.exists():
             last_run = datetime.datetime.fromtimestamp(last_run_file.stat().st_mtime)
             if (now - last_run).total_seconds() < interval_hours * 3600:
                 return
-        
+
         # For hourly backups, run every hour regardless of time
         if interval_hours == 1:
             # Start scheduled backup
@@ -884,31 +961,39 @@ class BlackBlazeBackupApp(QMainWindow):
             self.start_backup()
             last_run_file.touch()
             return
-        
+
         # For other frequencies, check specific time
-        scheduled_time_str = self.schedule_config.get('time')
+        scheduled_time_str = self.schedule_config.get("time")
         if scheduled_time_str:
-            scheduled_time = datetime.datetime.strptime(scheduled_time_str, '%H:%M').time()
-            
+            scheduled_time = datetime.datetime.strptime(
+                scheduled_time_str, "%H:%M"
+            ).time()
+
             # Check if it's the right time (within 1 minute)
-            if abs((now.time().hour * 60 + now.time().minute) - 
-                   (scheduled_time.hour * 60 + scheduled_time.minute)) <= 1:
-                
+            if (
+                abs(
+                    (now.time().hour * 60 + now.time().minute)
+                    - (scheduled_time.hour * 60 + scheduled_time.minute)
+                )
+                <= 1
+            ):
                 # Start scheduled backup
                 self.logger.info("Starting scheduled backup")
                 self.start_backup()
-                
+
                 # Update last run time
                 last_run_file.touch()
-    
+
     def closeEvent(self, event):
         """Handle application close event"""
         self.logger.info("Close event triggered")
-        
+
         if self.tray_icon:
             self.logger.info("System tray is available, minimizing to tray")
-            
-            if self.schedule_config and self.schedule_config.get('run_background', False):
+
+            if self.schedule_config and self.schedule_config.get(
+                "run_background", False
+            ):
                 # Hide to tray instead of closing
                 self.logger.info("Hiding to tray (scheduled backups enabled)")
                 self.hide()
@@ -917,7 +1002,7 @@ class BlackBlazeBackupApp(QMainWindow):
                     "BlackBlaze Backup is running in the background.\n"
                     "Double-click the tray icon to show the window.",
                     QSystemTrayIcon.Information,
-                    5000
+                    5000,
                 )
             else:
                 # Always minimize to tray
@@ -928,20 +1013,20 @@ class BlackBlazeBackupApp(QMainWindow):
                     "BlackBlaze Backup is running in the background.\n"
                     "Right-click the tray icon for options.",
                     QSystemTrayIcon.Information,
-                    3000
+                    3000,
                 )
             event.ignore()
         else:
             self.logger.info("System tray not available, minimizing to background")
-            
+
             # Always minimize to background
             self.hide()
             event.ignore()
-    
+
     def minimize_to_background(self):
         """Minimize application to background (Ubuntu compatible)"""
         self.logger.info("Minimizing to background")
-        
+
         if self.tray_icon and self.tray_icon.isVisible():
             # Use system tray if available
             self.hide()
@@ -950,7 +1035,7 @@ class BlackBlazeBackupApp(QMainWindow):
                 "BlackBlaze Backup is running in the background.\n"
                 "Right-click the tray icon for options.",
                 QSystemTrayIcon.Information,
-                3000
+                3000,
             )
         else:
             # Fallback for systems without system tray
@@ -960,17 +1045,17 @@ class BlackBlazeBackupApp(QMainWindow):
 def main():
     """Main application entry point"""
     app = QApplication(sys.argv)
-    
+
     # Set application properties
     app.setApplicationName("BlackBlaze B2 Backup Tool")
     app.setApplicationVersion("1.0.0")
     app.setOrganizationName("BlackBlaze Backup")
-    
+
     # Create and show main window
     try:
         window = BlackBlazeBackupApp()
         window.show()
-        
+
         # Start event loop
         sys.exit(app.exec())
     except Exception as e:

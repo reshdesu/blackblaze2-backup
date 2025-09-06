@@ -1,0 +1,153 @@
+name: Build Windows MSI Installer
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  build-msi:
+    name: Build Windows MSI with WiX
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v2
+      with:
+        version: "latest"
+    
+    - name: Install dependencies
+      run: |
+        uv venv
+        .venv\Scripts\activate
+        uv pip install -e ".[build]"
+        uv pip install pyinstaller
+    
+    - name: Build executable
+      run: |
+        .venv\Scripts\activate
+        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" --icon=src/blackblaze_backup/icon.svg main.py
+    
+    - name: Install WiX Toolset
+      uses: wix/setup-wix@v1
+      with:
+        version: '3.11.2'
+    
+    - name: Create WiX configuration
+      run: |
+        mkdir installer
+        $version = "1.0.0"
+        $productId = [System.Guid]::NewGuid().ToString().ToUpper()
+        $upgradeId = [System.Guid]::NewGuid().ToString().ToUpper()
+        
+        @"
+        <?xml version="1.0" encoding="UTF-8"?>
+        <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+          <Product Id="{$productId}" 
+                   Name="BlackBlaze B2 Backup Tool" 
+                   Language="1033" 
+                   Version="{$version}" 
+                   Manufacturer="BlackBlaze B2 Backup Tool Contributors" 
+                   UpgradeCode="{$upgradeId}">
+            
+            <Package InstallerVersion="200" 
+                     Compressed="yes" 
+                     InstallScope="perMachine" 
+                     Description="Cross-platform backup tool for BackBlaze B2" />
+            
+            <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+            <MediaTemplate EmbedCab="yes" />
+            
+            <Feature Id="ProductFeature" Title="BlackBlaze B2 Backup Tool" Level="1">
+              <ComponentGroupRef Id="ProductComponents" />
+            </Feature>
+            
+            <Directory Id="TARGETDIR" Name="SourceDir">
+              <Directory Id="ProgramFilesFolder">
+                <Directory Id="INSTALLFOLDER" Name="BlackBlazeBackupTool" />
+              </Directory>
+              <Directory Id="ProgramMenuFolder">
+                <Directory Id="ProgramMenuDir" Name="BlackBlaze B2 Backup Tool">
+                  <Component Id="ApplicationShortcut" Guid="*">
+                    <Shortcut Id="ApplicationStartMenuShortcut"
+                              Directory="ProgramMenuDir"
+                              Name="BlackBlaze B2 Backup Tool"
+                              WorkingDirectory="INSTALLFOLDER"
+                              Icon="ApplicationIcon"
+                              IconIndex="0"
+                              Advertise="yes" />
+                    <RemoveFolder Id="ProgramMenuDir" On="uninstall" />
+                    <RegistryValue Root="HKCU" Key="Software\BlackBlazeBackupTool" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+                  </Component>
+                </Directory>
+              </Directory>
+            </Directory>
+            
+            <Icon Id="ApplicationIcon" SourceFile="src/blackblaze_backup/icon.svg" />
+            
+            <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+              <Component Id="MainExecutable" Guid="*">
+                <File Id="BlackBlazeBackupToolExe" 
+                      Name="BlackBlaze-Backup-Tool.exe" 
+                      Source="dist/BlackBlaze-Backup-Tool.exe" 
+                      KeyPath="yes" />
+              </Component>
+            </ComponentGroup>
+            
+            <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+            <UIRef Id="WixUI_Minimal" />
+            <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+            
+          </Product>
+        </Wix>
+        "@ | Out-File -FilePath "installer/product.wxs" -Encoding UTF8
+        
+        # Create license file
+        @"
+        {\rtf1\ansi\deff0 {\fonttbl {\f0 Times New Roman;}}
+        \f0\fs24 BlackBlaze B2 Backup Tool License Agreement
+        
+        MIT License
+        
+        Copyright (c) 2025 BlackBlaze B2 Backup Tool Contributors
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        }
+        "@ | Out-File -FilePath "installer/license.rtf" -Encoding UTF8
+    
+    - name: Build MSI installer
+      run: |
+        cd installer
+        candle product.wxs
+        light product.wixobj -o BlackBlaze-Backup-Tool.msi
+    
+    - name: Upload MSI artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: blackblaze-backup-windows-msi-wix
+        path: installer/BlackBlaze-Backup-Tool.msi

@@ -10,17 +10,17 @@ __email__ = "reshdesu@users.noreply.github.com"
 __description__ = "A cross-platform GUI application for backing up local folders to BackBlaze B2 S3 buckets"
 
 from .core import (
-    BackupService,
-    BackupManager,
     BackupConfig,
+    BackupManager,
     BackupProgressTracker,
-    CredentialManager
+    BackupService,
+    CredentialManager,
 )
 from .gui import BlackBlazeBackupApp, main
 
 __all__ = [
     "BackupService",
-    "BackupManager", 
+    "BackupManager",
     "BackupConfig",
     "BackupProgressTracker",
     "CredentialManager",
@@ -29,5 +29,5 @@ __all__ = [
     "__version__",
     "__author__",
     "__email__",
-    "__description__"
+    "__description__",
 ]
