@@ -20,6 +20,7 @@ from .core import (
 # Import GUI components only when available (avoid CI issues)
 try:
     from .gui import BlackBlazeBackupApp, main
+
     _GUI_AVAILABLE = True
 except ImportError:
     # GUI not available (e.g., in CI environment without Qt)
