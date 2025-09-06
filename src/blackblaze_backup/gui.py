@@ -13,12 +13,75 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
     QPushButton, QLabel, QLineEdit, QTextEdit, QTreeWidget, QTreeWidgetItem,
     QGroupBox, QCheckBox, QComboBox, QProgressBar, QMessageBox, QFileDialog,
-    QSplitter, QTabWidget, QFormLayout, QSpinBox, QFrame
+    QSplitter, QTabWidget, QFormLayout, QSpinBox, QFrame, QSystemTrayIcon,
+    QMenu, QDialog, QDialogButtonBox, QTimeEdit, QCalendarWidget
 )
-from PySide6.QtCore import Qt, QThread, Signal, QTimer
-from PySide6.QtGui import QFont, QIcon, QPixmap
+from PySide6.QtCore import Qt, QThread, Signal, QTimer, QTime
+from PySide6.QtGui import QFont, QIcon, QPixmap, QAction
 
 from .core import BackupService
+
+
+class ScheduleDialog(QDialog):
+    """Dialog for setting up scheduled backups"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Schedule Automatic Backups")
+        self.setModal(True)
+        self.resize(400, 300)
+        
+        layout = QVBoxLayout(self)
+        
+        # Enable scheduled backups
+        self.enable_schedule = QCheckBox("Enable automatic backups")
+        layout.addWidget(self.enable_schedule)
+        
+        # Schedule settings
+        schedule_group = QGroupBox("Schedule Settings")
+        schedule_layout = QFormLayout(schedule_group)
+        
+        # Backup frequency
+        self.frequency_combo = QComboBox()
+        self.frequency_combo.addItems([
+            "Daily", "Every 2 days", "Weekly", "Every 2 weeks", "Monthly"
+        ])
+        schedule_layout.addRow("Frequency:", self.frequency_combo)
+        
+        # Backup time
+        self.time_edit = QTimeEdit()
+        self.time_edit.setTime(QTime(2, 0))  # Default to 2:00 AM
+        schedule_layout.addRow("Time:", self.time_edit)
+        
+        # Run in background
+        self.run_background = QCheckBox("Run in background (minimize to system tray)")
+        self.run_background.setChecked(True)
+        schedule_layout.addRow("", self.run_background)
+        
+        layout.addWidget(schedule_group)
+        
+        # Buttons
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+    
+    def get_schedule_config(self):
+        """Get the schedule configuration"""
+        frequency_map = {
+            "Daily": 24,
+            "Every 2 days": 48,
+            "Weekly": 168,
+            "Every 2 weeks": 336,
+            "Monthly": 720
+        }
+        
+        return {
+            "enabled": self.enable_schedule.isChecked(),
+            "interval_hours": frequency_map[self.frequency_combo.currentText()],
+            "time": self.time_edit.time().toString("hh:mm"),
+            "run_background": self.run_background.isChecked()
+        }
 
 
 class BackupWorker(QThread):
@@ -63,8 +126,13 @@ class BlackBlazeBackupApp(QMainWindow):
         super().__init__()
         self.backup_service = BackupService()
         self.backup_worker = None
+        self.tray_icon = None
+        self.schedule_timer = None
+        self.schedule_config = None
         self.setup_ui()
         self.setup_logging()
+        self.setup_system_tray()
+        self.load_schedule_config()
         
     def setup_logging(self):
         """Setup logging configuration"""
@@ -217,6 +285,11 @@ class BlackBlazeBackupApp(QMainWindow):
         self.cancel_backup_btn.clicked.connect(self.cancel_backup)
         self.cancel_backup_btn.setEnabled(False)
         controls_layout.addWidget(self.cancel_backup_btn)
+        
+        # Schedule button
+        schedule_btn = QPushButton("Schedule Automatic Backups")
+        schedule_btn.clicked.connect(self.show_schedule_dialog)
+        controls_layout.addWidget(schedule_btn)
         
         layout.addLayout(controls_layout)
         
@@ -401,8 +474,193 @@ class BlackBlazeBackupApp(QMainWindow):
         
         if success:
             QMessageBox.information(self, "Backup Complete", "Backup completed successfully!")
+            if self.tray_icon:
+                self.tray_icon.showMessage(
+                    "Backup Complete",
+                    "Backup completed successfully!",
+                    QSystemTrayIcon.Information,
+                    5000
+                )
         else:
             QMessageBox.warning(self, "Backup Failed", "Backup failed. Check the log for details.")
+            if self.tray_icon:
+                self.tray_icon.showMessage(
+                    "Backup Failed",
+                    "Backup failed. Check logs for details.",
+                    QSystemTrayIcon.Critical,
+                    5000
+                )
+    
+    def setup_system_tray(self):
+        """Setup system tray icon"""
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            return
+        
+        # Create a simple icon
+        pixmap = QPixmap(32, 32)
+        pixmap.fill("blue")
+        icon = QIcon(pixmap)
+        
+        # Create system tray icon
+        self.tray_icon = QSystemTrayIcon(icon, self)
+        self.tray_icon.setToolTip("BlackBlaze B2 Backup Tool")
+        
+        # Create context menu
+        menu = QMenu()
+        
+        # Show/Hide window action
+        self.show_action = menu.addAction("Show Window")
+        self.show_action.triggered.connect(self.show)
+        
+        # Start backup action
+        start_backup_action = menu.addAction("Start Backup Now")
+        start_backup_action.triggered.connect(self.start_backup)
+        
+        # Schedule action
+        schedule_action = menu.addAction("Schedule Backups")
+        schedule_action.triggered.connect(self.show_schedule_dialog)
+        
+        menu.addSeparator()
+        
+        # Exit action
+        exit_action = menu.addAction("Exit")
+        exit_action.triggered.connect(self.quit)
+        
+        self.tray_icon.setContextMenu(menu)
+        self.tray_icon.activated.connect(self.tray_icon_activated)
+        self.tray_icon.show()
+    
+    def tray_icon_activated(self, reason):
+        """Handle tray icon activation"""
+        if reason == QSystemTrayIcon.DoubleClick:
+            self.show()
+            self.raise_()
+            self.activateWindow()
+    
+    def show_schedule_dialog(self):
+        """Show schedule dialog"""
+        dialog = ScheduleDialog(self)
+        if dialog.exec() == QDialog.Accepted:
+            self.schedule_config = dialog.get_schedule_config()
+            self.save_schedule_config()
+            self.setup_schedule_timer()
+            
+            if self.schedule_config.get('run_background', False):
+                QMessageBox.information(
+                    self, 
+                    "Background Mode", 
+                    "Scheduled backups will run in the background.\n"
+                    "You can minimize the window to system tray."
+                )
+    
+    def load_schedule_config(self):
+        """Load schedule configuration from file"""
+        try:
+            config_file = Path.home() / ".blackblaze_backup" / "schedule.json"
+            if config_file.exists():
+                import json
+                with open(config_file, 'r') as f:
+                    self.schedule_config = json.load(f)
+                self.setup_schedule_timer()
+        except Exception as e:
+            self.logger.error(f"Error loading schedule config: {e}")
+    
+    def save_schedule_config(self):
+        """Save schedule configuration to file"""
+        try:
+            config_file = Path.home() / ".blackblaze_backup" / "schedule.json"
+            config_file.parent.mkdir(exist_ok=True)
+            
+            import json
+            with open(config_file, 'w') as f:
+                json.dump(self.schedule_config, f, indent=2)
+        except Exception as e:
+            self.logger.error(f"Error saving schedule config: {e}")
+    
+    def setup_schedule_timer(self):
+        """Setup scheduled backup timer"""
+        if self.schedule_timer:
+            self.schedule_timer.stop()
+        
+        if not self.schedule_config or not self.schedule_config.get('enabled', False):
+            return
+        
+        # Check every minute for scheduled backups
+        self.schedule_timer = QTimer()
+        self.schedule_timer.timeout.connect(self.check_scheduled_backup)
+        self.schedule_timer.start(60000)  # 1 minute
+        
+        self.logger.info("Scheduled backups enabled")
+    
+    def check_scheduled_backup(self):
+        """Check if it's time for a scheduled backup"""
+        if not self.schedule_config or not self.schedule_config.get('enabled', False):
+            return
+        
+        # Simple time-based scheduling (you can enhance this)
+        import datetime
+        now = datetime.datetime.now()
+        scheduled_time = datetime.datetime.strptime(
+            self.schedule_config.get('time', '02:00'), 
+            '%H:%M'
+        ).time()
+        
+        # Check if it's the right time (within 1 minute)
+        if abs((now.time().hour * 60 + now.time().minute) - 
+               (scheduled_time.hour * 60 + scheduled_time.minute)) <= 1:
+            
+            # Check if we haven't run recently (within the interval)
+            last_run_file = Path.home() / ".blackblaze_backup" / "last_backup"
+            if last_run_file.exists():
+                last_run = datetime.datetime.fromtimestamp(last_run_file.stat().st_mtime)
+                interval_hours = self.schedule_config.get('interval_hours', 24)
+                if (now - last_run).total_seconds() < interval_hours * 3600:
+                    return
+            
+            # Start scheduled backup
+            self.logger.info("Starting scheduled backup")
+            self.start_backup()
+            
+            # Update last run time
+            last_run_file.touch()
+    
+    def closeEvent(self, event):
+        """Handle application close event"""
+        if self.tray_icon and self.tray_icon.isVisible():
+            if self.schedule_config and self.schedule_config.get('run_background', False):
+                # Hide to tray instead of closing
+                self.hide()
+                self.tray_icon.showMessage(
+                    "Running in Background",
+                    "BlackBlaze Backup is running in the background.\n"
+                    "Double-click the tray icon to show the window.",
+                    QSystemTrayIcon.Information,
+                    5000
+                )
+                event.ignore()
+            else:
+                # Ask user if they want to close or minimize to tray
+                reply = QMessageBox.question(
+                    self, 
+                    "Exit Application",
+                    "Do you want to exit the application or minimize to system tray?",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No
+                )
+                
+                if reply == QMessageBox.No:
+                    self.hide()
+                    self.tray_icon.showMessage(
+                        "Minimized to Tray",
+                        "BlackBlaze Backup is running in the background.",
+                        QSystemTrayIcon.Information,
+                        3000
+                    )
+                    event.ignore()
+                else:
+                    event.accept()
+        else:
+            event.accept()
 
 
 def main():

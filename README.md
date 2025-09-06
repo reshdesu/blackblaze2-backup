@@ -6,6 +6,8 @@ A cross-platform GUI application for backing up local folders to BackBlaze B2 S3
 
 - **Cross-platform**: Runs on Windows and Ubuntu 24.04
 - **Simple GUI**: Minimalistic interface built with PySide6 (Qt for Python)
+- **Background Operation**: Runs backups in the background with system tray support
+- **Automatic Scheduling**: Set up automatic backups (daily, weekly, monthly)
 - **Flexible Backup Options**:
   - Upload all folders to a single bucket
   - Upload different folders to different buckets
@@ -162,6 +164,19 @@ flake8 .
    - Click "Start Backup" to begin the process
    - Monitor progress and status updates
    - Cancel if needed
+
+4. **Schedule Automatic Backups**:
+   - Click "Schedule Automatic Backups" button
+   - Choose frequency (daily, weekly, monthly)
+   - Set backup time (default: 2:00 AM)
+   - Enable "Run in background" to minimize to system tray
+   - The app will run backups automatically in the background
+
+5. **Background Operation**:
+   - When you close the app, it will ask if you want to minimize to system tray
+   - If scheduled backups are enabled, the app will continue running in the background
+   - Double-click the system tray icon to show the window again
+   - Right-click the tray icon for quick actions (Start Backup, Schedule, Exit)
 
 ## BackBlaze B2 Setup
 

@@ -35,6 +35,8 @@ build = [
 [project.scripts]
 bb2backup = "blackblaze_backup.gui:main"
 blackblaze-backup = "blackblaze_backup.gui:main"
+bb2backup-cli = "cli:main"
+bb2backup-tray = "tray:main"
 
 [build-system]
 requires = ["hatchling"]
