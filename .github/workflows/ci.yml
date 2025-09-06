@@ -93,10 +93,18 @@ jobs:
       with:
         version: "latest"
     
-    - name: Install dependencies
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
       run: |
         uv venv
         source .venv/bin/activate
+        uv pip install -e ".[build]"
+    
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        uv venv
+        .venv\Scripts\activate
         uv pip install -e ".[build]"
     
     - name: Build executable (Ubuntu)
