@@ -20,7 +20,31 @@ A cross-platform GUI application for backing up local folders to BackBlaze B2 S3
 - BackBlaze B2 account with S3-compatible API access
 - `uv` package manager (automatically installed by build scripts)
 
-## Installation
+## Quick Start
+
+### Using uv (Recommended)
+```bash
+# Clone the repository
+git clone https://github.com/reshdesu/blackblaze2-backup.git
+cd blackblaze2-backup
+
+# Run directly with uv (installs dependencies automatically)
+uv run python main.py
+```
+
+### Using Run Scripts
+```bash
+# Ubuntu/Linux
+./run.sh
+
+# Windows
+run.bat
+
+# Cross-platform Python script
+python run.py
+```
+
+### Traditional Installation
 
 ### Ubuntu 24.04
 
@@ -42,6 +66,13 @@ uv pip install PySide6 boto3 botocore cryptography keyring
 
 4. Run the application:
 ```bash
+# Using uv (recommended)
+uv run python main.py
+
+# Or using the run script
+./run.sh
+
+# Or directly with Python
 python3 main.py
 ```
 
@@ -63,6 +94,13 @@ uv pip install PySide6 boto3 botocore cryptography keyring
 
 5. Run the application:
 ```cmd
+REM Using uv (recommended)
+uv run python main.py
+
+REM Or using the run script
+run.bat
+
+REM Or directly with Python
 python main.py
 ```
 
