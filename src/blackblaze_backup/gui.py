@@ -437,6 +437,11 @@ class BlackBlazeBackupApp(QMainWindow):
         schedule_btn.clicked.connect(self.show_schedule_dialog)
         controls_layout.addWidget(schedule_btn)
 
+        # Disable schedule button
+        disable_schedule_btn = QPushButton("Disable Automatic Backups")
+        disable_schedule_btn.clicked.connect(self.disable_schedule)
+        controls_layout.addWidget(disable_schedule_btn)
+
         layout.addLayout(controls_layout)
 
         # Backup options
@@ -810,6 +815,38 @@ class BlackBlazeBackupApp(QMainWindow):
                     "Scheduled backups will run in the background.\n"
                     "You can minimize the window to system tray.",
                 )
+
+    def disable_schedule(self):
+        """Disable automatic backups"""
+        reply = QMessageBox.question(
+            self,
+            "Disable Automatic Backups",
+            "Are you sure you want to disable automatic backups?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+        
+        if reply == QMessageBox.Yes:
+            # Clear schedule config
+            self.schedule_config = None
+            
+            # Stop the timer
+            if self.schedule_timer:
+                self.schedule_timer.stop()
+                self.schedule_timer = None
+            
+            # Update status
+            self.update_schedule_status()
+            
+            # Save the disabled state
+            self.save_schedule_config()
+            
+            QMessageBox.information(
+                self,
+                "Automatic Backups Disabled",
+                "Automatic backups have been disabled.\n"
+                "You can re-enable them anytime using the Schedule button.",
+            )
 
     def load_schedule_config(self):
         """Load schedule configuration from file"""
