@@ -45,7 +45,7 @@ jobs:
     - name: Run unit tests
       run: |
         source .venv/bin/activate
-        pytest tests/test_core.py -v --cov=src/blackblaze_backup --cov-report=xml
+        pytest tests/test_core.py -v --cov=src/blackblaze_backup --cov-report=xml -p no:qt
     
     - name: Run GUI tests (Ubuntu only)
       if: matrix.python-version == '3.12'
