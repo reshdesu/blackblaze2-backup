@@ -218,7 +218,11 @@ class BackupProgressTracker:
         if self.total_folders == 0:
             return 0
 
-        # Calculate progress based on completed folders and files within current folder
+        # If all folders are completed, we're at 100%
+        if self.completed_folders >= self.total_folders:
+            return 100
+
+        # Calculate progress based on completed folders
         folder_progress = self.completed_folders / self.total_folders
 
         # Add progress from current folder if we're working on it
@@ -348,6 +352,9 @@ class BackupService:
             if not self.backup_manager.cancelled:
                 if status_callback:
                     status_callback("Backup completed successfully!")
+                # Ensure progress shows 100% when backup completes
+                if progress_callback:
+                    progress_callback(100)
                 return True
             else:
                 if status_callback:
