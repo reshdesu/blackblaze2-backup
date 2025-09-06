@@ -124,7 +124,7 @@ class TestBackupManager:
         file_path = Path("/home/user/documents/subdir/file.txt")
 
         s3_key = self.backup_manager.calculate_s3_key(file_path, base_folder)
-        assert s3_key == "subdir/file.txt"
+        assert s3_key == "documents/subdir/file.txt"
 
     @patch("boto3.client")
     def test_create_s3_client(self, mock_boto_client):
