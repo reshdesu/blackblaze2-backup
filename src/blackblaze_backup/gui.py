@@ -989,7 +989,13 @@ class BlackBlazeBackupApp(QMainWindow):
         frequency = self.schedule_config.get("interval_hours", 24)
         time_str = self.schedule_config.get("time")
 
-        if frequency == 1:
+        if frequency == 0.017:  # Test (1 minute)
+            status_text = "Scheduled: Test backups every 1 minute"
+            status_style = "color: #FF9800; font-weight: bold;"  # Orange for test mode
+        elif frequency == 0.083:  # Test (5 minutes)
+            status_text = "Scheduled: Test backups every 5 minutes"
+            status_style = "color: #FF9800; font-weight: bold;"  # Orange for test mode
+        elif frequency == 1:
             status_text = "Scheduled: Hourly backups"
             status_style = "color: #2E7D32; font-weight: bold;"
         elif frequency == 24:
