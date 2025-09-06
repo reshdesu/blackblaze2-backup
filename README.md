@@ -22,6 +22,11 @@ A cross-platform GUI application for backing up local folders to BackBlaze B2 S3
 
 ## Quick Start
 
+### One-Line Command (Easiest)
+```bash
+git clone https://github.com/reshdesu/blackblaze2-backup.git && cd blackblaze2-backup && uv run bb2backup
+```
+
 ### Using uv (Recommended)
 ```bash
 # Clone the repository
@@ -29,7 +34,7 @@ git clone https://github.com/reshdesu/blackblaze2-backup.git
 cd blackblaze2-backup
 
 # Run directly with uv (installs dependencies automatically)
-uv run python main.py
+uv run bb2backup
 ```
 
 ### Using Run Scripts
