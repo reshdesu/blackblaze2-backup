@@ -28,6 +28,26 @@ def setup_logging():
 
 def main():
     """Main application entry point"""
+    import subprocess
+    import os
+    
+    # Kill any existing instances before starting
+    try:
+        # Find and kill existing bb2backup processes
+        result = subprocess.run(['pgrep', '-f', 'bb2backup'], 
+                              capture_output=True, text=True)
+        if result.stdout.strip():
+            pids = result.stdout.strip().split('\n')
+            for pid in pids:
+                if pid and pid != str(os.getpid()):  # Don't kill ourselves
+                    try:
+                        subprocess.run(['kill', pid], check=True)
+                        print(f"Killed existing bb2backup process (PID: {pid})")
+                    except subprocess.CalledProcessError:
+                        pass  # Process might have already exited
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass  # pgrep or kill commands not available, continue anyway
+    
     setup_logging()
     
     app = QApplication(sys.argv)
@@ -38,11 +58,15 @@ def main():
     app.setOrganizationName("BlackBlaze Backup")
     
     # Create and show main window
-    window = BlackBlazeBackupApp()
-    window.show()
-    
-    # Start event loop
-    sys.exit(app.exec())
+    try:
+        window = BlackBlazeBackupApp()
+        window.show()
+        
+        # Start event loop
+        sys.exit(app.exec())
+    except Exception as e:
+        logging.error(f"Error starting application: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

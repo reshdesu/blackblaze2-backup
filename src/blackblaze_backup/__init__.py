@@ -16,7 +16,7 @@ from .core import (
     BackupProgressTracker,
     CredentialManager
 )
-from .gui import BlackBlazeBackupApp
+from .gui import BlackBlazeBackupApp, main
 
 __all__ = [
     "BackupService",
@@ -25,6 +25,7 @@ __all__ = [
     "BackupProgressTracker",
     "CredentialManager",
     "BlackBlazeBackupApp",
+    "main",
     "__version__",
     "__author__",
     "__email__",

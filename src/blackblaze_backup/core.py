@@ -106,7 +106,9 @@ class BackupManager:
     def calculate_s3_key(self, file_path: Path, base_folder: Path) -> str:
         """Calculate the S3 key for a file based on its relative path"""
         relative_path = file_path.relative_to(base_folder)
-        return str(relative_path).replace('\\', '/')
+        # Create a folder with the same name as the base folder and put files inside it
+        folder_name = base_folder.name
+        return f"{folder_name}/{relative_path}".replace('\\', '/')
     
     def upload_file(self, s3_client, file_path: Path, bucket_name: str, s3_key: str) -> bool:
         """Upload a single file to S3"""
@@ -212,7 +214,16 @@ class BackupProgressTracker:
         """Get overall backup progress percentage"""
         if self.total_folders == 0:
             return 0
-        return int((self.completed_folders / self.total_folders) * 100)
+        
+        # Calculate progress based on completed folders and files within current folder
+        folder_progress = self.completed_folders / self.total_folders
+        
+        # Add progress from current folder if we're working on it
+        if self.current_folder and self.total_files > 0:
+            current_folder_progress = self.completed_files / self.total_files
+            folder_progress += current_folder_progress / self.total_folders
+        
+        return int(folder_progress * 100)
     
     def get_folder_progress(self) -> int:
         """Get current folder progress percentage"""
@@ -300,9 +311,13 @@ class BackupService:
                 
                 # Upload files
                 folder_path_obj = Path(folder_path)
-                for file_path in files:
+                for i, file_path in enumerate(files):
                     if self.backup_manager.cancelled:
                         break
+                    
+                    # Update status for each file
+                    if status_callback:
+                        status_callback(f"Uploading: {Path(file_path).name}")
                     
                     s3_key = self.backup_manager.calculate_s3_key(file_path, folder_path_obj)
                     success = self.backup_manager.upload_file(s3_client, file_path, bucket_name, s3_key)
@@ -316,6 +331,8 @@ class BackupService:
                             error_callback(f"Failed to upload: {file_path}")
                 
                 self.progress_tracker.complete_folder()
+                if progress_callback:
+                    progress_callback(self.progress_tracker.get_overall_progress())
             
             if not self.backup_manager.cancelled:
                 if status_callback:

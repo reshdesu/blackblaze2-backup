@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QTabWidget, QPushButton, QCheckBox, QProgressBar
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
 

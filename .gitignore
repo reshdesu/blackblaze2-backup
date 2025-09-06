@@ -154,6 +154,9 @@ Thumbs.db
 temp/
 tmp/
 
+# Test files with credentials
+test_credentials.py
+
 # Backup files
 *.bak
 *.backup
@@ -165,6 +168,7 @@ config.json
 .env.local
 .env.production
 .env.staging
+*.env
 *.key
 *.pem
 *.p12
