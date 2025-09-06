@@ -811,14 +811,6 @@ class BlackBlazeBackupApp(QMainWindow):
             self.save_schedule_config()
             self.setup_schedule_timer()
 
-            if self.schedule_config.get("run_background", False):
-                QMessageBox.information(
-                    self,
-                    "Background Mode",
-                    "Scheduled backups will run in the background.\n"
-                    "You can minimize the window to system tray.",
-                )
-
     def disable_schedule(self):
         """Disable automatic backups"""
         # Clear schedule config
