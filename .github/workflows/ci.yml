@@ -34,7 +34,8 @@ jobs:
       run: |
         uv venv
         source .venv/bin/activate
-        uv pip install -e ".[dev]"
+        uv pip install -e .
+        uv pip install -r requirements-ci.txt
     
     - name: Run linting
       run: |
@@ -45,7 +46,7 @@ jobs:
     - name: Run unit tests
       run: |
         source .venv/bin/activate
-        pytest tests/test_core.py -v --cov=src/blackblaze_backup --cov-report=xml -p no:qt
+        pytest tests/test_core.py -v --cov=src/blackblaze_backup --cov-report=xml
     
     - name: Run GUI tests (Ubuntu only)
       if: matrix.python-version == '3.12'
