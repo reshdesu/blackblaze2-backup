@@ -240,17 +240,17 @@ class BlackBlazeBackupApp(QMainWindow):
         try:
             config_dir = Path.home() / ".blackblaze_backup"
             config_dir.mkdir(exist_ok=True)
-            
+
             config_file = config_dir / "incremental_backup.json"
             import json
-            
+
             config = {
                 "incremental_backup_enabled": self.incremental_backup_check.isChecked()
             }
-            
+
             with open(config_file, "w") as f:
                 json.dump(config, f)
-                
+
         except Exception as e:
             self.logger.error(f"Error saving incremental backup setting: {e}")
 
@@ -260,7 +260,7 @@ class BlackBlazeBackupApp(QMainWindow):
             config_file = Path.home() / ".blackblaze_backup" / "incremental_backup.json"
             if config_file.exists():
                 import json
-                with open(config_file, "r") as f:
+                with open(config_file) as f:
                     config = json.load(f)
                     self.incremental_backup_check.setChecked(
                         config.get("incremental_backup_enabled", True)
@@ -450,13 +450,13 @@ class BlackBlazeBackupApp(QMainWindow):
         # Backup options
         options_group = QGroupBox("Backup Options")
         options_layout = QVBoxLayout(options_group)
-        
+
         # Incremental backup checkbox
         self.incremental_backup_check = QCheckBox("Enable incremental backup (only upload changed files)")
         self.incremental_backup_check.setChecked(True)  # Default to enabled
         self.incremental_backup_check.setToolTip("When enabled, only files that have changed will be uploaded, making backups faster and more efficient.")
         options_layout.addWidget(self.incremental_backup_check)
-        
+
         layout.addWidget(options_group)
 
         # Schedule status display
@@ -815,18 +815,18 @@ class BlackBlazeBackupApp(QMainWindow):
         """Disable automatic backups"""
         # Clear schedule config
         self.schedule_config = None
-        
+
         # Stop the timer
         if self.schedule_timer:
             self.schedule_timer.stop()
             self.schedule_timer = None
-        
+
         # Update status
         self.update_schedule_status()
-        
+
         # Save the disabled state
         self.save_schedule_config()
-        
+
         # Show status message instead of popup
         self.statusBar().showMessage("Automatic backups disabled. You can re-enable them using the Schedule button.", 5000)
 
@@ -853,7 +853,7 @@ class BlackBlazeBackupApp(QMainWindow):
 
             with open(config_file, "w") as f:
                 json.dump(self.schedule_config, f, indent=2)
-            
+
             # Update button state after saving schedule
             self.update_schedule_status()
         except Exception as e:
@@ -972,7 +972,7 @@ class BlackBlazeBackupApp(QMainWindow):
             # Disable the disable button when no schedule is active
             self.disable_schedule_btn.setEnabled(False)
             return
-        
+
         # Enable the disable button when schedule is active
         self.disable_schedule_btn.setEnabled(True)
 
