@@ -141,9 +141,10 @@ class BackupWorker(QThread):
     error_occurred = Signal(str)
     backup_completed = Signal(bool)
 
-    def __init__(self, backup_service: BackupService):
+    def __init__(self, backup_service: BackupService, incremental: bool = True):
         super().__init__()
         self.backup_service = backup_service
+        self.incremental = incremental
 
     def run(self):
         """Execute the backup process"""
@@ -161,6 +162,7 @@ class BackupWorker(QThread):
             progress_callback=progress_callback,
             status_callback=status_callback,
             error_callback=error_callback,
+            incremental=self.incremental,
         )
 
         self.backup_completed.emit(success)
@@ -189,6 +191,7 @@ class BlackBlazeBackupApp(QMainWindow):
             self.load_credentials_automatically()  # Auto-load saved credentials
             self.load_schedule_config()
             self.load_folder_config()
+            self.load_incremental_backup_setting()  # Load incremental backup setting
             self.update_schedule_status()
             self.setup_auto_save()
         except Exception as e:
@@ -225,8 +228,45 @@ class BlackBlazeBackupApp(QMainWindow):
             # Save schedule configuration
             if self.schedule_config:
                 self.save_schedule_config()
+            # Save incremental backup setting
+            self.save_incremental_backup_setting()
         except Exception as e:
             self.logger.error(f"Error in auto-save: {e}")
+
+    def save_incremental_backup_setting(self):
+        """Save incremental backup setting to file"""
+        try:
+            config_dir = Path.home() / ".blackblaze_backup"
+            config_dir.mkdir(exist_ok=True)
+            
+            config_file = config_dir / "incremental_backup.json"
+            import json
+            
+            config = {
+                "incremental_backup_enabled": self.incremental_backup_check.isChecked()
+            }
+            
+            with open(config_file, "w") as f:
+                json.dump(config, f)
+                
+        except Exception as e:
+            self.logger.error(f"Error saving incremental backup setting: {e}")
+
+    def load_incremental_backup_setting(self):
+        """Load incremental backup setting from file"""
+        try:
+            config_file = Path.home() / ".blackblaze_backup" / "incremental_backup.json"
+            if config_file.exists():
+                import json
+                with open(config_file, "r") as f:
+                    config = json.load(f)
+                    self.incremental_backup_check.setChecked(
+                        config.get("incremental_backup_enabled", True)
+                    )
+        except Exception as e:
+            self.logger.error(f"Error loading incremental backup setting: {e}")
+            # Default to enabled if loading fails
+            self.incremental_backup_check.setChecked(True)
 
     def update_credentials_status(self):
         """Update credentials status display"""
@@ -398,6 +438,18 @@ class BlackBlazeBackupApp(QMainWindow):
         controls_layout.addWidget(schedule_btn)
 
         layout.addLayout(controls_layout)
+
+        # Backup options
+        options_group = QGroupBox("Backup Options")
+        options_layout = QVBoxLayout(options_group)
+        
+        # Incremental backup checkbox
+        self.incremental_backup_check = QCheckBox("Enable incremental backup (only upload changed files)")
+        self.incremental_backup_check.setChecked(True)  # Default to enabled
+        self.incremental_backup_check.setToolTip("When enabled, only files that have changed will be uploaded, making backups faster and more efficient.")
+        options_layout.addWidget(self.incremental_backup_check)
+        
+        layout.addWidget(options_group)
 
         # Schedule status display
         self.schedule_status = QLabel("No scheduled backups configured")
@@ -596,8 +648,9 @@ class BlackBlazeBackupApp(QMainWindow):
             QMessageBox.warning(self, "Invalid Configuration", message)
             return
 
-        # Start backup worker
-        self.backup_worker = BackupWorker(self.backup_service)
+        # Start backup worker with incremental setting
+        incremental_enabled = self.incremental_backup_check.isChecked()
+        self.backup_worker = BackupWorker(self.backup_service, incremental=incremental_enabled)
         self.backup_worker.progress_updated.connect(self.update_progress)
         self.backup_worker.status_updated.connect(self.update_status)
         self.backup_worker.error_occurred.connect(self.handle_error)
