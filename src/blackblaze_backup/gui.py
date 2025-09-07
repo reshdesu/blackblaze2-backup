@@ -232,13 +232,20 @@ class BlackBlazeBackupApp(QMainWindow):
                 self.text_widget = text_widget
 
             def emit(self, record):
-                msg = self.format(record)
-                # Use QMetaObject.invokeMethod to ensure thread safety
-                from PySide6.QtCore import QMetaObject, Qt
+                # Format the message with timestamp using the UI formatter
+                from datetime import datetime
 
-                QMetaObject.invokeMethod(
-                    self.text_widget, "append", Qt.QueuedConnection, msg
-                )
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                msg = f"{timestamp} - {record.getMessage()}"
+                # Debug: print to console to verify this is being called
+                print(f"UI Handler called: {msg}")
+                # Use QTimer.singleShot for thread safety
+                from PySide6.QtCore import QTimer
+
+                def append_to_ui():
+                    self.text_widget.append(msg)
+
+                QTimer.singleShot(0, append_to_ui)
 
         # Create handlers
         file_handler = logging.FileHandler(log_file_path)
@@ -259,6 +266,10 @@ class BlackBlazeBackupApp(QMainWindow):
             level=logging.INFO,
             handlers=[file_handler, stream_handler, ui_handler],
         )
+
+        # Ensure UI handler is added to root logger
+        root_logger = logging.getLogger()
+        root_logger.addHandler(ui_handler)
         self.logger = logging.getLogger(__name__)
 
         # Add initial log message
@@ -525,12 +536,6 @@ class BlackBlazeBackupApp(QMainWindow):
         # Progress bar
         self.progress_bar = QProgressBar()
         layout.addWidget(self.progress_bar)
-
-        # Status text
-        self.status_text = QTextEdit()
-        self.status_text.setMaximumHeight(200)
-        self.status_text.setReadOnly(True)
-        layout.addWidget(self.status_text)
 
         # Log text
         log_group = QGroupBox("Backup Log")
@@ -845,7 +850,6 @@ class BlackBlazeBackupApp(QMainWindow):
         self.start_backup_btn.setEnabled(False)
         self.cancel_backup_btn.setEnabled(True)
         self.progress_bar.setValue(0)
-        self.status_text.clear()
         self.log_text.clear()
         self.is_backup_running = True  # Set backup running flag
 
@@ -872,12 +876,10 @@ class BlackBlazeBackupApp(QMainWindow):
 
     def update_status(self, message):
         """Update status text"""
-        self.status_text.append(message)
         self.logger.info(message)
 
     def handle_error(self, error_message):
         """Handle backup errors"""
-        self.status_text.append(f"ERROR: {error_message}")
         self.logger.error(error_message)
 
     def backup_finished(self, success):
