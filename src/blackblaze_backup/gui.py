@@ -534,9 +534,10 @@ class BlackBlazeBackupApp(QMainWindow):
         self.schedule_status.setStyleSheet("color: #666; font-style: italic;")
         layout.addWidget(self.schedule_status)
 
-        # Progress bar (indeterminate for better performance)
+        # Progress bar (starts inactive, becomes indeterminate during backup)
         self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 0)  # Indeterminate mode - no percentages
+        self.progress_bar.setRange(0, 100)  # Normal mode by default
+        self.progress_bar.setValue(0)  # Start at 0
         self.progress_bar.setFormat("")  # No text format
         # Ensure the progress bar shows activity on all platforms
         self.progress_bar.setVisible(True)
