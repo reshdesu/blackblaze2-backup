@@ -197,6 +197,7 @@ class BlackBlazeBackupApp(QMainWindow):
             self.schedule_timer = None
             self.schedule_config = None
             self.auto_save_timer = None
+            self.is_backup_running = False  # Track backup state
 
             self.setup_ui()
             self.setup_logging()
@@ -698,6 +699,7 @@ class BlackBlazeBackupApp(QMainWindow):
         self.progress_bar.setValue(0)
         self.status_text.clear()
         self.log_text.clear()
+        self.is_backup_running = True  # Set backup running flag
 
         self.backup_worker.start()
 
@@ -706,6 +708,7 @@ class BlackBlazeBackupApp(QMainWindow):
         if self.backup_worker and self.backup_worker.isRunning():
             self.backup_worker.cancel()
             self.backup_worker.wait()
+            self.is_backup_running = False  # Clear backup running flag
 
     def update_progress(self, value):
         """Update progress bar"""
@@ -725,6 +728,7 @@ class BlackBlazeBackupApp(QMainWindow):
         """Handle backup completion"""
         self.start_backup_btn.setEnabled(True)
         self.cancel_backup_btn.setEnabled(False)
+        self.is_backup_running = False  # Clear backup running flag
 
         if success:
             self.statusBar().showMessage("✅ Backup completed successfully!", 10000)
@@ -1065,6 +1069,16 @@ class BlackBlazeBackupApp(QMainWindow):
     def check_scheduled_backup(self):
         """Check if it's time for a scheduled backup"""
         if not self.schedule_config or not self.schedule_config.get("enabled", False):
+            return
+
+        # Check if a backup is already running
+        if self.backup_worker and self.backup_worker.isRunning():
+            self.logger.info("Skipping scheduled backup - manual backup already in progress")
+            return
+        
+        # Additional check using backup state flag
+        if self.is_backup_running:
+            self.logger.info("Skipping scheduled backup - backup already in progress")
             return
 
         import datetime
