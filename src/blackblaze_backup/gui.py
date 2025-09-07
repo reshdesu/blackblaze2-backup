@@ -225,15 +225,42 @@ class BlackBlazeBackupApp(QMainWindow):
         # Use config directory for log file (user-accessible location)
         log_file_path = config.log_file
 
+        # Custom handler for UI log display
+        class UILogHandler(logging.Handler):
+            def __init__(self, text_widget):
+                super().__init__()
+                self.text_widget = text_widget
+
+            def emit(self, record):
+                msg = self.format(record)
+                # Use QMetaObject.invokeMethod to ensure thread safety
+                from PySide6.QtCore import QMetaObject, Qt
+
+                QMetaObject.invokeMethod(
+                    self.text_widget, "append", Qt.QueuedConnection, msg
+                )
+
+        # Create handlers
+        file_handler = logging.FileHandler(log_file_path)
+        stream_handler = logging.StreamHandler()
+        ui_handler = UILogHandler(self.log_text)
+
+        # Set format
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        file_handler.setFormatter(formatter)
+        stream_handler.setFormatter(formatter)
+        ui_handler.setFormatter(formatter)
+
+        # Configure logging
         logging.basicConfig(
             level=logging.INFO,
-            format="%(asctime)s - %(levelname)s - %(message)s",
-            handlers=[
-                logging.FileHandler(log_file_path),
-                logging.StreamHandler(),
-            ],
+            handlers=[file_handler, stream_handler, ui_handler],
         )
         self.logger = logging.getLogger(__name__)
+
+        # Add initial log message
+        self.logger.info("BlackBlaze B2 Backup Tool started")
+        self.logger.info(f"Log file location: {log_file_path}")
 
     def setup_auto_save(self):
         """Setup automatic saving of configuration"""
@@ -694,11 +721,12 @@ class BlackBlazeBackupApp(QMainWindow):
             self.show_upload_preview()
 
     def show_upload_preview(self):
-        """Show what files will be uploaded before starting"""
+        """Show what files will be uploaded in logs and start backup immediately"""
         try:
             # Get credentials and S3 client
             credentials = self.backup_service.credential_manager.load_credentials()
             if not credentials:
+                self.logger.error("No saved credentials found")
                 QMessageBox.warning(
                     self, "No Credentials", "No saved credentials found."
                 )
@@ -752,7 +780,7 @@ class BlackBlazeBackupApp(QMainWindow):
                     self.logger.warning(f"Error analyzing folder {folder_path}: {e}")
                     continue
 
-            # Show preview dialog
+            # Log upload preview information
             from .utils import format_file_size
 
             upload_count = len(files_to_upload)
@@ -763,35 +791,32 @@ class BlackBlazeBackupApp(QMainWindow):
             mode = "Incremental" if incremental_enabled else "Full"
 
             if upload_count == 0:
-                QMessageBox.information(
-                    self,
-                    "No Upload Needed",
-                    f"All files are already up to date!\n\n"
-                    f"Mode: {mode}\n"
-                    f"Files to skip: {skip_count} ({skip_size_str})",
+                self.logger.info(
+                    f"📋 Upload Analysis Complete - All files up to date! "
+                    f"Mode: {mode}, Files to skip: {skip_count} ({skip_size_str})"
                 )
                 return
 
-            # Show preview and ask for confirmation
-            preview_text = f"""
-{mode} Upload Preview:
-
-📤 Files to upload: {upload_count} ({upload_size_str})
-⏭️ Files to skip: {skip_count} ({skip_size_str})
-
-Do you want to start the upload?
-"""
-
-            reply = QMessageBox.question(
-                self,
-                "Upload Preview",
-                preview_text,
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.Yes,
+            # Log detailed upload preview
+            self.logger.info(
+                f"📋 Upload Analysis Complete - {mode} Mode: "
+                f"📤 {upload_count} files to upload ({upload_size_str}), "
+                f"⏭️ {skip_count} files to skip ({skip_size_str})"
             )
 
-            if reply == QMessageBox.Yes:
-                self.start_backup_immediately(incremental_enabled)
+            # Log first few files to upload for visibility
+            if files_to_upload:
+                sample_files = files_to_upload[:5]  # Show first 5 files
+                self.logger.info(
+                    f"📁 Sample files to upload: {', '.join(sample_files)}"
+                )
+                if len(files_to_upload) > 5:
+                    self.logger.info(
+                        f"📁 ... and {len(files_to_upload) - 5} more files"
+                    )
+
+            # Start backup immediately without popup
+            self.start_backup_immediately(incremental_enabled)
 
         except Exception as e:
             self.logger.error(f"Error in upload preview: {e}")
@@ -801,6 +826,9 @@ Do you want to start the upload?
 
     def start_backup_immediately(self, incremental_enabled):
         """Start backup immediately after preview confirmation"""
+        # Clear log display for new backup
+        self.log_text.clear()
+
         # Reset cancellation state for new backup
         self.backup_service.reset_cancellation()
 
