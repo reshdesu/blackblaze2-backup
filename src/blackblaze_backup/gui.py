@@ -858,11 +858,16 @@ class BlackBlazeBackupApp(QMainWindow):
         self.backup_worker.error_occurred.connect(self.handle_error)
         self.backup_worker.backup_completed.connect(self.backup_finished)
 
+        # Update UI immediately to show backup is starting
         self.start_backup_btn.setEnabled(False)
         self.cancel_backup_btn.setEnabled(True)
         self.progress_bar.setValue(0)
         self.log_text.clear()
         self.is_backup_running = True  # Set backup running flag
+
+        # Show immediate feedback that backup is starting
+        self.logger.info("Starting backup...")
+        self.statusBar().showMessage("Starting backup...", 0)
 
         # Handle folder management based on backup type
         if is_scheduled:
@@ -876,6 +881,7 @@ class BlackBlazeBackupApp(QMainWindow):
             self.remove_folder_btn.setEnabled(False)
             self.folder_tree.setEnabled(False)
 
+        # Start the backup worker
         self.backup_worker.start()
 
     def cancel_backup(self):

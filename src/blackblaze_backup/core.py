@@ -100,14 +100,45 @@ class BackupManager:
         self.cancelled = False
         self.logger.info("Backup cancellation state reset")
 
-    def get_files_to_backup(self, folder_path: str) -> list[Path]:
-        """Get all files in a folder that need to be backed up"""
+    def get_files_to_backup(
+        self, folder_path: str, progress_callback=None
+    ) -> list[Path]:
+        """Get all files in a folder that need to be backed up with progress updates"""
         folder_path_obj = Path(folder_path)
         if not folder_path_obj.exists():
             raise FileNotFoundError(f"Folder not found: {folder_path}")
 
-        files = list(folder_path_obj.rglob("*"))
-        return [f for f in files if f.is_file()]
+        # Use generator to avoid blocking UI during large scans
+        files = []
+        total_scanned = 0
+
+        if progress_callback:
+            progress_callback("Scanning files...")
+
+        # Use rglob with generator to avoid blocking
+        for file_path in folder_path_obj.rglob("*"):
+            if self.cancelled:
+                break
+
+            if file_path.is_file():
+                files.append(file_path)
+
+            total_scanned += 1
+
+            # Update progress every 1000 files to avoid UI blocking
+            if total_scanned % 1000 == 0 and progress_callback:
+                progress_callback(
+                    f"Scanned {total_scanned} items, found {len(files)} files..."
+                )
+                # Small yield to allow UI updates
+                import time
+
+                time.sleep(0.001)  # 1ms yield
+
+        if progress_callback:
+            progress_callback(f"File scan complete: {len(files)} files found")
+
+        return files
 
     def calculate_s3_key(self, file_path: Path, base_folder: Path) -> str:
         """Calculate the S3 key for a file based on its relative path"""
@@ -519,8 +550,10 @@ class BackupService:
                 if status_callback:
                     status_callback(f"Backing up: {folder_path}")
 
-                # Get files to backup
-                files = self.backup_manager.get_files_to_backup(folder_path)
+                # Get files to backup with progress updates
+                files = self.backup_manager.get_files_to_backup(
+                    folder_path, progress_callback
+                )
                 self.progress_tracker.start_folder(folder_path, len(files))
 
                 # Upload files (incremental backup)
