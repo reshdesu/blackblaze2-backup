@@ -238,12 +238,11 @@ jobs:
           ### Downloads
           - **Windows Executable**: `BlackBlaze-Backup-Tool.exe`
           - **Ubuntu Executable**: `BlackBlaze-Backup-Tool`
-          - **Windows MSI Installer**: `BlackBlaze-Backup-Tool-Windows.exe` (if available)
-          - **Ubuntu DEB Package**: `blackblaze-backup-tool_1.0.0_amd64.deb` (if available)
+          - **Ubuntu DEB Package**: `blackblaze-backup-tool_1.0.0_amd64.deb`
           
           ### Installation
           1. Download the appropriate package for your platform
-          2. **Windows**: Run the MSI installer or executable
+          2. **Windows**: Run the `BlackBlaze-Backup-Tool.exe` executable
           3. **Ubuntu**: Install with `sudo dpkg -i blackblaze-backup-tool_1.0.0_amd64.deb` or run executable
           4. Configure your BackBlaze B2 credentials
           5. Select folders to backup

@@ -1,9 +1,10 @@
 name: Build Windows MSI Installer
 
 on:
-  push:
-    branches: [ main ]
-    tags: [ 'v*' ]
+  # Disabled - standalone .exe is sufficient for Windows users
+  # push:
+  #   branches: [ main ]
+  #   tags: [ 'v*' ]
   workflow_dispatch:
 
 jobs:
