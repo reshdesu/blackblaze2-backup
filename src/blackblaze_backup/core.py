@@ -89,11 +89,19 @@ class BackupManager:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.cancelled = False
+        # Cache for deduplication to avoid repeated S3 calls
+        self._hash_cache = {}  # Maps file_hash -> s3_key where it exists
+        self._cache_populated = False
 
     def cancel_backup(self):
         """Cancel the current backup operation"""
         self.cancelled = True
         self.logger.info("Backup cancellation requested")
+
+    def reset_cache(self):
+        """Reset the deduplication cache for a new backup session"""
+        self._hash_cache.clear()
+        self._cache_populated = False
 
     def reset_cancellation(self):
         """Reset the cancellation state for a new backup"""
@@ -264,52 +272,68 @@ class BackupManager:
             )
             return True
 
-    def _file_content_exists_in_s3(
-        self, s3_client, bucket_name: str, file_hash: str
-    ) -> bool:
-        """Check if file content (by hash) already exists anywhere in S3 bucket
+    def _populate_hash_cache(self, s3_client, bucket_name: str) -> None:
+        """Populate the hash cache with all existing file hashes in the bucket
 
-        This is an efficient way to detect duplicate content without scanning all files.
-        Uses S3 metadata to store and lookup file hashes.
+        This is much more efficient than checking each file individually.
+        We only do this once per backup session.
         """
+        if self._cache_populated:
+            return
+
+        self.logger.info("Populating deduplication cache...")
         try:
-            # Use S3 list_objects_v2 to search for files with matching hash metadata
-            # This is much more efficient than scanning all files
             paginator = s3_client.get_paginator("list_objects_v2")
 
             for page in paginator.paginate(Bucket=bucket_name):
                 if "Contents" not in page:
                     continue
 
-                # Check each object's metadata for matching hash
+                # Process objects in batches to get metadata efficiently
                 for obj in page["Contents"]:
                     try:
-                        # Get object metadata
                         response = s3_client.head_object(
                             Bucket=bucket_name, Key=obj["Key"]
                         )
                         metadata = response.get("Metadata", {})
+                        file_hash = metadata.get("file-hash")
 
-                        # Check if hash matches
-                        if metadata.get("file-hash") == file_hash:
-                            self.logger.debug(
-                                f"Found duplicate content at: {obj['Key']}"
-                            )
-                            return True
+                        if file_hash:
+                            self._hash_cache[file_hash] = obj["Key"]
 
                     except Exception as e:
-                        # Skip objects we can't read metadata for
+                        # Skip objects that can't be read
                         self.logger.debug(
                             f"Could not read metadata for {obj['Key']}: {e}"
                         )
                         continue
 
-            return False
+            self._cache_populated = True
+            self.logger.info(
+                f"Deduplication cache populated with {len(self._hash_cache)} file hashes"
+            )
 
         except Exception as e:
-            self.logger.warning(f"Error checking for duplicate content: {e}")
-            # If we can't check, assume it's new content
-            return False
+            self.logger.warning(f"Failed to populate hash cache: {e}")
+            # Continue without cache - deduplication will be less efficient but still work
+
+    def _file_content_exists_in_s3(
+        self, s3_client, bucket_name: str, file_hash: str
+    ) -> bool:
+        """Check if file content (by hash) already exists anywhere in S3 bucket
+
+        Uses cached hash lookup for much better performance.
+        """
+        # Ensure cache is populated
+        self._populate_hash_cache(s3_client, bucket_name)
+
+        # Fast cache lookup
+        if file_hash in self._hash_cache:
+            existing_key = self._hash_cache[file_hash]
+            self.logger.debug(f"Found duplicate content at: {existing_key}")
+            return True
+
+        return False
 
     def upload_file(
         self, s3_client, file_path: Path, bucket_name: str, s3_key: str
@@ -335,6 +359,9 @@ class BackupManager:
             s3_client.upload_file(
                 str(file_path), bucket_name, s3_key, ExtraArgs=extra_args
             )
+
+            # Update cache with new file hash
+            self._hash_cache[file_hash] = s3_key
 
             self.logger.debug(
                 f"Uploaded {file_path.name} with hash metadata: {file_hash[:8] if file_hash else 'N/A'}..."
@@ -569,6 +596,9 @@ class BackupService:
 
             # Create S3 client
             s3_client = self.backup_manager.create_s3_client(credentials)
+
+            # Reset deduplication cache for new backup session
+            self.backup_manager.reset_cache()
 
             # Get backup plan
             backup_plan = self.config.get_backup_plan()
