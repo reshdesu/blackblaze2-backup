@@ -440,9 +440,9 @@ class BlackBlazeBackupApp(QMainWindow):
         folder_layout = QVBoxLayout(folder_group)
 
         # Add folder button
-        add_folder_btn = QPushButton("Add Folder")
-        add_folder_btn.clicked.connect(self.add_folder)
-        folder_layout.addWidget(add_folder_btn)
+        self.add_folder_btn = QPushButton("Add Folder")
+        self.add_folder_btn.clicked.connect(self.add_folder)
+        folder_layout.addWidget(self.add_folder_btn)
 
         # Folder tree
         self.folder_tree = QTreeWidget()
@@ -450,9 +450,9 @@ class BlackBlazeBackupApp(QMainWindow):
         folder_layout.addWidget(self.folder_tree)
 
         # Remove folder button
-        remove_folder_btn = QPushButton("Remove Selected Folder")
-        remove_folder_btn.clicked.connect(self.remove_folder)
-        folder_layout.addWidget(remove_folder_btn)
+        self.remove_folder_btn = QPushButton("Remove Selected Folder")
+        self.remove_folder_btn.clicked.connect(self.remove_folder)
+        folder_layout.addWidget(self.remove_folder_btn)
 
         layout.addWidget(folder_group)
 
@@ -853,6 +853,11 @@ class BlackBlazeBackupApp(QMainWindow):
         self.log_text.clear()
         self.is_backup_running = True  # Set backup running flag
 
+        # Disable folder management during backup
+        self.add_folder_btn.setEnabled(False)
+        self.remove_folder_btn.setEnabled(False)
+        self.folder_tree.setEnabled(False)
+
         self.backup_worker.start()
 
     def cancel_backup(self):
@@ -865,6 +870,11 @@ class BlackBlazeBackupApp(QMainWindow):
         self.start_backup_btn.setEnabled(True)
         self.cancel_backup_btn.setEnabled(False)
         self.is_backup_running = False  # Clear backup running flag
+
+        # Re-enable folder management after cancellation
+        self.add_folder_btn.setEnabled(True)
+        self.remove_folder_btn.setEnabled(True)
+        self.folder_tree.setEnabled(True)
 
         # Update status message
         self.statusBar().showMessage("Backup cancelled by user", 5000)
@@ -887,6 +897,11 @@ class BlackBlazeBackupApp(QMainWindow):
         self.start_backup_btn.setEnabled(True)
         self.cancel_backup_btn.setEnabled(False)
         self.is_backup_running = False  # Clear backup running flag
+
+        # Re-enable folder management after backup
+        self.add_folder_btn.setEnabled(True)
+        self.remove_folder_btn.setEnabled(True)
+        self.folder_tree.setEnabled(True)
 
         if success:
             self.statusBar().showMessage(" Backup completed successfully!", 10000)
