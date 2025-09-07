@@ -226,10 +226,12 @@ jobs:
             
             <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
               <Component Id="MainExecutable" Guid="*">
+                <RegistryKey Root="HKCU" Key="Software\BlackBlazeBackupTool" Action="createAndRemoveOnUninstall">
+                  <RegistryValue Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+                </RegistryKey>
                 <File Id="BlackBlazeBackupToolExe" 
                       Name="BlackBlaze-Backup-Tool.exe" 
-                      Source="../dist/BlackBlaze-Backup-Tool.exe" 
-                      KeyPath="yes" />
+                      Source="../dist/BlackBlaze-Backup-Tool.exe" />
               </Component>
             </ComponentGroup>
             
