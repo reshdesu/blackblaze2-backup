@@ -103,6 +103,7 @@ celerybeat.pid
 
 # Environments
 .env
+!sample.env
 .venv
 env/
 venv/
@@ -169,6 +170,7 @@ config.json
 .env.production
 .env.staging
 *.env
+!sample.env
 *.key
 *.pem
 *.p12
