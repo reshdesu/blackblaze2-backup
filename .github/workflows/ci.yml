@@ -135,8 +135,8 @@ jobs:
       run: |
         source .venv/bin/activate
         
-        # Use full git tag name for consistency
-        VERSION=$GITHUB_REF_NAME
+        # Extract version from git tag (remove 'v' prefix for DEB version)
+        VERSION=${GITHUB_REF_NAME#v}
         echo "Building DEB package version: $VERSION"
         
         mkdir -p package/usr/bin
@@ -178,8 +178,8 @@ jobs:
          with automatic scheduling and background operation.
         EOF
         
-        # Build DEB package
-        dpkg-deb --build package blackblaze-backup-tool_${VERSION}_amd64.deb
+        # Build DEB package with versioned filename
+        dpkg-deb --build package blackblaze-backup-tool_${GITHUB_REF_NAME}_amd64.deb
     
     - name: Build MSI package (Windows)
       if: matrix.os == 'windows-latest'
@@ -188,8 +188,8 @@ jobs:
         choco install wixtoolset -y
         refreshenv
         
-        # Use full git tag name for consistency
-        $version = "${{ github.ref_name }}"
+        # Extract version from git tag (remove 'v' prefix for WiX version)
+        $version = "${{ github.ref_name }}".Substring(1)  # Remove 'v' prefix
         $wixVersion = "$version.0"  # WiX requires 4-part version (major.minor.patch.build)
         echo "Building MSI package version: $wixVersion"
         
@@ -273,10 +273,10 @@ jobs:
         
         $wixContent | Out-File -FilePath "installer/product.wxs" -Encoding UTF8
         
-        # Build MSI installer
+        # Build MSI installer with versioned filename
         cd installer
         candle.exe product.wxs -o product.wixobj
-        light.exe product.wixobj -o BlackBlaze-Backup-Tool-$version.msi
+        light.exe product.wixobj -o BlackBlaze-Backup-Tool-${{ github.ref_name }}.msi
       shell: powershell
     
     - name: Upload DEB artifact
