@@ -142,6 +142,9 @@ def pytest_configure(config):
     )
     config.addinivalue_line("markers", "integration: marks tests as integration tests")
     config.addinivalue_line("markers", "unit: marks tests as unit tests")
+    config.addinivalue_line(
+        "markers", "performance: marks tests as performance benchmarks"
+    )
 
 
 def pytest_collection_modifyitems(config, items):
@@ -157,6 +160,15 @@ def pytest_collection_modifyitems(config, items):
 
         # Add slow marker to tests that might take time
         if "backup" in item.name.lower() or "upload" in item.name.lower():
+            item.add_marker(pytest.mark.slow)
+
+        # Add performance marker to performance benchmark tests
+        if (
+            "performance" in str(item.fspath)
+            or "benchmark" in item.name.lower()
+            or "statistical" in item.name.lower()
+        ):
+            item.add_marker(pytest.mark.performance)
             item.add_marker(pytest.mark.slow)
 
 
