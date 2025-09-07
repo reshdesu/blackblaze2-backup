@@ -198,6 +198,40 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 We welcome contributions! Please see our [CONTRIBUTORS](CONTRIBUTORS.md) and [SECURITY](SECURITY.md) files for guidelines.
 
+### Development Setup
+
+For developers, we provide an automated setup script:
+
+```bash
+# Run the development setup script
+./setup-dev.sh
+```
+
+This script will:
+- Install pre-commit hooks
+- Set up automatic code formatting
+- Fix any existing formatting issues
+- Ensure consistent code style
+
+**Pre-commit hooks automatically:**
+- Format code with `ruff`
+- Remove trailing whitespace
+- Fix end-of-file issues
+- Check YAML syntax
+- Prevent large files and merge conflicts
+
+**Manual setup:**
+```bash
+# Install dependencies
+uv pip install -e ".[dev]"
+
+# Install pre-commit hooks
+pre-commit install
+
+# Run formatting on all files
+pre-commit run --all-files
+```
+
 ## 🙏 Acknowledgments
 
 - Built with [PySide6](https://pypi.org/project/PySide6/) for cross-platform GUI
