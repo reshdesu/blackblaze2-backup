@@ -654,8 +654,8 @@ class BlackBlazeBackupApp(QMainWindow):
                 self, "No Saved Credentials", "No saved credentials found."
             )
 
-    def start_backup(self):
-        """Start the backup process with preview"""
+    def start_backup(self, is_scheduled=False):
+        """Start the backup process with preview (only for manual uploads)"""
         # Validate credentials
         if not all(
             [
@@ -684,8 +684,14 @@ class BlackBlazeBackupApp(QMainWindow):
             QMessageBox.warning(self, "Invalid Configuration", message)
             return
 
-        # Show upload preview
-        self.show_upload_preview()
+        # Show upload preview only for manual uploads, not scheduled backups
+        if is_scheduled:
+            # For scheduled backups, start immediately without preview
+            incremental_enabled = self.incremental_backup_check.isChecked()
+            self.start_backup_immediately(incremental_enabled)
+        else:
+            # For manual uploads, show preview dialog
+            self.show_upload_preview()
 
     def show_upload_preview(self):
         """Show what files will be uploaded before starting"""
@@ -1227,7 +1233,7 @@ Do you want to start the upload?
                 self.logger.info("Starting scheduled backup (every 15 minutes)")
             else:  # Hourly
                 self.logger.info("Starting scheduled hourly backup")
-            self.start_backup()
+            self.start_backup(is_scheduled=True)
             last_run_file.touch()
             return
 
@@ -1248,7 +1254,7 @@ Do you want to start the upload?
             ):
                 # Start scheduled backup
                 self.logger.info("Starting scheduled backup")
-                self.start_backup()
+                self.start_backup(is_scheduled=True)
 
                 # Update last run time
                 last_run_file.touch()
