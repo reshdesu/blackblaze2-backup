@@ -135,8 +135,8 @@ jobs:
       run: |
         source .venv/bin/activate
         
-        # Extract version from git tag (remove 'v' prefix)
-        VERSION=${GITHUB_REF_NAME#v}
+        # Use full git tag name for consistency
+        VERSION=$GITHUB_REF_NAME
         echo "Building DEB package version: $VERSION"
         
         mkdir -p package/usr/bin
@@ -188,8 +188,8 @@ jobs:
         choco install wixtoolset -y
         refreshenv
         
-        # Extract version from git tag (remove 'v' prefix and convert to WiX format)
-        $version = "${{ github.ref_name }}".Substring(1)  # Remove 'v' prefix
+        # Use full git tag name for consistency
+        $version = "${{ github.ref_name }}"
         $wixVersion = "$version.0"  # WiX requires 4-part version (major.minor.patch.build)
         echo "Building MSI package version: $wixVersion"
         
