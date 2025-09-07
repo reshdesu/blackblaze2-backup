@@ -417,6 +417,7 @@ class BackupProgressTracker:
         self.completed_files = 0
         self.current_folder = ""
         self.current_file = ""
+        self.folder_file_counts = {}  # Track file counts per folder
 
     def start_backup(self, folders: dict[str, str]):
         """Initialize progress tracking for a backup operation"""
@@ -426,10 +427,12 @@ class BackupProgressTracker:
         self.completed_files = 0
         self.current_folder = ""
         self.current_file = ""
+        self.folder_file_counts = {}
 
     def start_folder(self, folder_path: str, file_count: int):
         """Start processing a new folder"""
         self.current_folder = folder_path
+        self.folder_file_counts[folder_path] = file_count
         self.total_files += file_count
         self.completed_files = 0
 
@@ -450,21 +453,32 @@ class BackupProgressTracker:
         if self.completed_folders >= self.total_folders:
             return 100
 
-        # Calculate progress based on completed folders
-        folder_progress = self.completed_folders / self.total_folders
+        # Calculate progress based on completed folders and files
+        total_progress = 0
 
-        # Add progress from current folder if we're working on it
-        if self.current_folder and self.total_files > 0:
-            current_folder_progress = self.completed_files / self.total_files
-            folder_progress += current_folder_progress / self.total_folders
+        # Add progress from completed folders
+        for i, (folder_path, file_count) in enumerate(self.folder_file_counts.items()):
+            if i < self.completed_folders:
+                # This folder is completely done
+                total_progress += file_count
+            elif i == self.completed_folders and folder_path == self.current_folder:
+                # This is the current folder being processed
+                total_progress += self.completed_files
 
-        return int(folder_progress * 100)
+        # Calculate percentage
+        if self.total_files > 0:
+            progress_percentage = int((total_progress / self.total_files) * 100)
+            return min(progress_percentage, 100)
+
+        return 0
 
     def get_folder_progress(self) -> int:
         """Get current folder progress percentage"""
-        if self.total_files == 0:
-            return 0
-        return int((self.completed_files / self.total_files) * 100)
+        if self.current_folder and self.current_folder in self.folder_file_counts:
+            folder_total = self.folder_file_counts[self.current_folder]
+            if folder_total > 0:
+                return int((self.completed_files / folder_total) * 100)
+        return 0
 
     def get_status_message(self) -> str:
         """Get current status message"""
@@ -587,10 +601,6 @@ class BackupService:
 
                         if success:
                             self.progress_tracker.complete_file()
-                            if progress_callback:
-                                progress_callback(
-                                    self.progress_tracker.get_overall_progress()
-                                )
                         else:
                             if error_callback:
                                 error_callback(f"Failed to upload: {file_path}")
@@ -601,10 +611,10 @@ class BackupService:
                                 f"Skipping unchanged: {Path(file_path).name}"
                             )
                         self.progress_tracker.complete_file()
-                        if progress_callback:
-                            progress_callback(
-                                self.progress_tracker.get_overall_progress()
-                            )
+
+                    # Update progress after every file (more frequent updates)
+                    if progress_callback:
+                        progress_callback(self.progress_tracker.get_overall_progress())
 
                 self.progress_tracker.complete_folder()
                 if progress_callback:
