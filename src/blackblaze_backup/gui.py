@@ -942,6 +942,8 @@ class BlackBlazeBackupApp(QMainWindow):
         self.progress_bar.setValue(0)
 
         if success:
+            # The detailed message will come from the status callback
+            # Just show a generic success message in status bar
             self.statusBar().showMessage("Backup completed successfully!", 10000)
             if self.tray_icon:
                 self.tray_icon.showMessage(

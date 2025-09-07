@@ -524,6 +524,20 @@ class BackupService:
         """Validate the current backup configuration"""
         return self.config.validate_config()
 
+    def _format_duration(self, seconds: float) -> str:
+        """Format duration in seconds to a human-readable string showing both minutes and seconds"""
+        if seconds < 60:
+            return f"{seconds:.1f} seconds ({seconds:.1f}s)"
+        elif seconds < 3600:
+            minutes = int(seconds // 60)
+            remaining_seconds = seconds % 60
+            return f"{minutes}m {remaining_seconds:.1f}s ({seconds:.1f}s total)"
+        else:
+            hours = int(seconds // 3600)
+            remaining_minutes = int((seconds % 3600) // 60)
+            remaining_seconds = seconds % 60
+            return f"{hours}h {remaining_minutes}m {remaining_seconds:.1f}s ({seconds:.1f}s total)"
+
     def execute_backup(
         self,
         progress_callback=None,
@@ -532,6 +546,12 @@ class BackupService:
         incremental=True,
     ) -> bool:
         """Execute the backup operation with callbacks for progress updates"""
+        import time
+
+        # Start timing the backup
+        start_time = time.time()
+        uploaded_files_count = 0
+
         try:
             # Validate configuration
             is_valid, message = self.validate_backup_config()
@@ -604,6 +624,7 @@ class BackupService:
                         )
 
                         if success:
+                            uploaded_files_count += 1
                             self.progress_tracker.complete_file()
                         else:
                             if error_callback:
@@ -626,8 +647,15 @@ class BackupService:
                     progress_callback(self.progress_tracker.get_overall_progress())
 
             if not self.backup_manager.cancelled:
+                # Calculate time taken
+                end_time = time.time()
+                time_taken = end_time - start_time
+                time_str = self._format_duration(time_taken)
+
                 if status_callback:
-                    status_callback("Backup completed successfully!")
+                    status_callback(
+                        f"Backup completed successfully! Uploaded {uploaded_files_count} files in {time_str}"
+                    )
                 return True
             else:
                 if status_callback:
