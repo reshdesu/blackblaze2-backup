@@ -35,10 +35,10 @@ jobs:
     - name: Build executable
       run: |
         .venv\Scripts\activate
-        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" --icon=src/blackblaze_backup/icon.svg main.py
+        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" --icon=src/blackblaze_backup/icon.png main.py
     
     - name: Install WiX Toolset
-      uses: wix/setup-wix@v1
+      uses: wixtoolset/setup-wix@v1
       with:
         version: '3.11.2'
     
@@ -92,7 +92,7 @@ jobs:
               </Directory>
             </Directory>
             
-            <Icon Id="ApplicationIcon" SourceFile="src/blackblaze_backup/icon.svg" />
+            <Icon Id="ApplicationIcon" SourceFile="src/blackblaze_backup/icon.png" />
             
             <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
               <Component Id="MainExecutable" Guid="*">
