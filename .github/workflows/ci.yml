@@ -247,6 +247,7 @@ jobs:
                 <Shortcut Id="StartMenuShortcut" 
                           Directory="ProgramMenuDir" 
                           Name="BlackBlaze B2 Backup Tool" 
+                          Target="[INSTALLFOLDER]BlackBlaze-Backup-Tool.exe"
                           WorkingDirectory="INSTALLFOLDER" 
                           Icon="ApplicationIcon" 
                           IconIndex="0" />
@@ -260,6 +261,7 @@ jobs:
                 <Shortcut Id="DesktopShortcut" 
                           Directory="DesktopFolder" 
                           Name="BlackBlaze B2 Backup Tool" 
+                          Target="[INSTALLFOLDER]BlackBlaze-Backup-Tool.exe"
                           WorkingDirectory="INSTALLFOLDER" 
                           Icon="ApplicationIcon" 
                           IconIndex="0" />
