@@ -190,15 +190,16 @@ class BlackBlazeBackupApp(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        try:
-            self.backup_service = BackupService()
-            self.backup_worker = None
-            self.tray_icon = None
-            self.schedule_timer = None
-            self.schedule_config = None
-            self.auto_save_timer = None
-            self.is_backup_running = False  # Track backup state
+        self.backup_service = BackupService()
+        self.backup_worker = None
+        self.tray_icon = None
+        self.schedule_timer = None
+        self.schedule_config = None
+        self.auto_save_timer = None
+        self.is_backup_running = False  # Track backup state
+        self.progress_animation_timer = None  # Timer for progress animation
 
+        try:
             self.setup_ui()
             self.setup_logging()
             self.setup_system_tray()
@@ -537,6 +538,27 @@ class BlackBlazeBackupApp(QMainWindow):
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 0)  # Indeterminate mode - no percentages
         self.progress_bar.setFormat("")  # No text format
+        # Ensure the progress bar shows activity on all platforms
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setEnabled(True)
+        # Ubuntu-specific styling for better visual appeal
+        self.progress_bar.setStyleSheet(
+            """
+            QProgressBar {
+                border: 2px solid #404040;
+                border-radius: 8px;
+                background-color: #2D2D2D;
+                height: 20px;
+                font-weight: bold;
+            }
+            QProgressBar::chunk {
+                background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                    stop: 0 #00D4AA, stop: 1 #00A8CC);
+                border-radius: 6px;
+                margin: 1px;
+            }
+        """
+        )
         layout.addWidget(self.progress_bar)
 
         # Log text
