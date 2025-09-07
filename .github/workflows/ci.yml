@@ -166,48 +166,72 @@ jobs:
         # Copy icon
         cp src/blackblaze_backup/icon.png package/usr/share/icons/blackblaze-backup-tool.png
 
-        # Create preinst script for proper upgrade handling
+        # Create robust preinst script for graceful upgrades
         cat > package/DEBIAN/preinst << 'EOF'
         #!/bin/bash
-        set -e
+        # Pre-installation script for BlackBlaze B2 Backup Tool
+        # This script handles graceful upgrades by stopping running instances
+
+        # Function to safely stop processes
+        stop_blackblaze_processes() {
+            # Find and stop any running instances gracefully
+            local pids=$(pgrep -f blackblaze-backup-tool 2>/dev/null || true)
+            if [ -n "$pids" ]; then
+                echo "Stopping running BlackBlaze B2 Backup Tool instances..."
+                # Try graceful shutdown first
+                kill -TERM $pids 2>/dev/null || true
+                sleep 2
+                # Force kill if still running
+                kill -KILL $pids 2>/dev/null || true
+                echo "Stopped running instances."
+            fi
+        }
 
         # Check if this is an upgrade
         if dpkg -l blackblaze-backup-tool >/dev/null 2>&1; then
-            echo "Upgrading blackblaze-backup-tool..."
+            echo "Upgrading BlackBlaze B2 Backup Tool..."
+            stop_blackblaze_processes
         else
-            echo "Installing blackblaze-backup-tool..."
+            echo "Installing BlackBlaze B2 Backup Tool..."
         fi
 
-        # Stop any running instances (disable set -e temporarily for this section)
-        set +e
-        if pgrep -f blackblaze-backup-tool >/dev/null 2>&1; then
-            echo "Stopping running instances..."
-            pkill -f blackblaze-backup-tool
-            sleep 2
-        fi
-        set -e
+        echo "Pre-installation completed successfully."
         EOF
 
         chmod +x package/DEBIAN/preinst
 
-        # Create postinst script for upgrade completion
+        # Create robust postinst script for post-installation setup
         cat > package/DEBIAN/postinst << 'EOF'
         #!/bin/bash
-        set -e
+        # Post-installation script for BlackBlaze B2 Backup Tool
+        # This script updates desktop database and icon cache
 
-        # Update desktop database (disable set -e temporarily for this section)
-        set +e
-        if command -v update-desktop-database >/dev/null 2>&1; then
-            update-desktop-database /usr/share/applications || true
-        fi
+        # Function to safely update desktop database
+        update_desktop_database() {
+            if command -v update-desktop-database >/dev/null 2>&1; then
+                echo "Updating desktop database..."
+                update-desktop-database /usr/share/applications 2>/dev/null || {
+                    echo "Warning: Failed to update desktop database (non-critical)"
+                }
+            fi
+        }
 
-        # Update icon cache
-        if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-            gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true
-        fi
-        set -e
+        # Function to safely update icon cache
+        update_icon_cache() {
+            if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+                echo "Updating icon cache..."
+                gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || {
+                    echo "Warning: Failed to update icon cache (non-critical)"
+                }
+            fi
+        }
 
-        echo "blackblaze-backup-tool installation/upgrade completed successfully!"
+        # Perform post-installation tasks
+        update_desktop_database
+        update_icon_cache
+
+        echo "BlackBlaze B2 Backup Tool installation completed successfully!"
+        echo "You can now run 'blackblaze-backup-tool' from the command line or find it in your applications menu."
         EOF
 
         chmod +x package/DEBIAN/postinst
