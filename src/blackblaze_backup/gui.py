@@ -217,11 +217,16 @@ class BlackBlazeBackupApp(QMainWindow):
 
     def setup_logging(self):
         """Setup logging configuration"""
+        from .config import config
+        
+        # Use config directory for log file (user-accessible location)
+        log_file_path = config.log_file
+        
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(levelname)s - %(message)s",
             handlers=[
-                logging.FileHandler("blackblaze_backup.log"),
+                logging.FileHandler(log_file_path),
                 logging.StreamHandler(),
             ],
         )
