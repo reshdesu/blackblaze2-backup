@@ -183,3 +183,6 @@ dist/
 *.deb
 *.rpm
 *.msi
+
+# Cursor conversation files
+cursor_*.md
