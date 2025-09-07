@@ -178,8 +178,8 @@ jobs:
          with automatic scheduling and background operation.
         EOF
         
-        # Build DEB package with versioned filename
-        dpkg-deb --build package blackblaze-backup-tool_${GITHUB_REF_NAME}_amd64.deb
+        # Build DEB package with version at the end
+        dpkg-deb --build package blackblaze-backup-tool_amd64_${GITHUB_REF_NAME}.deb
     
     - name: Build MSI package (Windows)
       if: matrix.os == 'windows-latest'
@@ -273,7 +273,7 @@ jobs:
         
         $wixContent | Out-File -FilePath "installer/product.wxs" -Encoding UTF8
         
-        # Build MSI installer with versioned filename
+        # Build MSI installer with version at the end
         cd installer
         candle.exe product.wxs -o product.wixobj
         light.exe product.wixobj -o BlackBlaze-Backup-Tool-${{ github.ref_name }}.msi
@@ -284,7 +284,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: blackblaze-backup-ubuntu-deb
-        path: blackblaze-backup-tool_${{ github.ref_name }}_amd64.deb
+        path: blackblaze-backup-tool_amd64_${{ github.ref_name }}.deb
     
     - name: Upload MSI artifact
       if: matrix.os == 'windows-latest'
@@ -364,12 +364,12 @@ jobs:
           
           ### Downloads
           - **Windows MSI Installer**: `BlackBlaze-Backup-Tool-${{ github.ref_name }}.msi` (Recommended for Windows)
-          - **Ubuntu DEB Package**: `blackblaze-backup-tool_${{ github.ref_name }}_amd64.deb` (Recommended for Ubuntu)
+          - **Ubuntu DEB Package**: `blackblaze-backup-tool_amd64_${{ github.ref_name }}.deb` (Recommended for Ubuntu)
           
           ### Installation
           1. Download the appropriate package for your platform
           2. **Windows**: Run the MSI installer (no admin rights required)
-          3. **Ubuntu**: Install with `sudo dpkg -i blackblaze-backup-tool_${{ github.ref_name }}_amd64.deb`
+          3. **Ubuntu**: Install with `sudo dpkg -i blackblaze-backup-tool_amd64_${{ github.ref_name }}.deb`
           4. Configure your BackBlaze B2 credentials
           5. Select folders to backup
           6. Set up automatic backup schedule
