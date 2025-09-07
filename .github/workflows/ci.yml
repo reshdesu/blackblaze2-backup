@@ -192,7 +192,7 @@ jobs:
         
         $wixContent = @"
         <?xml version="1.0" encoding="UTF-8"?>
-        <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+        <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:ui="http://schemas.microsoft.com/wix/2006/ui">
           <Product Id="$productId" 
                    Name="BlackBlaze B2 Backup Tool" 
                    Language="1033" 
@@ -233,8 +233,8 @@ jobs:
               </Component>
             </ComponentGroup>
             
-            <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-            <UIRef Id="WixUI_Minimal" />
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+        <ui:WixUI_Minimal />
             
           </Product>
         </Wix>
