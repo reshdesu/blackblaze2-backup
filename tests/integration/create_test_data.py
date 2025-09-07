@@ -22,7 +22,7 @@ class TestDataCreator:
 
     def create_test_structure(self) -> Path:
         """Create comprehensive test folder structure"""
-        print(f"🔧 Creating test data structure at: {self.base_path}")
+        print(f"Creating test data structure at: {self.base_path}")
 
         # Create main directory
         self.base_path.mkdir(parents=True, exist_ok=True)
@@ -38,7 +38,7 @@ class TestDataCreator:
         self._create_large_files()
         self._create_special_files()
 
-        print(f"✅ Test structure created with {len(self.test_files)} files")
+        print(f" Test structure created with {len(self.test_files)} files")
         return self.base_path
 
     def _create_root_files(self):
@@ -432,7 +432,7 @@ password = redis_password
 
 def main():
     """Main function to create test data"""
-    print("🧪 BlackBlaze B2 Backup Tool - Test Data Creator")
+    print(" BlackBlaze B2 Backup Tool - Test Data Creator")
     print("=" * 60)
 
     # Create test data
@@ -441,19 +441,19 @@ def main():
 
     # Display summary
     summary = creator.get_file_summary()
-    print("\n📊 Test Data Summary:")
-    print(f"   📁 Total Files: {summary['total_files']}")
-    print(f"   📏 Total Size: {summary['total_size_mb']} MB")
-    print(f"   📂 File Types: {summary['file_types']}")
+    print("\nTest Data Summary:")
+    print(f"    Total Files: {summary['total_files']}")
+    print(f"    Total Size: {summary['total_size_mb']} MB")
+    print(f"    File Types: {summary['file_types']}")
 
-    print("\n📋 Directory Structure:")
+    print("\n Directory Structure:")
     for file_path in summary["directory_structure"][:10]:  # Show first 10
         print(f"   - {file_path}")
     if len(summary["directory_structure"]) > 10:
         print(f"   ... and {len(summary['directory_structure']) - 10} more files")
 
-    print(f"\n✅ Test data created successfully at: {test_path}")
-    print("🚀 Ready for backup testing!")
+    print(f"\n Test data created successfully at: {test_path}")
+    print("Ready for backup testing!")
 
 
 if __name__ == "__main__":

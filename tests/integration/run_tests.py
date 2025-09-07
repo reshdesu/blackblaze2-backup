@@ -20,7 +20,7 @@ class TestSuite:
 
     def run_all_tests(self) -> bool:
         """Run all tests in sequence"""
-        print("🧪 BlackBlaze B2 Backup Tool - Comprehensive Test Suite")
+        print("BlackBlaze B2 Backup Tool - Comprehensive Test Suite")
         print("=" * 70)
 
         tests = [
@@ -37,20 +37,20 @@ class TestSuite:
         all_passed = True
 
         for test_name, test_func in tests:
-            print(f"\n🔍 Running: {test_name}")
+            print(f"\nRunning: {test_name}")
             print("-" * 50)
 
             try:
                 result = test_func()
                 if result:
-                    print(f"✅ {test_name}: PASSED")
+                    print(f" {test_name}: PASSED")
                     self.test_results.append((test_name, "PASSED", ""))
                 else:
-                    print(f"❌ {test_name}: FAILED")
+                    print(f" {test_name}: FAILED")
                     self.test_results.append((test_name, "FAILED", ""))
                     all_passed = False
             except Exception as e:
-                print(f"💥 {test_name}: ERROR - {str(e)}")
+                print(f" {test_name}: ERROR - {str(e)}")
                 self.test_results.append((test_name, "ERROR", str(e)))
                 all_passed = False
 
@@ -79,7 +79,7 @@ class TestSuite:
     def run_gui_tests(self) -> bool:
         """Run GUI tests"""
         try:
-            print("⚠️  GUI tests may crash due to Qt memory issues - this is normal")
+            print("GUI tests may crash due to Qt memory issues - this is normal")
             result = subprocess.run(
                 [
                     "uv",
@@ -134,20 +134,20 @@ class TestSuite:
     def test_backup_functionality(self) -> bool:
         """Test backup functionality with created test data"""
         if not self.test_data_path or not self.test_data_path.exists():
-            print("❌ No test data available for backup testing")
+            print(" No test data available for backup testing")
             return False
 
         try:
-            print(f"📁 Testing backup with data from: {self.test_data_path}")
+            print(f" Testing backup with data from: {self.test_data_path}")
 
             # Count files
             file_count = len(list(self.test_data_path.rglob("*")))
-            print(f"📊 Found {file_count} files to backup")
+            print(f"Found {file_count} files to backup")
 
             # Check if real credentials are available for actual testing
             env_file = Path(".env")
             if env_file.exists():
-                print("🔑 Real credentials found, testing actual S3 connectivity...")
+                print(" Real credentials found, testing actual S3 connectivity...")
                 try:
                     # Import and run the real upload test
                     import subprocess
@@ -160,42 +160,40 @@ class TestSuite:
                     )
 
                     if result.returncode == 0:
-                        print("✅ Real S3 connectivity test passed!")
+                        print(" Real S3 connectivity test passed!")
+                        print(" Test files were successfully uploaded to BackBlaze B2")
                         print(
-                            "📤 Test files were successfully uploaded to BackBlaze B2"
-                        )
-                        print(
-                            "🧹 Test files were automatically cleaned up after verification"
+                            " Test files were automatically cleaned up after verification"
                         )
                     else:
                         print(
-                            "⚠️  Real S3 connectivity test failed (using placeholder credentials)"
+                            "Real S3 connectivity test failed (using placeholder credentials)"
                         )
-                        print("🔄 Falling back to simulation...")
-                        print("🔄 Simulating backup process...")
+                        print("Falling back to simulation...")
+                        print("Simulating backup process...")
                         time.sleep(1)  # Simulate processing time
-                        print("✅ Backup simulation completed successfully")
+                        print(" Backup simulation completed successfully")
                 except subprocess.TimeoutExpired:
                     print(
                         "⏰ S3 connectivity test timed out, falling back to simulation"
                     )
-                    print("🔄 Simulating backup process...")
+                    print("Simulating backup process...")
                     time.sleep(1)  # Simulate processing time
-                    print("✅ Backup simulation completed successfully")
+                    print(" Backup simulation completed successfully")
                 except Exception as e:
-                    print(f"⚠️  S3 connectivity test error: {e}")
-                    print("🔄 Falling back to simulation...")
-                    print("🔄 Simulating backup process...")
+                    print(f"S3 connectivity test error: {e}")
+                    print("Falling back to simulation...")
+                    print("Simulating backup process...")
                     time.sleep(1)  # Simulate processing time
-                    print("✅ Backup simulation completed successfully")
+                    print(" Backup simulation completed successfully")
             else:
-                print("📝 No .env file found, simulating backup process...")
+                print(" No .env file found, simulating backup process...")
                 print(
-                    "💡 To test real connectivity, create a .env file with your BackBlaze B2 credentials"
+                    "To test real connectivity, create a .env file with your BackBlaze B2 credentials"
                 )
-                print("🔄 Simulating backup process...")
+                print("Simulating backup process...")
                 time.sleep(1)  # Simulate processing time
-                print("✅ Backup simulation completed successfully")
+                print(" Backup simulation completed successfully")
 
             return True
 
@@ -206,7 +204,7 @@ class TestSuite:
     def test_system_tray(self) -> bool:
         """Test system tray functionality"""
         try:
-            print("🔍 Testing system tray availability...")
+            print("Testing system tray availability...")
 
             # Test if system tray is available
             from PySide6.QtWidgets import QSystemTrayIcon
@@ -214,9 +212,9 @@ class TestSuite:
             tray_available = QSystemTrayIcon.isSystemTrayAvailable()
 
             if tray_available:
-                print("✅ System tray is available")
+                print(" System tray is available")
             else:
-                print("⚠️  System tray is not available (common on some Linux desktops)")
+                print("System tray is not available (common on some Linux desktops)")
 
             return True  # Not a failure if tray is unavailable
 
@@ -227,7 +225,7 @@ class TestSuite:
     def test_credentials(self) -> bool:
         """Test credentials management"""
         try:
-            print("🔐 Testing credentials management...")
+            print(" Testing credentials management...")
 
             # Test credential validation
             from src.blackblaze_backup.core import CredentialManager
@@ -246,9 +244,9 @@ class TestSuite:
             is_valid, message = credential_manager.validate_credentials(
                 test_credentials
             )
-            print(f"📋 Credential validation test: {message}")
+            print(f" Credential validation test: {message}")
 
-            print("✅ Credentials management test completed")
+            print(" Credentials management test completed")
             return True
 
         except Exception as e:
@@ -258,23 +256,23 @@ class TestSuite:
     def test_cross_platform(self) -> bool:
         """Test cross-platform compatibility"""
         try:
-            print("🌍 Testing cross-platform compatibility...")
+            print(" Testing cross-platform compatibility...")
 
             # Test platform detection
             import platform
 
             system = platform.system()
-            print(f"📱 Detected platform: {system}")
+            print(f" Detected platform: {system}")
 
             # Test Qt availability
 
-            print("✅ PySide6 (Qt) is available")
+            print(" PySide6 (Qt) is available")
 
             # Test boto3 availability
 
-            print("✅ boto3 (AWS SDK) is available")
+            print(" boto3 (AWS SDK) is available")
 
-            print("✅ Cross-platform compatibility test passed")
+            print(" Cross-platform compatibility test passed")
             return True
 
         except Exception as e:
@@ -284,7 +282,7 @@ class TestSuite:
     def test_performance(self) -> bool:
         """Test performance characteristics"""
         try:
-            print("⚡ Testing performance characteristics...")
+            print("Testing performance characteristics...")
 
             # Test import performance
             start_time = time.time()
@@ -292,22 +290,22 @@ class TestSuite:
 
             import_time = time.time() - start_time
 
-            print(f"📦 Module import time: {import_time:.3f}s")
+            print(f"Module import time: {import_time:.3f}s")
 
             # Test service initialization
             start_time = time.time()
             BackupService()
             init_time = time.time() - start_time
 
-            print(f"🚀 Service initialization time: {init_time:.3f}s")
+            print(f"Service initialization time: {init_time:.3f}s")
 
             # Performance thresholds
             if import_time > 2.0:
-                print("⚠️  Import time is slower than expected")
+                print("Import time is slower than expected")
             if init_time > 1.0:
-                print("⚠️  Initialization time is slower than expected")
+                print("Initialization time is slower than expected")
 
-            print("✅ Performance test completed")
+            print(" Performance test completed")
             return True
 
         except Exception as e:
@@ -317,7 +315,7 @@ class TestSuite:
     def print_test_summary(self):
         """Print comprehensive test summary"""
         print("\n" + "=" * 70)
-        print("📊 TEST SUMMARY")
+        print("TEST SUMMARY")
         print("=" * 70)
 
         passed = sum(1 for _, status, _ in self.test_results if status == "PASSED")
@@ -325,21 +323,19 @@ class TestSuite:
         errors = sum(1 for _, status, _ in self.test_results if status == "ERROR")
         total = len(self.test_results)
 
-        print(f"✅ Passed: {passed}")
-        print(f"❌ Failed: {failed}")
-        print(f"💥 Errors: {errors}")
-        print(f"📊 Total:  {total}")
+        print(f" Passed: {passed}")
+        print(f" Failed: {failed}")
+        print(f" Errors: {errors}")
+        print(f"Total:  {total}")
 
         if failed == 0 and errors == 0:
-            print("\n🎉 ALL TESTS PASSED! Ready for release!")
+            print("\nALL TESTS PASSED! Ready for release!")
         else:
-            print(f"\n⚠️  {failed + errors} test(s) need attention before release")
+            print(f"\n{failed + errors} test(s) need attention before release")
 
-        print("\n📋 Detailed Results:")
+        print("\n Detailed Results:")
         for test_name, status, error in self.test_results:
-            status_icon = (
-                "✅" if status == "PASSED" else "❌" if status == "FAILED" else "💥"
-            )
+            status_icon = "" if status == "PASSED" else "" if status == "FAILED" else ""
             print(f"   {status_icon} {test_name}: {status}")
             if error:
                 print(f"      Error: {error}")

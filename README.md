@@ -2,29 +2,29 @@
 
 A cross-platform GUI application for backing up local folders to BackBlaze B2 S3 buckets with automatic scheduling and background operation.
 
-## ✨ Features
+## Features
 
-- **🖥️ Cross-platform**: Runs on Windows 11 and Ubuntu 24.04
-- **🎨 Modern GUI**: Clean, minimalistic interface built with PySide6 (Qt for Python)
-- **🔄 Background Operation**: Runs backups in the background with system tray support
-- **⏰ Automatic Scheduling**: Set up automatic backups (1min, 5min, 15min, hourly, daily, weekly, monthly)
-- **📁 Flexible Backup Options**:
+- **Cross-platform**: Runs on Windows 11 and Ubuntu 24.04
+- **Modern GUI**: Clean, minimalistic interface built with PySide6 (Qt for Python)
+- **Background Operation**: Runs backups in the background with system tray support
+- **Automatic Scheduling**: Set up automatic backups (1min, 5min, 15min, hourly, daily, weekly, monthly)
+- **Flexible Backup Options**:
   - Upload all folders to a single bucket
   - Upload different folders to different buckets
-- **🔐 Secure Credential Storage**: Encrypted credential storage using system keyring
-- **📊 Real-time Progress**: Live progress bars and status updates
-- **🛡️ Error Handling**: Comprehensive error reporting and logging
-- **⚡ Fast Package Management**: Uses `uv` for lightning-fast dependency management
-- **💾 Persistent Configuration**: Automatically remembers folders, schedules, and settings
-- **📂 Organized Storage**: Files are organized in S3 with proper folder structure
-- **🔄 Incremental Backups**: Only upload changed files for faster, efficient backups
-- **🚫 Concurrent Protection**: Prevents multiple backup operations from interfering
-- **📦 Easy Installation**: MSI installer for Windows, DEB package for Ubuntu
-- **🔄 Auto-Updates**: Automatic uninstallation of older versions during MSI installation
+- **Secure Credential Storage**: Encrypted credential storage using system keyring
+- **Real-time Progress**: Live progress bars and status updates
+- **Error Handling**: Comprehensive error reporting and logging
+- **Fast Package Management**: Uses `uv` for lightning-fast dependency management
+- ** Persistent Configuration**: Automatically remembers folders, schedules, and settings
+- ** Organized Storage**: Files are organized in S3 with proper folder structure
+- **Incremental Backups**: Only upload changed files for faster, efficient backups
+- ** Concurrent Protection**: Prevents multiple backup operations from interfering
+- **Easy Installation**: MSI installer for Windows, DEB package for Ubuntu
+- **Auto-Updates**: Automatic uninstallation of older versions during MSI installation
 
-## 🚀 Quick Start
+## Quick Start
 
-### 📦 Install from Releases (Recommended)
+### Install from Releases (Recommended)
 
 **Windows:**
 1. Download `BlackBlaze-Backup-Tool-v1.0.43.msi` from [Releases](https://github.com/reshdesu/blackblaze2-backup/releases)
@@ -36,7 +36,7 @@ A cross-platform GUI application for backing up local folders to BackBlaze B2 S3
 2. Install with: `sudo dpkg -i blackblaze-backup-tool_amd64_v1.0.43.deb`
 3. Launch from Applications menu
 
-### 🛠️ Development Setup
+### Development Setup
 
 **One-Line Command (Easiest)**
 ```bash
@@ -53,7 +53,7 @@ cd blackblaze2-backup
 uv run bb2backup
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### 1. Configure Credentials
 
@@ -78,7 +78,7 @@ cp sample.env .env
 4. Note your S3 endpoint URL from the Buckets page
 5. Use the Application Key ID and Application Key as your credentials
 
-## 📖 Usage
+##  Usage
 
 ### 1. **Configure Credentials**
    - Go to the "Credentials" tab
@@ -114,7 +114,7 @@ cp sample.env .env
    - The app automatically kills older instances when starting
    - **Incremental Backups**: Only changed files are uploaded for efficiency
 
-## 🧪 Testing
+##  Testing
 
 ### Run Comprehensive Test Suite
 
@@ -143,7 +143,7 @@ uv run pytest tests/test_gui.py -v
 uv run pytest tests/ -v
 ```
 
-## 🏗️ Building from Source
+## Building from Source
 
 For development purposes, you can build the application locally:
 
@@ -164,7 +164,7 @@ pyinstaller --clean --log-level=ERROR blackblaze_backup.spec
 
 **Note**: For production use, we recommend downloading pre-built packages from [GitHub Releases](https://github.com/reshdesu/blackblaze2-backup/releases) instead of building locally.
 
-## 🛠️ Development
+## Development
 
 ### Using uv for Development
 
@@ -188,7 +188,7 @@ uv run ruff check .
 uv run mypy src/
 ```
 
-## 🔒 Security
+## Security
 
 - **Encrypted Storage**: Credentials are encrypted using Fernet encryption
 - **System Keyring**: Stored securely in the system keyring
@@ -196,7 +196,7 @@ uv run mypy src/
 - **Git Protection**: `.gitignore` configured to prevent accidental secret commits
 - **Input Validation**: All credential inputs are validated before saving
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 - **Check Logs**:
   - **Windows**: `%USERPROFILE%\.blackblaze_backup\blackblaze_backup.log`
@@ -210,7 +210,7 @@ uv run mypy src/
   - **Windows**: Try running MSI as administrator if shortcuts don't work
   - **Ubuntu**: See detailed troubleshooting guide below
 
-## 🛠️ Ubuntu Installation Troubleshooting
+## Ubuntu Installation Troubleshooting
 
 If you encounter installation issues on Ubuntu, try these solutions:
 
@@ -262,7 +262,7 @@ If issues persist, please include:
 - Package status: `dpkg -l | grep blackblaze`
 - Installation log: `sudo apt install ./blackblaze-backup-tool_amd64_v*.deb 2>&1 | tee install.log`
 
-## ⚡ Why uv?
+## Why uv?
 
 We use `uv` instead of traditional pip because it's:
 - **10-100x faster** than pip for package installation
@@ -270,17 +270,17 @@ We use `uv` instead of traditional pip because it's:
 - **Modern** with built-in virtual environment management
 - **Cross-platform** with excellent Windows and Linux support
 
-## 📋 Requirements
+## Requirements
 
 - Python 3.8 or higher
 - BackBlaze B2 account with S3-compatible API access
 - `uv` package manager (automatically installed by build scripts)
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see our [CONTRIBUTORS](CONTRIBUTORS.md) and [SECURITY](SECURITY.md) files for guidelines.
 
@@ -318,16 +318,16 @@ pre-commit install
 pre-commit run --all-files
 ```
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Built with [PySide6](https://pypi.org/project/PySide6/) for cross-platform GUI
 - Uses [uv](https://github.com/astral-sh/uv) for fast package management
 - Integrates with [BackBlaze B2](https://www.backblaze.com/b2-cloud-storage.html) S3-compatible API
 - Secure credential storage powered by [keyring](https://pypi.org/project/keyring/) and [cryptography](https://pypi.org/project/cryptography/)
 
-## 📊 Project Status
+## Project Status
 
-✅ **Core Features Complete**
+**Core Features Complete**
 - Cross-platform GUI application (Windows 11 & Ubuntu 24.04)
 - Secure credential management with system keyring
 - Background operation with system tray support
@@ -339,14 +339,14 @@ pre-commit run --all-files
 - Incremental backup support for efficiency
 - Concurrent backup protection to prevent conflicts
 
-✅ **Packaging & Distribution Complete**
+**Packaging & Distribution Complete**
 - MSI installer for Windows with automatic upgrades
 - DEB package for Ubuntu with proper dependencies
 - GitHub Actions CI/CD pipeline with automated releases
 - Versioned packages with dynamic versioning
 - Cross-platform build system using uv
 
-✅ **Testing Complete**
+**Testing Complete**
 - Unit tests for core functionality
 - GUI tests for user interface
 - Integration tests with real S3 connectivity
@@ -354,7 +354,7 @@ pre-commit run --all-files
 - CI/CD pipeline with GitHub Actions
 - Pre-commit hooks for code quality
 
-✅ **Documentation Complete**
+**Documentation Complete**
 - Comprehensive README with installation instructions
 - Security guidelines and best practices
 - Contributing guidelines with development setup

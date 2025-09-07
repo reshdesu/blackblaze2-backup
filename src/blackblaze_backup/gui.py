@@ -325,7 +325,7 @@ class BlackBlazeBackupApp(QMainWindow):
         """Update credentials status display"""
         credentials = self.backup_service.credential_manager.load_credentials()
         if credentials:
-            self.credentials_status.setText("✓ Credentials saved securely")
+            self.credentials_status.setText(" Credentials saved securely")
             self.credentials_status.setStyleSheet("color: #2E7D32; font-weight: bold;")
         else:
             self.credentials_status.setText("No credentials saved")
@@ -792,28 +792,24 @@ class BlackBlazeBackupApp(QMainWindow):
 
             if upload_count == 0:
                 self.logger.info(
-                    f"📋 Upload Analysis Complete - All files up to date! "
+                    f"Upload Analysis Complete - All files up to date! "
                     f"Mode: {mode}, Files to skip: {skip_count} ({skip_size_str})"
                 )
                 return
 
             # Log detailed upload preview
             self.logger.info(
-                f"📋 Upload Analysis Complete - {mode} Mode: "
-                f"📤 {upload_count} files to upload ({upload_size_str}), "
-                f"⏭️ {skip_count} files to skip ({skip_size_str})"
+                f"Upload Analysis Complete - {mode} Mode: "
+                f"{upload_count} files to upload ({upload_size_str}), "
+                f"{skip_count} files to skip ({skip_size_str})"
             )
 
             # Log first few files to upload for visibility
             if files_to_upload:
                 sample_files = files_to_upload[:5]  # Show first 5 files
-                self.logger.info(
-                    f"📁 Sample files to upload: {', '.join(sample_files)}"
-                )
+                self.logger.info(f"Sample files to upload: {', '.join(sample_files)}")
                 if len(files_to_upload) > 5:
-                    self.logger.info(
-                        f"📁 ... and {len(files_to_upload) - 5} more files"
-                    )
+                    self.logger.info(f"... and {len(files_to_upload) - 5} more files")
 
             # Start backup immediately without popup
             self.start_backup_immediately(incremental_enabled)
@@ -886,7 +882,7 @@ class BlackBlazeBackupApp(QMainWindow):
         self.is_backup_running = False  # Clear backup running flag
 
         if success:
-            self.statusBar().showMessage("✅ Backup completed successfully!", 10000)
+            self.statusBar().showMessage(" Backup completed successfully!", 10000)
             if self.tray_icon:
                 self.tray_icon.showMessage(
                     "Backup Complete",
@@ -896,7 +892,7 @@ class BlackBlazeBackupApp(QMainWindow):
                 )
         else:
             self.statusBar().showMessage(
-                "❌ Backup failed. Check the log for details.", 10000
+                " Backup failed. Check the log for details.", 10000
             )
             if self.tray_icon:
                 self.tray_icon.showMessage(
