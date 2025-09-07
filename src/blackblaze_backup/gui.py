@@ -684,6 +684,9 @@ class BlackBlazeBackupApp(QMainWindow):
             QMessageBox.warning(self, "Invalid Configuration", message)
             return
 
+        # Reset cancellation state for new backup
+        self.backup_service.reset_cancellation()
+
         # Start backup worker with incremental setting
         incremental_enabled = self.incremental_backup_check.isChecked()
         self.backup_worker = BackupWorker(
@@ -708,7 +711,15 @@ class BlackBlazeBackupApp(QMainWindow):
         if self.backup_worker and self.backup_worker.isRunning():
             self.backup_worker.cancel()
             self.backup_worker.wait()
-            self.is_backup_running = False  # Clear backup running flag
+
+        # Reset UI state after cancellation
+        self.start_backup_btn.setEnabled(True)
+        self.cancel_backup_btn.setEnabled(False)
+        self.is_backup_running = False  # Clear backup running flag
+
+        # Update status message
+        self.statusBar().showMessage("Backup cancelled by user", 5000)
+        self.logger.info("Backup cancelled by user")
 
     def update_progress(self, value):
         """Update progress bar"""

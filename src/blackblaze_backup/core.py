@@ -95,6 +95,11 @@ class BackupManager:
         self.cancelled = True
         self.logger.info("Backup cancellation requested")
 
+    def reset_cancellation(self):
+        """Reset the cancellation state for a new backup"""
+        self.cancelled = False
+        self.logger.info("Backup cancellation state reset")
+
     def get_files_to_backup(self, folder_path: str) -> list[Path]:
         """Get all files in a folder that need to be backed up"""
         folder_path_obj = Path(folder_path)
@@ -451,3 +456,7 @@ class BackupService:
     def cancel_backup(self):
         """Cancel the current backup operation"""
         self.backup_manager.cancel_backup()
+
+    def reset_cancellation(self):
+        """Reset the cancellation state for a new backup"""
+        self.backup_manager.reset_cancellation()
