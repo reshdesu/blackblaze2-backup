@@ -179,7 +179,6 @@ jobs:
     
     - name: Build MSI package (Windows)
       if: matrix.os == 'windows-latest'
-      shell: powershell
       run: |
         # Install WiX Toolset via Chocolatey
         choco install wixtoolset -y
@@ -191,7 +190,7 @@ jobs:
         $productId = [System.Guid]::NewGuid().ToString().ToUpper()
         $upgradeId = "12345678-1234-1234-1234-123456789012"
         
-        @"
+        $wixContent = @"
         <?xml version="1.0" encoding="UTF-8"?>
         <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
           <Product Id="{$productId}" 
@@ -239,13 +238,15 @@ jobs:
             
           </Product>
         </Wix>
-        "@ | Out-File -FilePath "installer/product.wxs" -Encoding UTF8
+        "@
+        
+        $wixContent | Out-File -FilePath "installer/product.wxs" -Encoding UTF8
         
         # Build MSI installer
         cd installer
         candle.exe product.wxs -o product.wixobj
         light.exe product.wixobj -o BlackBlaze-Backup-Tool.msi
-      shell: cmd
+      shell: powershell
     
     - name: Upload DEB artifact
       if: matrix.os == 'ubuntu-latest'
