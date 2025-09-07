@@ -1073,9 +1073,11 @@ class BlackBlazeBackupApp(QMainWindow):
 
         # Check if a backup is already running
         if self.backup_worker and self.backup_worker.isRunning():
-            self.logger.info("Skipping scheduled backup - manual backup already in progress")
+            self.logger.info(
+                "Skipping scheduled backup - manual backup already in progress"
+            )
             return
-        
+
         # Additional check using backup state flag
         if self.is_backup_running:
             self.logger.info("Skipping scheduled backup - backup already in progress")
