@@ -203,12 +203,35 @@ jobs:
         cd release-assets
         zip -r ../blackblaze-backup-${{ github.ref_name }}.zip .
     
-    - name: Upload release assets
-      uses: actions/upload-release-asset@v1
+    - name: Create GitHub Release with Packages
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        body: |
+          ## BlackBlaze B2 Backup Tool ${{ github.ref_name }}
+          
+          ### Downloads
+          - **Windows MSI**: `BlackBlaze-Backup-Tool-Windows.exe`
+          - **Ubuntu DEB**: `blackblaze-backup-tool_1.0.0_amd64.deb`
+          
+          ### Installation
+          1. Download the appropriate package for your platform
+          2. **Windows**: Run the MSI installer
+          3. **Ubuntu**: Install with `sudo dpkg -i blackblaze-backup-tool_1.0.0_amd64.deb`
+          4. Configure your BackBlaze B2 credentials
+          5. Select folders to backup
+          6. Set up automatic backup schedule
+          
+          ### Features
+          - Cross-platform GUI (Windows & Ubuntu)
+          - Automatic incremental backups
+          - System tray integration
+          - Scheduled backups (1min, 5min, 15min, hourly, daily, weekly)
+          - Secure credential storage
+        files: |
+          blackblaze-backup-${{ github.ref_name }}.zip
+        draft: false
+        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./blackblaze-backup-${{ github.ref_name }}.zip
-        asset_name: blackblaze-backup-${{ github.ref_name }}.zip
-        asset_content_type: application/zip
