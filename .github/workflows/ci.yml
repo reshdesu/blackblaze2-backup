@@ -74,8 +74,8 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
 
-  build:
-    name: Build Executables
+  build-packages:
+    name: Build Packages
     runs-on: ${{ matrix.os }}
     needs: test
     strategy:
@@ -109,6 +109,13 @@ jobs:
         uv venv
         .venv\Scripts\activate
         uv pip install -e ".[build]"
+        uv pip install pillow
+    
+    - name: Convert icon to ICO format (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        .venv\Scripts\activate
+        python -c "from PIL import Image; Image.open('src/blackblaze_backup/icon.png').save('src/blackblaze_backup/icon.ico', format='ICO')"
     
     - name: Build executable (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
@@ -122,19 +129,134 @@ jobs:
         .venv\Scripts\activate
         pyinstaller --clean --log-level=ERROR blackblaze_backup.spec
     
-    - name: Upload Ubuntu executable
+    - name: Build DEB package (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        source .venv/bin/activate
+        mkdir -p package/usr/bin
+        mkdir -p package/usr/share/applications
+        mkdir -p package/usr/share/icons
+        mkdir -p package/usr/share/doc/blackblaze-backup-tool
+        mkdir -p package/DEBIAN
+        
+        # Copy executable
+        cp dist/BlackBlaze-Backup-Tool package/usr/bin/blackblaze-backup-tool
+        chmod +x package/usr/bin/blackblaze-backup-tool
+        
+        # Create desktop file
+        cat > package/usr/share/applications/blackblaze-backup-tool.desktop << EOF
+        [Desktop Entry]
+        Name=BlackBlaze B2 Backup Tool
+        Comment=Cross-platform backup tool for BackBlaze B2
+        Exec=blackblaze-backup-tool
+        Icon=blackblaze-backup-tool
+        Terminal=false
+        Type=Application
+        Categories=Utility;System;
+        EOF
+        
+        # Copy icon
+        cp src/blackblaze_backup/icon.png package/usr/share/icons/blackblaze-backup-tool.png
+        
+        # Create control file
+        cat > package/DEBIAN/control << EOF
+        Package: blackblaze-backup-tool
+        Version: 1.0.0
+        Section: utils
+        Priority: optional
+        Architecture: amd64
+        Depends: libc6 (>= 2.17), libgcc-s1 (>= 3.0)
+        Maintainer: BlackBlaze B2 Backup Tool Contributors <noreply@example.com>
+        Description: Cross-platform backup tool for BackBlaze B2
+         A modern GUI application for backing up local folders to BackBlaze B2 S3 buckets
+         with automatic scheduling and background operation.
+        EOF
+        
+        # Build DEB package
+        dpkg-deb --build package blackblaze-backup-tool_1.0.0_amd64.deb
+    
+    - name: Build MSI package (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        # Install WiX Toolset via Chocolatey
+        choco install wixtoolset -y
+        refreshenv
+        
+        # Create WiX configuration
+        mkdir installer
+        $version = "1.0.0"
+        $productId = [System.Guid]::NewGuid().ToString().ToUpper()
+        $upgradeId = "12345678-1234-1234-1234-123456789012"
+        
+        @"
+        <?xml version="1.0" encoding="UTF-8"?>
+        <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+          <Product Id="{$productId}" 
+                   Name="BlackBlaze B2 Backup Tool" 
+                   Language="1033" 
+                   Version="{$version}" 
+                   Manufacturer="BlackBlaze B2 Backup Tool Contributors" 
+                   UpgradeCode="{$upgradeId}">
+            
+            <Package InstallerVersion="200" 
+                     Compressed="yes" 
+                     InstallScope="perUser" 
+                     Description="Cross-platform backup tool for BackBlaze B2" />
+            
+            <MajorUpgrade 
+              DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+              AllowSameVersionUpgrades="yes"
+              Schedule="afterInstallValidate" />
+            
+            <MediaTemplate EmbedCab="yes" />
+            
+            <Feature Id="ProductFeature" Title="BlackBlaze B2 Backup Tool" Level="1">
+              <ComponentGroupRef Id="ProductComponents" />
+            </Feature>
+            
+            <Directory Id="TARGETDIR" Name="SourceDir">
+              <Directory Id="LocalAppDataFolder">
+                <Directory Id="INSTALLFOLDER" Name="BlackBlazeBackupTool" />
+              </Directory>
+            </Directory>
+            
+            <Icon Id="ApplicationIcon" SourceFile="src/blackblaze_backup/icon.ico" />
+            
+            <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+              <Component Id="MainExecutable" Guid="*">
+                <File Id="BlackBlazeBackupToolExe" 
+                      Name="BlackBlaze-Backup-Tool.exe" 
+                      Source="dist/BlackBlaze-Backup-Tool.exe" 
+                      KeyPath="yes" />
+              </Component>
+            </ComponentGroup>
+            
+            <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+            <UIRef Id="WixUI_Minimal" />
+            
+          </Product>
+        </Wix>
+        "@ | Out-File -FilePath "installer/product.wxs" -Encoding UTF8
+        
+        # Build MSI installer
+        cd installer
+        candle.exe product.wxs -o product.wixobj
+        light.exe product.wixobj -o BlackBlaze-Backup-Tool.msi
+      shell: cmd
+    
+    - name: Upload DEB artifact
       if: matrix.os == 'ubuntu-latest'
       uses: actions/upload-artifact@v4
       with:
-        name: blackblaze-backup-ubuntu
-        path: dist/BlackBlaze-Backup-Tool
+        name: blackblaze-backup-ubuntu-deb
+        path: blackblaze-backup-tool_1.0.0_amd64.deb
     
-    - name: Upload Windows executable
+    - name: Upload MSI artifact
       if: matrix.os == 'windows-latest'
       uses: actions/upload-artifact@v4
       with:
-        name: blackblaze-backup-windows
-        path: dist/BlackBlaze-Backup-Tool.exe
+        name: blackblaze-backup-windows-msi
+        path: installer/BlackBlaze-Backup-Tool.msi
 
   security:
     name: Security Scan
@@ -175,52 +297,32 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [test, build, security]
+    needs: [test, build-packages, security]
     if: startsWith(github.ref, 'refs/tags/v')
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Download Ubuntu executable
-      uses: actions/download-artifact@v4
-      with:
-        name: blackblaze-backup-ubuntu
-        path: ./releases/ubuntu
-    
-    - name: Download Windows executable
-      uses: actions/download-artifact@v4
-      with:
-        name: blackblaze-backup-windows
-        path: ./releases/windows
-    
     - name: Download Ubuntu DEB package
       uses: actions/download-artifact@v4
       with:
         name: blackblaze-backup-ubuntu-deb
         path: ./releases/ubuntu-deb
-      continue-on-error: true
     
     - name: Download Windows MSI package
       uses: actions/download-artifact@v4
       with:
-        name: blackblaze-backup-windows-msi-wix
+        name: blackblaze-backup-windows-msi
         path: ./releases/windows-msi
-      continue-on-error: true
     
     - name: Create release archive
       run: |
         mkdir -p release-assets
-        cp releases/ubuntu/BlackBlaze-Backup-Tool release-assets/
-        cp releases/windows/BlackBlaze-Backup-Tool.exe release-assets/
         
-        # Add MSI/DEB packages if they exist
-        if [ -d "releases/ubuntu-deb" ]; then
-          cp releases/ubuntu-deb/*.deb release-assets/ 2>/dev/null || true
-        fi
-        if [ -d "releases/windows-msi" ]; then
-          cp releases/windows-msi/*.msi release-assets/ 2>/dev/null || true
-        fi
+        # Add MSI/DEB packages
+        cp releases/ubuntu-deb/*.deb release-assets/
+        cp releases/windows-msi/*.msi release-assets/
         
         cd release-assets
         TAG_NAME=${GITHUB_REF#refs/tags/}
@@ -235,17 +337,13 @@ jobs:
           ## BlackBlaze B2 Backup Tool ${{ github.ref_name }}
           
           ### Downloads
-          - **Windows Executable**: `BlackBlaze-Backup-Tool.exe`
-          - **Windows MSI Installer**: `BlackBlaze-Backup-Tool.msi`
-          - **Ubuntu Executable**: `BlackBlaze-Backup-Tool`
-          - **Ubuntu DEB Package**: `blackblaze-backup-tool_1.0.0_amd64.deb`
+          - **Windows MSI Installer**: `BlackBlaze-Backup-Tool.msi` (Recommended for Windows)
+          - **Ubuntu DEB Package**: `blackblaze-backup-tool_1.0.0_amd64.deb` (Recommended for Ubuntu)
           
           ### Installation
           1. Download the appropriate package for your platform
-          2. **Windows**: 
-             - **MSI**: Run the installer (recommended for most users)
-             - **EXE**: Run the standalone executable (portable)
-          3. **Ubuntu**: Install with `sudo dpkg -i blackblaze-backup-tool_1.0.0_amd64.deb` or run executable
+          2. **Windows**: Run the MSI installer (no admin rights required)
+          3. **Ubuntu**: Install with `sudo dpkg -i blackblaze-backup-tool_1.0.0_amd64.deb`
           4. Configure your BackBlaze B2 credentials
           5. Select folders to backup
           6. Set up automatic backup schedule
