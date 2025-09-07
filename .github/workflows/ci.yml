@@ -222,13 +222,13 @@ jobs:
               </Directory>
             </Directory>
             
-            <Icon Id="ApplicationIcon" SourceFile="src/blackblaze_backup/icon.ico" />
+            <Icon Id="ApplicationIcon" SourceFile="../src/blackblaze_backup/icon.ico" />
             
             <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
               <Component Id="MainExecutable" Guid="*">
                 <File Id="BlackBlazeBackupToolExe" 
                       Name="BlackBlaze-Backup-Tool.exe" 
-                      Source="dist/BlackBlaze-Backup-Tool.exe" 
+                      Source="../dist/BlackBlaze-Backup-Tool.exe" 
                       KeyPath="yes" />
               </Component>
             </ComponentGroup>
