@@ -249,8 +249,7 @@ jobs:
                           Name="BlackBlaze B2 Backup Tool" 
                           WorkingDirectory="INSTALLFOLDER" 
                           Icon="ApplicationIcon" 
-                          IconIndex="0" 
-                          Advertise="yes" />
+                          IconIndex="0" />
                 <RemoveFolder Id="ProgramMenuDir" On="uninstall" />
                 <RegistryValue Root="HKCU" Key="Software\BlackBlazeBackupTool" Name="installed" Type="integer" Value="1" KeyPath="yes" />
               </Component>
@@ -263,8 +262,7 @@ jobs:
                           Name="BlackBlaze B2 Backup Tool" 
                           WorkingDirectory="INSTALLFOLDER" 
                           Icon="ApplicationIcon" 
-                          IconIndex="0" 
-                          Advertise="yes" />
+                          IconIndex="0" />
                 <RegistryValue Root="HKCU" Key="Software\BlackBlazeBackupTool" Name="desktop" Type="integer" Value="1" KeyPath="yes" />
               </Component>
             </ComponentGroup>
@@ -278,7 +276,7 @@ jobs:
         # Build MSI installer
         cd installer
         candle.exe product.wxs -o product.wixobj
-        light.exe product.wixobj -o BlackBlaze-Backup-Tool.msi
+        light.exe product.wixobj -o BlackBlaze-Backup-Tool-$version.msi
       shell: powershell
     
     - name: Upload DEB artifact
@@ -293,7 +291,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: blackblaze-backup-windows-msi
-        path: installer/BlackBlaze-Backup-Tool.msi
+        path: installer/BlackBlaze-Backup-Tool-${{ github.ref_name }}.msi
 
   security:
     name: Security Scan
@@ -365,7 +363,7 @@ jobs:
           ## BlackBlaze B2 Backup Tool ${{ github.ref_name }}
           
           ### Downloads
-          - **Windows MSI Installer**: `BlackBlaze-Backup-Tool.msi` (Recommended for Windows)
+          - **Windows MSI Installer**: `BlackBlaze-Backup-Tool-${{ github.ref_name }}.msi` (Recommended for Windows)
           - **Ubuntu DEB Package**: `blackblaze-backup-tool_${{ github.ref_name }}_amd64.deb` (Recommended for Ubuntu)
           
           ### Installation
