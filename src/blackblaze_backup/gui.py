@@ -309,8 +309,8 @@ class BlackBlazeBackupApp(QMainWindow):
         self.setWindowTitle("BlackBlaze B2 Backup Tool")
         self.setGeometry(100, 100, 650, 700)
 
-        # Set window icon
-        icon_path = Path(__file__).parent / "icon.svg"
+        # Set window icon (use PNG for better cross-platform compatibility)
+        icon_path = Path(__file__).parent / "icon.png"
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
 
@@ -773,10 +773,10 @@ class BlackBlazeBackupApp(QMainWindow):
 
         self.logger.info("Setting up cross-platform system tray icon...")
 
-        # Create cross-platform compatible icon
-        icon_path = Path(__file__).parent / "icon.svg"
+        # Create cross-platform compatible icon (use PNG for better Windows compatibility)
+        icon_path = Path(__file__).parent / "icon.png"
         if icon_path.exists():
-            # Try to load SVG directly (works on Windows 11 and modern Ubuntu)
+            # Use PNG icon (works better on Windows)
             icon = QIcon(str(icon_path))
         else:
             # Fallback: Create a simple programmatic icon
