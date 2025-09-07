@@ -195,43 +195,20 @@ jobs:
         name: blackblaze-backup-ubuntu-deb
         path: ./releases/ubuntu
     
-    - name: Create release archive
+    - name: Wait for main CI release to be created
       run: |
-        mkdir -p release-assets
-        cp releases/windows/BlackBlaze-Backup-Tool.exe release-assets/BlackBlaze-Backup-Tool-Windows.exe
-        cp releases/ubuntu/blackblaze-backup-tool_1.0.0_amd64.deb release-assets/
-        cd release-assets
-        zip -r ../blackblaze-backup-${{ github.ref_name }}.zip .
+        echo "Waiting for main CI pipeline to create release..."
+        sleep 60
     
-    - name: Create GitHub Release with Packages
+    - name: Upload packages to existing release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.ref_name }}
-        name: Release ${{ github.ref_name }}
-        body: |
-          ## BlackBlaze B2 Backup Tool ${{ github.ref_name }}
-          
-          ### Downloads
-          - **Windows MSI**: `BlackBlaze-Backup-Tool-Windows.exe`
-          - **Ubuntu DEB**: `blackblaze-backup-tool_1.0.0_amd64.deb`
-          
-          ### Installation
-          1. Download the appropriate package for your platform
-          2. **Windows**: Run the MSI installer
-          3. **Ubuntu**: Install with `sudo dpkg -i blackblaze-backup-tool_1.0.0_amd64.deb`
-          4. Configure your BackBlaze B2 credentials
-          5. Select folders to backup
-          6. Set up automatic backup schedule
-          
-          ### Features
-          - Cross-platform GUI (Windows & Ubuntu)
-          - Automatic incremental backups
-          - System tray integration
-          - Scheduled backups (1min, 5min, 15min, hourly, daily, weekly)
-          - Secure credential storage
         files: |
-          blackblaze-backup-${{ github.ref_name }}.zip
+          releases/windows/*.exe
+          releases/ubuntu/*.deb
         draft: false
         prerelease: false
+        fail_on_unmatched_files: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

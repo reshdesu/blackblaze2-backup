@@ -195,11 +195,34 @@ jobs:
         name: blackblaze-backup-windows
         path: ./releases/windows
     
+    - name: Download Ubuntu DEB package
+      uses: actions/download-artifact@v4
+      with:
+        name: blackblaze-backup-ubuntu-deb
+        path: ./releases/ubuntu-deb
+      continue-on-error: true
+    
+    - name: Download Windows MSI package
+      uses: actions/download-artifact@v4
+      with:
+        name: blackblaze-backup-windows-msi
+        path: ./releases/windows-msi
+      continue-on-error: true
+    
     - name: Create release archive
       run: |
         mkdir -p release-assets
         cp releases/ubuntu/BlackBlaze-Backup-Tool release-assets/
         cp releases/windows/BlackBlaze-Backup-Tool.exe release-assets/
+        
+        # Add MSI/DEB packages if they exist
+        if [ -d "releases/ubuntu-deb" ]; then
+          cp releases/ubuntu-deb/*.deb release-assets/ 2>/dev/null || true
+        fi
+        if [ -d "releases/windows-msi" ]; then
+          cp releases/windows-msi/*.exe release-assets/ 2>/dev/null || true
+        fi
+        
         cd release-assets
         TAG_NAME=${GITHUB_REF#refs/tags/}
         zip -r ../blackblaze-backup-${TAG_NAME}.zip .
@@ -213,15 +236,18 @@ jobs:
           ## BlackBlaze B2 Backup Tool ${{ github.ref_name }}
           
           ### Downloads
-          - **Windows**: `BlackBlaze-Backup-Tool.exe`
-          - **Ubuntu**: `BlackBlaze-Backup-Tool`
+          - **Windows Executable**: `BlackBlaze-Backup-Tool.exe`
+          - **Ubuntu Executable**: `BlackBlaze-Backup-Tool`
+          - **Windows MSI Installer**: `BlackBlaze-Backup-Tool-Windows.exe` (if available)
+          - **Ubuntu DEB Package**: `blackblaze-backup-tool_1.0.0_amd64.deb` (if available)
           
           ### Installation
-          1. Download the appropriate executable for your platform
-          2. Run the executable
-          3. Configure your BackBlaze B2 credentials
-          4. Select folders to backup
-          5. Set up automatic backup schedule
+          1. Download the appropriate package for your platform
+          2. **Windows**: Run the MSI installer or executable
+          3. **Ubuntu**: Install with `sudo dpkg -i blackblaze-backup-tool_1.0.0_amd64.deb` or run executable
+          4. Configure your BackBlaze B2 credentials
+          5. Select folders to backup
+          6. Set up automatic backup schedule
           
           ### Features
           - Cross-platform GUI (Windows & Ubuntu)
