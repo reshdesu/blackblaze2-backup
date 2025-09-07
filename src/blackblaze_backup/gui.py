@@ -655,7 +655,7 @@ class BlackBlazeBackupApp(QMainWindow):
             )
 
     def start_backup(self):
-        """Start the backup process"""
+        """Start the backup process with preview"""
         # Validate credentials
         if not all(
             [
@@ -684,11 +684,121 @@ class BlackBlazeBackupApp(QMainWindow):
             QMessageBox.warning(self, "Invalid Configuration", message)
             return
 
+        # Show upload preview
+        self.show_upload_preview()
+
+    def show_upload_preview(self):
+        """Show what files will be uploaded before starting"""
+        try:
+            # Get credentials and S3 client
+            credentials = self.backup_service.credential_manager.load_credentials()
+            if not credentials:
+                QMessageBox.warning(
+                    self, "No Credentials", "No saved credentials found."
+                )
+                return
+
+            s3_client = self.backup_service.backup_manager.create_s3_client(credentials)
+
+            # Get backup plan
+            backup_plan = self.backup_service.config.get_backup_plan()
+
+            files_to_upload = []
+            files_to_skip = []
+            total_upload_size = 0
+            total_skip_size = 0
+
+            incremental_enabled = self.incremental_backup_check.isChecked()
+
+            # Quick analysis of what will be uploaded
+            for folder_path, bucket_name in backup_plan.items():
+                try:
+                    files = self.backup_service.backup_manager.get_files_to_backup(
+                        folder_path
+                    )
+                    folder_path_obj = Path(folder_path)
+
+                    for file_path in files:
+                        s3_key = self.backup_service.backup_manager.calculate_s3_key(
+                            file_path, folder_path_obj
+                        )
+
+                        should_upload = (
+                            self.backup_service.backup_manager.should_upload_file(
+                                s3_client,
+                                file_path,
+                                bucket_name,
+                                s3_key,
+                                incremental_enabled,
+                            )
+                        )
+
+                        file_size = file_path.stat().st_size
+
+                        if should_upload:
+                            files_to_upload.append(file_path.name)
+                            total_upload_size += file_size
+                        else:
+                            files_to_skip.append(file_path.name)
+                            total_skip_size += file_size
+
+                except Exception as e:
+                    self.logger.warning(f"Error analyzing folder {folder_path}: {e}")
+                    continue
+
+            # Show preview dialog
+            from .utils import format_file_size
+
+            upload_count = len(files_to_upload)
+            skip_count = len(files_to_skip)
+            upload_size_str = format_file_size(total_upload_size)
+            skip_size_str = format_file_size(total_skip_size)
+
+            mode = "Incremental" if incremental_enabled else "Full"
+
+            if upload_count == 0:
+                QMessageBox.information(
+                    self,
+                    "No Upload Needed",
+                    f"All files are already up to date!\n\n"
+                    f"Mode: {mode}\n"
+                    f"Files to skip: {skip_count} ({skip_size_str})",
+                )
+                return
+
+            # Show preview and ask for confirmation
+            preview_text = f"""
+{mode} Upload Preview:
+
+📤 Files to upload: {upload_count} ({upload_size_str})
+⏭️ Files to skip: {skip_count} ({skip_size_str})
+
+Do you want to start the upload?
+"""
+
+            reply = QMessageBox.question(
+                self,
+                "Upload Preview",
+                preview_text,
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
+            )
+
+            if reply == QMessageBox.Yes:
+                self.start_backup_immediately(incremental_enabled)
+
+        except Exception as e:
+            self.logger.error(f"Error in upload preview: {e}")
+            QMessageBox.critical(
+                self, "Preview Error", f"Failed to analyze files:\n{str(e)}"
+            )
+
+    def start_backup_immediately(self, incremental_enabled):
+        """Start backup immediately after preview confirmation"""
         # Reset cancellation state for new backup
         self.backup_service.reset_cancellation()
 
         # Start backup worker with incremental setting
-        incremental_enabled = self.incremental_backup_check.isChecked()
         self.backup_worker = BackupWorker(
             self.backup_service, incremental=incremental_enabled
         )
