@@ -202,13 +202,8 @@ jobs:
             
             <Package InstallerVersion="200" 
                      Compressed="yes" 
-                     InstallScope="perUser" 
+                     InstallScope="perMachine" 
                      Description="Cross-platform backup tool for BackBlaze B2" />
-            
-            <MajorUpgrade 
-              DowngradeErrorMessage="A newer version of [ProductName] is already installed."
-              AllowSameVersionUpgrades="yes"
-              Schedule="afterInstallValidate" />
             
             <MediaTemplate EmbedCab="yes" />
             
@@ -217,27 +212,19 @@ jobs:
             </Feature>
             
             <Directory Id="TARGETDIR" Name="SourceDir">
-              <Directory Id="LocalAppDataFolder">
+              <Directory Id="ProgramFilesFolder">
                 <Directory Id="INSTALLFOLDER" Name="BlackBlazeBackupTool" />
               </Directory>
             </Directory>
             
-            <Icon Id="ApplicationIcon" SourceFile="../src/blackblaze_backup/icon.ico" />
-            
             <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
               <Component Id="MainExecutable" Guid="12345678-1234-1234-1234-123456789012">
-                <RegistryKey Root="HKCU" Key="Software\BlackBlazeBackupTool" Action="createAndRemoveOnUninstall">
-                  <RegistryValue Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
-                </RegistryKey>
                 <File Id="BlackBlazeBackupToolExe" 
                       Name="BlackBlaze-Backup-Tool.exe" 
-                      Source="../dist/BlackBlaze-Backup-Tool.exe" />
-                <RemoveFile Id="RemoveInstallFolder" On="uninstall" Name="*" />
+                      Source="../dist/BlackBlaze-Backup-Tool.exe" 
+                      KeyPath="yes" />
               </Component>
             </ComponentGroup>
-            
-        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-        <UIRef Id="WixUI_Minimal" />
             
           </Product>
         </Wix>
@@ -248,7 +235,7 @@ jobs:
         # Build MSI installer
         cd installer
         candle.exe product.wxs -o product.wixobj
-        light.exe -ext WixUIExtension product.wixobj -o BlackBlaze-Backup-Tool.msi
+        light.exe product.wixobj -o BlackBlaze-Backup-Tool.msi
       shell: powershell
     
     - name: Upload DEB artifact
