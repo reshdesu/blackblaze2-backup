@@ -151,10 +151,22 @@ class BackupManager:
 
                 local_hash = get_file_hash(file_path, "md5")
 
-                # S3 ETag is usually MD5 hash for single-part uploads
-                if local_hash and s3_etag and local_hash != s3_etag:
-                    self.logger.debug(f"File hash changed: {file_path.name}")
-                    return True
+                # Only compare hashes if we have both and local hash is valid
+                if local_hash and s3_etag:
+                    # Handle multi-part upload ETags (format: "hash-partcount")
+                    if "-" in s3_etag:
+                        # Multi-part upload - compare just the hash part
+                        s3_hash = s3_etag.split("-")[0]
+                        if local_hash != s3_hash:
+                            self.logger.debug(
+                                f"File hash changed (multi-part): {file_path.name}"
+                            )
+                            return True
+                    else:
+                        # Single-part upload - direct comparison
+                        if local_hash != s3_etag:
+                            self.logger.debug(f"File hash changed: {file_path.name}")
+                            return True
 
                 # File is identical, skip upload
                 self.logger.debug(f"Skipping unchanged file: {file_path.name}")
@@ -166,9 +178,9 @@ class BackupManager:
                 return True
 
         except Exception as e:
-            # If we can't check, err on the side of uploading
+            # If we can't check, err on the side of uploading but log the error
             self.logger.warning(
-                f"Could not check file status for {file_path.name}: {e}"
+                f"Could not check file status for {file_path.name}: {e}. Will upload to be safe."
             )
             return True
 

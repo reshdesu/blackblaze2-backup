@@ -17,7 +17,12 @@ def get_file_hash(file_path: Path, algorithm: str = "md5") -> str:
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_obj.update(chunk)
         return hash_obj.hexdigest()
-    except OSError:
+    except OSError as e:
+        # Log the error for debugging
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Could not calculate hash for {file_path}: {e}")
         return ""
 
 
