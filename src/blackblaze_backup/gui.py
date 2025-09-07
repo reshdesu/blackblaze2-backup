@@ -206,9 +206,11 @@ class BlackBlazeBackupApp(QMainWindow):
             self.load_schedule_config()
             self.load_folder_config()
             self.load_incremental_backup_setting()  # Load incremental backup setting
-            
+
             # Debug: Log window state
-            self.logger.info(f"Window created - Visible: {self.isVisible()}, Geometry: {self.geometry()}")
+            self.logger.info(
+                f"Window created - Visible: {self.isVisible()}, Geometry: {self.geometry()}"
+            )
             self.update_schedule_status()
             self.setup_auto_save()
         except Exception as e:
@@ -218,10 +220,10 @@ class BlackBlazeBackupApp(QMainWindow):
     def setup_logging(self):
         """Setup logging configuration"""
         from .config import config
-        
+
         # Use config directory for log file (user-accessible location)
         log_file_path = config.log_file
-        
+
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(levelname)s - %(message)s",
