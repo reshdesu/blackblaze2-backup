@@ -20,7 +20,7 @@ if not icon_file.exists():
 # Hidden imports for PySide6 and other dependencies
 hidden_imports = [
     'PySide6.QtCore',
-    'PySide6.QtGui', 
+    'PySide6.QtGui',
     'PySide6.QtWidgets',
     'PySide6.QtNetwork',
     'PySide6.QtOpenGL',

@@ -18,21 +18,21 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9, "3.10", "3.11", "3.12"]
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    
+
     - name: Install uv
       uses: astral-sh/setup-uv@v2
       with:
         version: "latest"
-    
+
     - name: Install dependencies
       run: |
         uv venv
@@ -40,32 +40,32 @@ jobs:
         uv pip install -e ".[dev]"
         # Remove pytest-qt to avoid GUI dependencies in CI
         uv pip uninstall pytest-qt
-    
+
     - name: Run linting
       run: |
         source .venv/bin/activate
         ruff check src/ tests/
         ruff format --check src/ tests/
-    
+
     - name: Run unit tests
       run: |
         source .venv/bin/activate
         pytest tests/test_core.py -v --cov=src/blackblaze_backup --cov-report=xml
-    
+
     # GUI tests disabled in CI due to headless environment limitations
     # - name: Run GUI tests (Ubuntu only)
     #   if: matrix.python-version == '3.12'
     #   run: |
     #     source .venv/bin/activate
     #     pytest tests/test_gui.py -v --cov=src/blackblaze_backup --cov-append
-    
+
     # Comprehensive test suite disabled in CI due to headless environment limitations
     # - name: Run comprehensive test suite (Ubuntu only)
     #   if: matrix.python-version == '3.12'
     #   run: |
     #     source .venv/bin/activate
     #     python tests/integration/run_tests.py
-    
+
     - name: Upload coverage to Codecov
       if: matrix.python-version == '3.12'
       uses: codecov/codecov-action@v3
@@ -82,28 +82,28 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-    
+
     - name: Install uv
       uses: astral-sh/setup-uv@v2
       with:
         version: "latest"
-    
+
     - name: Install dependencies (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
         uv venv
         source .venv/bin/activate
         uv pip install -e ".[build]"
-    
+
     - name: Install dependencies (Windows)
       if: matrix.os == 'windows-latest'
       run: |
@@ -111,44 +111,44 @@ jobs:
         .venv\Scripts\activate
         uv pip install -e ".[build]"
         uv pip install pillow
-    
+
     - name: Convert icon to ICO format (Windows)
       if: matrix.os == 'windows-latest'
       run: |
         .venv\Scripts\activate
         python -c "from PIL import Image; Image.open('src/blackblaze_backup/icon.png').save('src/blackblaze_backup/icon.ico', format='ICO')"
-    
+
     - name: Build executable (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
         source .venv/bin/activate
         pyinstaller --clean --log-level=ERROR blackblaze_backup.spec
-    
+
     - name: Build executable (Windows)
       if: matrix.os == 'windows-latest'
       run: |
         .venv\Scripts\activate
         pyinstaller --clean --log-level=ERROR blackblaze_backup.spec
-    
+
     - name: Build DEB package (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
         source .venv/bin/activate
-        
+
         # Extract version from git tag (remove 'v' prefix for DEB version)
         VERSION=${GITHUB_REF_NAME#v}
         echo "Building DEB package version: $VERSION"
-        
+
         mkdir -p package/usr/bin
         mkdir -p package/usr/share/applications
         mkdir -p package/usr/share/icons
         mkdir -p package/usr/share/doc/blackblaze-backup-tool
         mkdir -p package/DEBIAN
-        
+
         # Copy executable
         cp dist/BlackBlaze-Backup-Tool package/usr/bin/blackblaze-backup-tool
         chmod +x package/usr/bin/blackblaze-backup-tool
-        
+
         # Create desktop file
         cat > package/usr/share/applications/blackblaze-backup-tool.desktop << EOF
         [Desktop Entry]
@@ -160,10 +160,10 @@ jobs:
         Type=Application
         Categories=Utility;System;
         EOF
-        
+
         # Copy icon
         cp src/blackblaze_backup/icon.png package/usr/share/icons/blackblaze-backup-tool.png
-        
+
         # Create control file
         cat > package/DEBIAN/control << EOF
         Package: blackblaze-backup-tool
@@ -177,55 +177,55 @@ jobs:
          A modern GUI application for backing up local folders to BackBlaze B2 S3 buckets
          with automatic scheduling and background operation.
         EOF
-        
+
         # Build DEB package with version at the end
         dpkg-deb --build package blackblaze-backup-tool_amd64_${GITHUB_REF_NAME}.deb
-    
+
     - name: Build MSI package (Windows)
       if: matrix.os == 'windows-latest'
       run: |
         # Install WiX Toolset via Chocolatey
         choco install wixtoolset -y
         refreshenv
-        
+
         # Extract version from git tag (remove 'v' prefix for WiX version)
         $version = "${{ github.ref_name }}".Substring(1)  # Remove 'v' prefix
         $wixVersion = "$version.0"  # WiX requires 4-part version (major.minor.patch.build)
         echo "Building MSI package version: $wixVersion"
-        
+
         # Create WiX configuration
         mkdir installer
         $productId = [System.Guid]::NewGuid().ToString().ToUpper()
         # Use consistent UpgradeCode for all versions to enable proper upgrades
         $upgradeId = "12345678-1234-1234-1234-123456789012"
-        
+
         $wixContent = @"
         <?xml version="1.0" encoding="UTF-8"?>
         <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-          <Product Id="$productId" 
-                   Name="BlackBlaze B2 Backup Tool" 
-                   Language="1033" 
-                   Version="$wixVersion" 
-                   Manufacturer="BlackBlaze B2 Backup Tool Contributors" 
+          <Product Id="$productId"
+                   Name="BlackBlaze B2 Backup Tool"
+                   Language="1033"
+                   Version="$wixVersion"
+                   Manufacturer="BlackBlaze B2 Backup Tool Contributors"
                    UpgradeCode="$upgradeId">
-            
-            <Package InstallerVersion="200" 
-                     Compressed="yes" 
-                     InstallScope="perMachine" 
+
+            <Package InstallerVersion="200"
+                     Compressed="yes"
+                     InstallScope="perMachine"
                      Description="Cross-platform backup tool for BackBlaze B2" />
-            
+
             <MediaTemplate EmbedCab="yes" />
-            
-            <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." 
-                          AllowSameVersionUpgrades="yes" 
+
+            <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                          AllowSameVersionUpgrades="yes"
                           Schedule="afterInstallValidate" />
-            
+
             <Feature Id="ProductFeature" Title="BlackBlaze B2 Backup Tool" Level="1">
               <ComponentGroupRef Id="ProductComponents" />
               <ComponentGroupRef Id="StartMenuComponents" />
               <ComponentGroupRef Id="DesktopComponents" />
             </Feature>
-            
+
             <Directory Id="TARGETDIR" Name="SourceDir">
               <Directory Id="ProgramFilesFolder">
                 <Directory Id="INSTALLFOLDER" Name="BlackBlazeBackupTool" />
@@ -235,64 +235,64 @@ jobs:
               </Directory>
               <Directory Id="DesktopFolder" Name="Desktop" />
             </Directory>
-            
+
             <Icon Id="ApplicationIcon" SourceFile="../src/blackblaze_backup/icon.ico" />
-            
+
             <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
               <Component Id="MainExecutable" Guid="12345678-1234-1234-1234-123456789012">
-                <File Id="BlackBlazeBackupToolExe" 
-                      Name="BlackBlaze-Backup-Tool.exe" 
-                      Source="../dist/BlackBlaze-Backup-Tool.exe" 
+                <File Id="BlackBlazeBackupToolExe"
+                      Name="BlackBlaze-Backup-Tool.exe"
+                      Source="../dist/BlackBlaze-Backup-Tool.exe"
                       KeyPath="yes" />
               </Component>
             </ComponentGroup>
-            
+
             <ComponentGroup Id="StartMenuComponents" Directory="ProgramMenuDir">
               <Component Id="StartMenuShortcut" Guid="87654321-4321-4321-4321-210987654321">
-                <Shortcut Id="StartMenuShortcut" 
-                          Directory="ProgramMenuDir" 
-                          Name="BlackBlaze B2 Backup Tool" 
+                <Shortcut Id="StartMenuShortcut"
+                          Directory="ProgramMenuDir"
+                          Name="BlackBlaze B2 Backup Tool"
                           Target="[INSTALLFOLDER]BlackBlaze-Backup-Tool.exe"
-                          WorkingDirectory="INSTALLFOLDER" 
-                          Icon="ApplicationIcon" 
+                          WorkingDirectory="INSTALLFOLDER"
+                          Icon="ApplicationIcon"
                           IconIndex="0" />
                 <RemoveFolder Id="ProgramMenuDir" On="uninstall" />
                 <RegistryValue Root="HKCU" Key="Software\BlackBlazeBackupTool" Name="installed" Type="integer" Value="1" KeyPath="yes" />
               </Component>
             </ComponentGroup>
-            
+
             <ComponentGroup Id="DesktopComponents" Directory="DesktopFolder">
               <Component Id="DesktopShortcut" Guid="11111111-2222-3333-4444-555555555555">
-                <Shortcut Id="DesktopShortcut" 
-                          Directory="DesktopFolder" 
-                          Name="BlackBlaze B2 Backup Tool" 
+                <Shortcut Id="DesktopShortcut"
+                          Directory="DesktopFolder"
+                          Name="BlackBlaze B2 Backup Tool"
                           Target="[INSTALLFOLDER]BlackBlaze-Backup-Tool.exe"
-                          WorkingDirectory="INSTALLFOLDER" 
-                          Icon="ApplicationIcon" 
+                          WorkingDirectory="INSTALLFOLDER"
+                          Icon="ApplicationIcon"
                           IconIndex="0" />
                 <RegistryValue Root="HKCU" Key="Software\BlackBlazeBackupTool" Name="desktop" Type="integer" Value="1" KeyPath="yes" />
               </Component>
             </ComponentGroup>
-            
+
           </Product>
         </Wix>
         "@
-        
+
         $wixContent | Out-File -FilePath "installer/product.wxs" -Encoding UTF8
-        
+
         # Build MSI installer with version at the end
         cd installer
         candle.exe product.wxs -o product.wixobj
         light.exe product.wixobj -o BlackBlaze-Backup-Tool-${{ github.ref_name }}.msi
       shell: powershell
-    
+
     - name: Upload DEB artifact
       if: matrix.os == 'ubuntu-latest'
       uses: actions/upload-artifact@v4
       with:
         name: blackblaze-backup-ubuntu-deb
         path: blackblaze-backup-tool_amd64_${{ github.ref_name }}.deb
-    
+
     - name: Upload MSI artifact
       if: matrix.os == 'windows-latest'
       uses: actions/upload-artifact@v4
@@ -306,30 +306,30 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-    
+
     - name: Install uv
       uses: astral-sh/setup-uv@v2
       with:
         version: "latest"
-    
+
     - name: Install dependencies
       run: |
         uv venv
         source .venv/bin/activate
         uv pip install -e ".[dev]"
-    
+
     - name: Run security scan
       run: |
         source .venv/bin/activate
         pip install safety bandit
         safety check
         bandit -r src/ -f json -o bandit-report.json
-    
+
     - name: Upload security report
       uses: actions/upload-artifact@v4
       with:
@@ -341,23 +341,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, build-packages, security]
     if: startsWith(github.ref, 'refs/tags/v')
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Download Ubuntu DEB package
       uses: actions/download-artifact@v4
       with:
         name: blackblaze-backup-ubuntu-deb
         path: ./releases/ubuntu-deb
-    
+
     - name: Download Windows MSI package
       uses: actions/download-artifact@v4
       with:
         name: blackblaze-backup-windows-msi
         path: ./releases/windows-msi
-    
+
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
@@ -368,11 +368,11 @@ jobs:
           releases/windows-msi/*.msi
         body: |
           ## BlackBlaze B2 Backup Tool ${{ github.ref_name }}
-          
+
           ### Downloads
           - **Windows MSI Installer**: `BlackBlaze-Backup-Tool-${{ github.ref_name }}.msi` (Recommended for Windows)
           - **Ubuntu DEB Package**: `blackblaze-backup-tool_amd64_${{ github.ref_name }}.deb` (Recommended for Ubuntu)
-          
+
           ### Installation
           1. Download the appropriate package for your platform
           2. **Windows**: Run the MSI installer (no admin rights required)
@@ -380,7 +380,7 @@ jobs:
           4. Configure your BackBlaze B2 credentials
           5. Select folders to backup
           6. Set up automatic backup schedule
-          
+
           ### Features
           - Cross-platform GUI (Windows & Ubuntu)
           - Automatic incremental backups

@@ -31,7 +31,7 @@ pyinstaller --clean --log-level=ERROR blackblaze_backup.spec 2>nul
 REM Check if build was successful
 if exist "dist\BlackBlaze-Backup-Tool.exe" (
     echo.
-    echo ✅ Build successful! 
+    echo ✅ Build successful!
     echo Executable created: dist\BlackBlaze-Backup-Tool.exe
     echo.
     echo To run the application:

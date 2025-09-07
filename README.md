@@ -116,7 +116,7 @@ uv run python tests/integration/create_test_data.py
 # Unit tests
 uv run pytest tests/test_core.py -v
 
-# GUI tests  
+# GUI tests
 uv run pytest tests/test_gui.py -v
 
 # All tests
@@ -201,7 +201,7 @@ We welcome contributions! Please see our [CONTRIBUTORS](CONTRIBUTORS.md) and [SE
 ## 🙏 Acknowledgments
 
 - Built with [PySide6](https://pypi.org/project/PySide6/) for cross-platform GUI
-- Uses [uv](https://github.com/astral-sh/uv) for fast package management  
+- Uses [uv](https://github.com/astral-sh/uv) for fast package management
 - Integrates with [BackBlaze B2](https://www.backblaze.com/b2-cloud-storage.html) S3-compatible API
 - Secure credential storage powered by [keyring](https://pypi.org/project/keyring/) and [cryptography](https://pypi.org/project/cryptography/)
 

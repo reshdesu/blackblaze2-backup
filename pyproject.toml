@@ -60,7 +60,7 @@ addopts = [
 ]
 markers = [
     "slow: marks tests as slow",
-    "integration: marks tests as integration tests", 
+    "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
 ]
 filterwarnings = [
@@ -113,6 +113,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "tests/*" = ["B011"]
+"main.py" = ["E402"]  # Allow imports after sys.path modification
 
 [tool.ruff.lint.isort]
 known-first-party = ["blackblaze_backup"]
