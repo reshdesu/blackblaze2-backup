@@ -247,9 +247,12 @@ class BlackBlazeBackupApp(QMainWindow):
 
         # Set format
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        ui_formatter = logging.Formatter(
+            "%(asctime)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
         file_handler.setFormatter(formatter)
         stream_handler.setFormatter(formatter)
-        ui_handler.setFormatter(formatter)
+        ui_handler.setFormatter(ui_formatter)
 
         # Configure logging
         logging.basicConfig(
@@ -795,6 +798,8 @@ class BlackBlazeBackupApp(QMainWindow):
                     f"Upload Analysis Complete - All files up to date! "
                     f"Mode: {mode}, Files to skip: {skip_count} ({skip_size_str})"
                 )
+                # Still start the backup process even if no files need uploading
+                self.start_backup_immediately(incremental_enabled)
                 return
 
             # Log detailed upload preview
