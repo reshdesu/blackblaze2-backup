@@ -208,7 +208,59 @@ uv run mypy src/
 - **Concurrent Backups**: If you see duplicate uploads, check that only one backup is running
 - **Installation Issues**:
   - **Windows**: Try running MSI as administrator if shortcuts don't work
-  - **Ubuntu**: Use `sudo dpkg -i --force-overwrite` if installation conflicts occur
+  - **Ubuntu**: See detailed troubleshooting guide below
+
+## 🛠️ Ubuntu Installation Troubleshooting
+
+If you encounter installation issues on Ubuntu, try these solutions:
+
+### Quick Fix
+```bash
+# Remove any broken installation
+sudo dpkg --remove --force-remove-reinstreq blackblaze-backup-tool
+
+# Install fresh package
+sudo apt install ./blackblaze-backup-tool_amd64_v*.deb
+```
+
+### Common Issues
+
+#### Package Stuck in "iHR" State
+```bash
+# Check status
+dpkg -l | grep blackblaze
+
+# Force remove and reinstall
+sudo dpkg --remove --force-remove-reinstreq blackblaze-backup-tool
+sudo apt install ./blackblaze-backup-tool_amd64_v*.deb
+```
+
+#### Installation Interrupted
+```bash
+# Complete interrupted installations
+sudo dpkg --configure -a
+sudo apt-get install -f
+```
+
+#### Dependency Issues
+```bash
+# Update system and fix dependencies
+sudo apt update
+sudo apt-get install -f
+sudo apt install ./blackblaze-backup-tool_amd64_v*.deb
+```
+
+### Alternative Installation Methods
+- **GDebi**: `sudo apt install gdebi && sudo gdebi *.deb`
+- **Software Center**: Double-click the DEB file
+- **Manual**: Extract and copy files manually
+
+### Getting Help
+If issues persist, please include:
+- Ubuntu version: `lsb_release -a`
+- Architecture: `uname -m`
+- Package status: `dpkg -l | grep blackblaze`
+- Installation log: `sudo apt install ./blackblaze-backup-tool_amd64_v*.deb 2>&1 | tee install.log`
 
 ## ⚡ Why uv?
 
