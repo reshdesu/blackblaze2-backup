@@ -264,12 +264,6 @@ jobs:
                           AllowSameVersionUpgrades="yes"
                           Schedule="afterInstallValidate" />
 
-            <CloseApplication Id="CloseBlackBlazeBackup"
-                             Target="BlackBlaze-Backup-Tool.exe"
-                             Description="BlackBlaze B2 Backup Tool is running and must be closed before upgrading."
-                             CloseMessage="yes"
-                             RebootPrompt="no" />
-
             <Feature Id="ProductFeature" Title="BlackBlaze B2 Backup Tool" Level="1">
               <ComponentGroupRef Id="ProductComponents" />
               <ComponentGroupRef Id="StartMenuComponents" />
