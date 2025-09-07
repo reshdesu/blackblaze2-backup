@@ -39,6 +39,8 @@ jobs:
         uv venv
         source .venv/bin/activate
         uv pip install -e ".[dev]"
+        # Remove pytest-qt to avoid GUI dependencies in CI
+        uv pip uninstall pytest-qt -y
     
     - name: Run linting
       run: |
