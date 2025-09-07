@@ -193,12 +193,12 @@ jobs:
         $wixContent = @"
         <?xml version="1.0" encoding="UTF-8"?>
         <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-          <Product Id="{$productId}" 
+          <Product Id="$productId" 
                    Name="BlackBlaze B2 Backup Tool" 
                    Language="1033" 
-                   Version="{$version}" 
+                   Version="$version" 
                    Manufacturer="BlackBlaze B2 Backup Tool Contributors" 
-                   UpgradeCode="{$upgradeId}">
+                   UpgradeCode="$upgradeId">
             
             <Package InstallerVersion="200" 
                      Compressed="yes" 
