@@ -309,23 +309,14 @@ jobs:
         name: blackblaze-backup-windows-msi
         path: ./releases/windows-msi
     
-    - name: Create release archive
-      run: |
-        mkdir -p release-assets
-        
-        # Add MSI/DEB packages
-        cp releases/ubuntu-deb/*.deb release-assets/
-        cp releases/windows-msi/*.msi release-assets/
-        
-        cd release-assets
-        TAG_NAME=${GITHUB_REF#refs/tags/}
-        zip -r ../blackblaze-backup-${TAG_NAME}.zip .
-    
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.ref_name }}
         name: Release ${{ github.ref_name }}
+        files: |
+          releases/ubuntu-deb/*.deb
+          releases/windows-msi/*.msi
         body: |
           ## BlackBlaze B2 Backup Tool ${{ github.ref_name }}
           
@@ -347,8 +338,6 @@ jobs:
           - System tray integration
           - Scheduled backups (1min, 5min, 15min, hourly, daily, weekly)
           - Secure credential storage
-        files: |
-          blackblaze-backup-${{ github.ref_name }}.zip
         draft: false
         prerelease: false
       env:
