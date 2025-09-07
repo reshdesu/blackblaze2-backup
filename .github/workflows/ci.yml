@@ -225,7 +225,7 @@ jobs:
             <Icon Id="ApplicationIcon" SourceFile="../src/blackblaze_backup/icon.ico" />
             
             <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-              <Component Id="MainExecutable" Guid="*">
+              <Component Id="MainExecutable" Guid="12345678-1234-1234-1234-123456789012">
                 <RegistryKey Root="HKCU" Key="Software\BlackBlazeBackupTool" Action="createAndRemoveOnUninstall">
                   <RegistryValue Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
                 </RegistryKey>
