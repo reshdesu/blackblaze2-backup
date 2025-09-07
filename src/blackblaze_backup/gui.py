@@ -576,6 +576,17 @@ class BlackBlazeBackupApp(QMainWindow):
             # Auto-save folder configuration
             self.save_folder_config()
 
+            # Show message if backup is currently running
+            if self.is_backup_running:
+                folder_name = Path(folder_path).name
+                self.logger.info(
+                    f"Folder '{folder_name}' added and will be included in the next backup"
+                )
+                self.statusBar().showMessage(
+                    f"Folder '{folder_name}' added - will be backed up in next run",
+                    5000,
+                )
+
     def remove_folder(self):
         """Remove selected folder from backup list"""
         current_item = self.folder_tree.currentItem()
@@ -723,7 +734,7 @@ class BlackBlazeBackupApp(QMainWindow):
         if is_scheduled:
             # For scheduled backups, start immediately without preview
             incremental_enabled = self.incremental_backup_check.isChecked()
-            self.start_backup_immediately(incremental_enabled)
+            self.start_backup_immediately(incremental_enabled, is_scheduled=True)
         else:
             # For manual uploads, show preview dialog
             self.show_upload_preview()
@@ -830,7 +841,7 @@ class BlackBlazeBackupApp(QMainWindow):
                 self, "Preview Error", f"Failed to analyze files:\n{str(e)}"
             )
 
-    def start_backup_immediately(self, incremental_enabled):
+    def start_backup_immediately(self, incremental_enabled, is_scheduled=False):
         """Start backup immediately after preview confirmation"""
         # Clear log display for new backup
         self.log_text.clear()
@@ -853,10 +864,17 @@ class BlackBlazeBackupApp(QMainWindow):
         self.log_text.clear()
         self.is_backup_running = True  # Set backup running flag
 
-        # Disable folder management during backup
-        self.add_folder_btn.setEnabled(False)
-        self.remove_folder_btn.setEnabled(False)
-        self.folder_tree.setEnabled(False)
+        # Handle folder management based on backup type
+        if is_scheduled:
+            # For scheduled backups: Allow adding folders with messaging
+            self.remove_folder_btn.setEnabled(False)
+            self.folder_tree.setEnabled(False)
+            self.add_folder_btn.setText("Add Folder (Next Backup)")
+        else:
+            # For manual backups: Disable all folder management
+            self.add_folder_btn.setEnabled(False)
+            self.remove_folder_btn.setEnabled(False)
+            self.folder_tree.setEnabled(False)
 
         self.backup_worker.start()
 
@@ -873,6 +891,7 @@ class BlackBlazeBackupApp(QMainWindow):
 
         # Re-enable folder management after cancellation
         self.add_folder_btn.setEnabled(True)
+        self.add_folder_btn.setText("Add Folder")  # Restore original text
         self.remove_folder_btn.setEnabled(True)
         self.folder_tree.setEnabled(True)
 
@@ -900,6 +919,7 @@ class BlackBlazeBackupApp(QMainWindow):
 
         # Re-enable folder management after backup
         self.add_folder_btn.setEnabled(True)
+        self.add_folder_btn.setText("Add Folder")  # Restore original text
         self.remove_folder_btn.setEnabled(True)
         self.folder_tree.setEnabled(True)
 
