@@ -205,7 +205,7 @@ jobs:
     - name: Download Windows MSI package
       uses: actions/download-artifact@v4
       with:
-        name: blackblaze-backup-windows-msi
+        name: blackblaze-backup-windows-msi-wix
         path: ./releases/windows-msi
       continue-on-error: true
     
@@ -220,7 +220,7 @@ jobs:
           cp releases/ubuntu-deb/*.deb release-assets/ 2>/dev/null || true
         fi
         if [ -d "releases/windows-msi" ]; then
-          cp releases/windows-msi/*.exe release-assets/ 2>/dev/null || true
+          cp releases/windows-msi/*.msi release-assets/ 2>/dev/null || true
         fi
         
         cd release-assets
@@ -237,12 +237,15 @@ jobs:
           
           ### Downloads
           - **Windows Executable**: `BlackBlaze-Backup-Tool.exe`
+          - **Windows MSI Installer**: `BlackBlaze-Backup-Tool.msi`
           - **Ubuntu Executable**: `BlackBlaze-Backup-Tool`
           - **Ubuntu DEB Package**: `blackblaze-backup-tool_1.0.0_amd64.deb`
           
           ### Installation
           1. Download the appropriate package for your platform
-          2. **Windows**: Run the `BlackBlaze-Backup-Tool.exe` executable
+          2. **Windows**: 
+             - **MSI**: Run the installer (recommended for most users)
+             - **EXE**: Run the standalone executable (portable)
           3. **Ubuntu**: Install with `sudo dpkg -i blackblaze-backup-tool_1.0.0_amd64.deb` or run executable
           4. Configure your BackBlaze B2 credentials
           5. Select folders to backup

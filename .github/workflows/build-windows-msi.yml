@@ -1,10 +1,9 @@
 name: Build Windows MSI Installer
 
 on:
-  # Disabled - standalone .exe is sufficient for Windows users
-  # push:
-  #   branches: [ main ]
-  #   tags: [ 'v*' ]
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
   workflow_dispatch:
 
 jobs:
@@ -43,19 +42,18 @@ jobs:
         .venv\Scripts\activate
         pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" --icon=src/blackblaze_backup/icon.ico main.py
     
-    - name: Check WiX installation
+    - name: Install WiX Toolset via Chocolatey
       run: |
-        Write-Host "Checking for WiX installation..."
-        Get-ChildItem "C:\Program Files*" -Recurse -Name "*candle.exe" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "Found: $_" }
-        Get-ChildItem "C:\Program Files*" -Recurse -Name "*light.exe" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "Found: $_" }
-      shell: pwsh
+        choco install wixtoolset -y
+        refreshenv
+      shell: cmd
     
     - name: Create WiX configuration
       run: |
         mkdir installer
         $version = "1.0.0"
         $productId = [System.Guid]::NewGuid().ToString().ToUpper()
-        $upgradeId = [System.Guid]::NewGuid().ToString().ToUpper()
+        $upgradeId = "12345678-1234-1234-1234-123456789012"  # Keep consistent for upgrades
         
         @"
         <?xml version="1.0" encoding="UTF-8"?>
@@ -67,20 +65,30 @@ jobs:
                    Manufacturer="BlackBlaze B2 Backup Tool Contributors" 
                    UpgradeCode="{$upgradeId}">
             
+            <!-- Best Practice: Proper package configuration -->
             <Package InstallerVersion="200" 
                      Compressed="yes" 
-                     InstallScope="perMachine" 
-                     Description="Cross-platform backup tool for BackBlaze B2" />
+                     InstallScope="perUser" 
+                     Description="Cross-platform backup tool for BackBlaze B2"
+                     Comments="BlackBlaze B2 Backup Tool - Secure cloud backup solution" />
             
-            <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+            <!-- Best Practice: Major upgrade handling -->
+            <MajorUpgrade 
+              DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+              AllowSameVersionUpgrades="yes"
+              Schedule="afterInstallValidate" />
+            
+            <!-- Best Practice: Media template -->
             <MediaTemplate EmbedCab="yes" />
             
+            <!-- Best Practice: Feature organization -->
             <Feature Id="ProductFeature" Title="BlackBlaze B2 Backup Tool" Level="1">
               <ComponentGroupRef Id="ProductComponents" />
             </Feature>
             
+            <!-- Best Practice: Proper directory structure -->
             <Directory Id="TARGETDIR" Name="SourceDir">
-              <Directory Id="ProgramFilesFolder">
+              <Directory Id="LocalAppDataFolder">
                 <Directory Id="INSTALLFOLDER" Name="BlackBlazeBackupTool" />
               </Directory>
               <Directory Id="ProgramMenuFolder">
@@ -100,8 +108,10 @@ jobs:
               </Directory>
             </Directory>
             
+            <!-- Best Practice: Application icon -->
             <Icon Id="ApplicationIcon" SourceFile="src/blackblaze_backup/icon.ico" />
             
+            <!-- Best Practice: Component organization -->
             <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
               <Component Id="MainExecutable" Guid="*">
                 <File Id="BlackBlazeBackupToolExe" 
@@ -111,9 +121,14 @@ jobs:
               </Component>
             </ComponentGroup>
             
+            <!-- Best Practice: UI configuration -->
             <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
             <UIRef Id="WixUI_Minimal" />
             <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+            
+            <!-- Best Practice: Installation properties -->
+            <Property Id="ALLUSERS" Value="2" />
+            <Property Id="MSIINSTALLPERUSER" Value="1" />
             
           </Product>
         </Wix>
@@ -151,25 +166,31 @@ jobs:
     - name: Build MSI installer
       run: |
         cd installer
-        
-        # Find WiX tools
-        $candle = Get-ChildItem "C:\Program Files*" -Recurse -Name "*candle.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-        $light = Get-ChildItem "C:\Program Files*" -Recurse -Name "*light.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-        
-        if (-not $candle -or -not $light) {
-          Write-Error "WiX tools not found"
+        candle.exe product.wxs -o product.wixobj
+        light.exe product.wixobj -o BlackBlaze-Backup-Tool.msi
+      shell: cmd
+    
+    - name: Test MSI Installation
+      run: |
+        cd installer
+        echo "Testing MSI installation..."
+        msiexec /i BlackBlaze-Backup-Tool.msi /qn /l*v install.log
+        if %ERRORLEVEL% NEQ 0 (
+          echo "Installation failed"
+          type install.log
           exit 1
-        }
+        )
+        echo "Installation successful"
         
-        $candlePath = "C:\Program Files*\$candle"
-        $lightPath = "C:\Program Files*\$light"
-        
-        Write-Host "Using candle: $candlePath"
-        Write-Host "Using light: $lightPath"
-        
-        & $candlePath -nologo -out product.wixobj product.wxs
-        & $lightPath -nologo -out BlackBlaze-Backup-Tool.msi product.wixobj
-      shell: pwsh
+        echo "Testing MSI uninstallation..."
+        msiexec /x BlackBlaze-Backup-Tool.msi /qn /l*v uninstall.log
+        if %ERRORLEVEL% NEQ 0 (
+          echo "Uninstallation failed"
+          type uninstall.log
+          exit 1
+        )
+        echo "Uninstallation successful"
+      shell: cmd
     
     - name: Upload MSI artifact
       uses: actions/upload-artifact@v4
