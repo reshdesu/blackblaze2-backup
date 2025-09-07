@@ -35,15 +35,9 @@ jobs:
     - name: Build executable
       run: |
         .venv\Scripts\activate
-        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" --icon=src/blackblaze_backup/icon.svg main.py
+        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" --icon=src/blackblaze_backup/icon.png main.py
     
-    - name: Create MSI installer
-      run: |
-        .venv\Scripts\activate
-        pip install pyinstaller[encryption]
-        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" --icon=src/blackblaze_backup/icon.svg --add-data "src/blackblaze_backup/icon.svg;." main.py
-    
-    - name: Upload MSI artifact
+    - name: Upload Windows executable artifact
       uses: actions/upload-artifact@v4
       with:
         name: blackblaze-backup-windows-msi
@@ -77,7 +71,7 @@ jobs:
     - name: Build executable
       run: |
         source .venv/bin/activate
-        pyinstaller --onefile --windowed --name "blackblaze-backup-tool" --icon=src/blackblaze_backup/icon.svg main.py
+        pyinstaller --onefile --windowed --name "blackblaze-backup-tool" --icon=src/blackblaze_backup/icon.png main.py
     
     - name: Create DEB package
       run: |
@@ -104,7 +98,7 @@ jobs:
         EOF
         
         # Copy icon
-        cp src/blackblaze_backup/icon.svg package/usr/share/icons/blackblaze-backup-tool.svg
+        cp src/blackblaze_backup/icon.png package/usr/share/icons/blackblaze-backup-tool.png
         
         # Create copyright file
         cat > package/usr/share/doc/blackblaze-backup-tool/copyright << EOF
