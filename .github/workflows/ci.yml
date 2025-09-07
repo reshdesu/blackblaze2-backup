@@ -264,6 +264,12 @@ jobs:
                           AllowSameVersionUpgrades="yes"
                           Schedule="afterInstallValidate" />
 
+            <CloseApplication Id="CloseBlackBlazeBackup"
+                             Target="BlackBlaze-Backup-Tool.exe"
+                             Description="BlackBlaze B2 Backup Tool is running and must be closed before upgrading."
+                             CloseMessage="yes"
+                             RebootPrompt="no" />
+
             <Feature Id="ProductFeature" Title="BlackBlaze B2 Backup Tool" Level="1">
               <ComponentGroupRef Id="ProductComponents" />
               <ComponentGroupRef Id="StartMenuComponents" />
@@ -317,6 +323,17 @@ jobs:
                 <RegistryValue Root="HKCU" Key="Software\BlackBlazeBackupTool" Name="desktop" Type="integer" Value="1" KeyPath="yes" />
               </Component>
             </ComponentGroup>
+
+            <!-- Custom action to gracefully close application -->
+            <CustomAction Id="CloseAppGracefully"
+                          Directory="INSTALLFOLDER"
+                          ExeCommand="powershell -Command &quot;Get-Process -Name 'BlackBlaze-Backup-Tool' -ErrorAction SilentlyContinue | ForEach-Object { $_.CloseMainWindow(); Start-Sleep -Seconds 3; if (!$_.HasExited) { $_.Kill() } }&quot;"
+                          Execute="deferred"
+                          Return="ignore" />
+
+            <InstallExecuteSequence>
+              <Custom Action="CloseAppGracefully" Before="InstallFiles">NOT Installed</Custom>
+            </InstallExecuteSequence>
 
           </Product>
         </Wix>
