@@ -137,7 +137,9 @@ jobs:
 
         # Extract version from git tag (remove 'v' prefix for DEB version)
         VERSION=${GITHUB_REF_NAME#v}
-        echo "Building DEB package version: $VERSION"
+        # Ensure proper Debian version format (epoch:version-revision)
+        DEB_VERSION="1:${VERSION}-1"
+        echo "Building DEB package version: $DEB_VERSION"
 
         mkdir -p package/usr/bin
         mkdir -p package/usr/share/applications
@@ -164,10 +166,52 @@ jobs:
         # Copy icon
         cp src/blackblaze_backup/icon.png package/usr/share/icons/blackblaze-backup-tool.png
 
+        # Create preinst script for proper upgrade handling
+        cat > package/DEBIAN/preinst << 'EOF'
+        #!/bin/bash
+        set -e
+
+        # Check if this is an upgrade
+        if dpkg -l blackblaze-backup-tool >/dev/null 2>&1; then
+            echo "Upgrading blackblaze-backup-tool..."
+        else
+            echo "Installing blackblaze-backup-tool..."
+        fi
+
+        # Stop any running instances
+        if pgrep -f blackblaze-backup-tool >/dev/null 2>&1; then
+            echo "Stopping running instances..."
+            pkill -f blackblaze-backup-tool || true
+            sleep 2
+        fi
+        EOF
+
+        chmod +x package/DEBIAN/preinst
+
+        # Create postinst script for upgrade completion
+        cat > package/DEBIAN/postinst << 'EOF'
+        #!/bin/bash
+        set -e
+
+        # Update desktop database
+        if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database /usr/share/applications || true
+        fi
+
+        # Update icon cache
+        if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+            gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true
+        fi
+
+        echo "blackblaze-backup-tool installation/upgrade completed successfully!"
+        EOF
+
+        chmod +x package/DEBIAN/postinst
+
         # Create control file
         cat > package/DEBIAN/control << EOF
         Package: blackblaze-backup-tool
-        Version: $VERSION
+        Version: $DEB_VERSION
         Section: utils
         Priority: optional
         Architecture: amd64
