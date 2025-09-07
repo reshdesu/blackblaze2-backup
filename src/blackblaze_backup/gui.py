@@ -292,7 +292,7 @@ class BlackBlazeBackupApp(QMainWindow):
         else:
             self.credentials_status.setText("No credentials saved")
             self.credentials_status.setStyleSheet("color: #666; font-style: italic;")
-
+    
     def setup_ui(self):
         """Setup the user interface"""
         self.setWindowTitle("BlackBlaze B2 Backup Tool")
@@ -529,7 +529,7 @@ class BlackBlazeBackupApp(QMainWindow):
     
             # Auto-save folder configuration
             self.save_folder_config()
-
+    
     def remove_folder(self):
         """Remove selected folder from backup list"""
         current_item = self.folder_tree.currentItem()

@@ -40,7 +40,7 @@ jobs:
     - name: Build executable
       run: |
         .venv\Scripts\activate
-        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" --icon=src/blackblaze_backup/icon.png main.py
+        pyinstaller --clean --log-level=ERROR blackblaze_backup.spec
     
     - name: Upload Windows executable artifact
       uses: actions/upload-artifact@v4
@@ -76,7 +76,7 @@ jobs:
     - name: Build executable
       run: |
         source .venv/bin/activate
-        pyinstaller --onefile --windowed --name "blackblaze-backup-tool" --icon=src/blackblaze_backup/icon.png main.py
+        pyinstaller --clean --log-level=ERROR blackblaze_backup.spec
     
     - name: Create DEB package
       run: |
@@ -87,7 +87,7 @@ jobs:
         mkdir -p package/usr/share/doc/blackblaze-backup-tool
         
         # Copy executable
-        cp dist/blackblaze-backup-tool package/usr/bin/
+        cp dist/BlackBlaze-Backup-Tool package/usr/bin/blackblaze-backup-tool
         chmod +x package/usr/bin/blackblaze-backup-tool
         
         # Create desktop file

@@ -15,8 +15,8 @@ uv venv
 call .venv\Scripts\activate.bat
 uv pip install -e ".[build]"
 
-REM Create executable
-pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" main.py
+REM Create executable using spec file
+pyinstaller --clean blackblaze_backup.spec
 
 echo Build complete! Executable created in dist\ directory
 echo To run: dist\BlackBlaze-Backup-Tool.exe

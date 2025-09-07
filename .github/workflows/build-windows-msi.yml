@@ -40,7 +40,7 @@ jobs:
     - name: Build executable
       run: |
         .venv\Scripts\activate
-        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" --icon=src/blackblaze_backup/icon.ico main.py
+        pyinstaller --clean --log-level=ERROR blackblaze_backup.spec
     
     - name: Install WiX Toolset via Chocolatey
       run: |
