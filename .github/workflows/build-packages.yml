@@ -6,6 +6,11 @@ on:
     tags: [ 'v*' ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  packages: write
+  security-events: write
+
 jobs:
   build-windows-msi:
     name: Build Windows MSI
