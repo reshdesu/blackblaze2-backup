@@ -143,20 +143,26 @@ uv run pytest tests/test_gui.py -v
 uv run pytest tests/ -v
 ```
 
-## 🏗️ Building Executables
+## 🏗️ Building from Source
 
-### Ubuntu 24.04
+For development purposes, you can build the application locally:
+
+### Prerequisites
+- Python 3.9+ with `uv` package manager
+- Platform-specific dependencies (see [Development Setup](#-development) above)
+
+### Build Commands
 ```bash
-chmod +x build_ubuntu.sh
-./build_ubuntu.sh
+# Install dependencies
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv pip install -e ".[build]"
+
+# Build executable
+pyinstaller --clean --log-level=ERROR blackblaze_backup.spec
 ```
 
-### Windows
-```cmd
-build_windows_clean.bat
-```
-
-**Note**: The Windows build script automatically handles PyInstaller warnings and creates a clean executable in the `dist/` directory.
+**Note**: For production use, we recommend downloading pre-built packages from [GitHub Releases](https://github.com/reshdesu/blackblaze2-backup/releases) instead of building locally.
 
 ## 🛠️ Development
 
