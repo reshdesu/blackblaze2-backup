@@ -206,10 +206,30 @@ class BackupManager:
                 self.logger.debug(f"New file: {file_path.name}")
                 return True
 
+            except Exception as e:
+                # Handle other S3 errors (like network issues) but still check deduplication
+                self.logger.warning(
+                    f"S3 error checking {file_path.name}: {e}. Checking deduplication..."
+                )
+
+                # If deduplication is enabled, check if this content exists elsewhere
+                if enable_deduplication:
+                    if self._file_content_exists_in_s3(
+                        s3_client, bucket_name, local_hash
+                    ):
+                        self.logger.info(
+                            f"Skipping duplicate content despite S3 error: {file_path.name} (hash: {local_hash[:8]}...)"
+                        )
+                        return False
+
+                # If we can't check S3 or deduplication, err on the side of uploading
+                self.logger.warning(f"Will upload {file_path.name} due to S3 error")
+                return True
+
         except Exception as e:
-            # If we can't check, err on the side of uploading but log the error
+            # If we can't even calculate hash or access file, err on the side of uploading
             self.logger.warning(
-                f"Could not check file status for {file_path.name}: {e}. Will upload to be safe."
+                f"Could not process file {file_path.name}: {e}. Will upload to be safe."
             )
             return True
 
