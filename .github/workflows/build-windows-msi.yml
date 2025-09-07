@@ -30,17 +30,22 @@ jobs:
         uv venv
         .venv\Scripts\activate
         uv pip install -e ".[build]"
-        uv pip install pyinstaller
+        uv pip install pyinstaller pillow
+    
+    - name: Convert icon to ICO format
+      run: |
+        .venv\Scripts\activate
+        python -c "from PIL import Image; Image.open('src/blackblaze_backup/icon.png').save('src/blackblaze_backup/icon.ico', format='ICO')"
     
     - name: Build executable
       run: |
         .venv\Scripts\activate
-        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" --icon=src/blackblaze_backup/icon.png main.py
+        pyinstaller --onefile --windowed --name "BlackBlaze-Backup-Tool" --icon=src/blackblaze_backup/icon.ico main.py
     
-    - name: Install WiX Toolset
-      uses: wixtoolset/setup-wix@v1
+    - name: Setup WiX Toolset
+      uses: utilitywarehouse/ghaction-wix@v1
       with:
-        version: '3.11.2'
+        wix-version: '3.11.2'
     
     - name: Create WiX configuration
       run: |
@@ -92,7 +97,7 @@ jobs:
               </Directory>
             </Directory>
             
-            <Icon Id="ApplicationIcon" SourceFile="src/blackblaze_backup/icon.png" />
+            <Icon Id="ApplicationIcon" SourceFile="src/blackblaze_backup/icon.ico" />
             
             <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
               <Component Id="MainExecutable" Guid="*">
@@ -143,8 +148,8 @@ jobs:
     - name: Build MSI installer
       run: |
         cd installer
-        candle product.wxs
-        light product.wixobj -o BlackBlaze-Backup-Tool.msi
+        candle -nologo -out product.wixobj product.wxs
+        light -nologo -out BlackBlaze-Backup-Tool.msi product.wixobj
     
     - name: Upload MSI artifact
       uses: actions/upload-artifact@v4
