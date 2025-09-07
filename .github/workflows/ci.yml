@@ -232,6 +232,7 @@ jobs:
                 <File Id="BlackBlazeBackupToolExe" 
                       Name="BlackBlaze-Backup-Tool.exe" 
                       Source="../dist/BlackBlaze-Backup-Tool.exe" />
+                <RemoveFile Id="RemoveInstallFolder" On="uninstall" Name="*" />
               </Component>
             </ComponentGroup>
             
