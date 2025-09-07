@@ -16,11 +16,16 @@ from PySide6.QtWidgets import QApplication
 
 def setup_logging():
     """Setup logging configuration"""
+    from blackblaze_backup.config import config
+    
+    # Use config directory for log file (user-accessible location)
+    log_file_path = config.log_file
+    
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler('blackblaze_backup.log'),
+            logging.FileHandler(log_file_path),
             logging.StreamHandler()
         ]
     )
