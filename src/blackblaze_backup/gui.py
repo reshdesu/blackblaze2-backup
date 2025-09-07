@@ -206,6 +206,9 @@ class BlackBlazeBackupApp(QMainWindow):
             self.load_schedule_config()
             self.load_folder_config()
             self.load_incremental_backup_setting()  # Load incremental backup setting
+            
+            # Debug: Log window state
+            self.logger.info(f"Window created - Visible: {self.isVisible()}, Geometry: {self.geometry()}")
             self.update_schedule_status()
             self.setup_auto_save()
         except Exception as e:

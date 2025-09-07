@@ -65,7 +65,13 @@ def main():
     # Create and show main window
     try:
         window = BlackBlazeBackupApp()
+        
+        # Ensure window is visible on Windows
         window.show()
+        window.raise_()
+        window.activateWindow()
+        
+        logging.info("Main window created and shown")
         
         # Start event loop
         sys.exit(app.exec())
