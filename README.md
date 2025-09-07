@@ -7,7 +7,7 @@ A cross-platform GUI application for backing up local folders to BackBlaze B2 S3
 - **🖥️ Cross-platform**: Runs on Windows 11 and Ubuntu 24.04
 - **🎨 Modern GUI**: Clean, minimalistic interface built with PySide6 (Qt for Python)
 - **🔄 Background Operation**: Runs backups in the background with system tray support
-- **⏰ Automatic Scheduling**: Set up automatic backups (hourly, daily, weekly, monthly)
+- **⏰ Automatic Scheduling**: Set up automatic backups (1min, 5min, 15min, hourly, daily, weekly, monthly)
 - **📁 Flexible Backup Options**:
   - Upload all folders to a single bucket
   - Upload different folders to different buckets
@@ -17,15 +17,33 @@ A cross-platform GUI application for backing up local folders to BackBlaze B2 S3
 - **⚡ Fast Package Management**: Uses `uv` for lightning-fast dependency management
 - **💾 Persistent Configuration**: Automatically remembers folders, schedules, and settings
 - **📂 Organized Storage**: Files are organized in S3 with proper folder structure
+- **🔄 Incremental Backups**: Only upload changed files for faster, efficient backups
+- **🚫 Concurrent Protection**: Prevents multiple backup operations from interfering
+- **📦 Easy Installation**: MSI installer for Windows, DEB package for Ubuntu
+- **🔄 Auto-Updates**: Automatic uninstallation of older versions during MSI installation
 
 ## 🚀 Quick Start
 
-### One-Line Command (Easiest)
+### 📦 Install from Releases (Recommended)
+
+**Windows:**
+1. Download `BlackBlaze-Backup-Tool-v1.0.43.msi` from [Releases](https://github.com/reshdesu/blackblaze2-backup/releases)
+2. Run the MSI installer (no admin rights required)
+3. Launch from Start Menu or Desktop shortcut
+
+**Ubuntu:**
+1. Download `blackblaze-backup-tool_amd64_v1.0.43.deb` from [Releases](https://github.com/reshdesu/blackblaze2-backup/releases)
+2. Install with: `sudo dpkg -i blackblaze-backup-tool_amd64_v1.0.43.deb`
+3. Launch from Applications menu
+
+### 🛠️ Development Setup
+
+**One-Line Command (Easiest)**
 ```bash
 git clone https://github.com/reshdesu/blackblaze2-backup.git && cd blackblaze2-backup && uv run bb2backup
 ```
 
-### Using uv (Recommended)
+**Using uv (Recommended)**
 ```bash
 # Clone the repository
 git clone https://github.com/reshdesu/blackblaze2-backup.git
@@ -84,15 +102,17 @@ cp sample.env .env
 
 ### 4. **Schedule Automatic Backups**
    - Click "Schedule Automatic Backups" button
-   - Choose frequency (hourly, daily, weekly, monthly)
+   - Choose frequency (1min, 5min, 15min, hourly, daily, weekly, monthly)
    - Set backup time (for non-hourly schedules)
    - Your schedule is automatically saved
+   - **Concurrent Protection**: Scheduled backups won't interfere with manual uploads
 
 ### 5. **Background Operation**
    - When you close the app, it minimizes to system tray
    - Scheduled backups run automatically in the background
    - Right-click the tray icon for quick actions (Show Window, Start Backup, Schedule, Exit)
    - The app automatically kills older instances when starting
+   - **Incremental Backups**: Only changed files are uploaded for efficiency
 
 ## 🧪 Testing
 
@@ -133,8 +153,10 @@ chmod +x build_ubuntu.sh
 
 ### Windows
 ```cmd
-build_windows.bat
+build_windows_clean.bat
 ```
+
+**Note**: The Windows build script automatically handles PyInstaller warnings and creates a clean executable in the `dist/` directory.
 
 ## 🛠️ Development
 
@@ -142,7 +164,7 @@ build_windows.bat
 
 ```bash
 # Install development dependencies
-uv add --dev pytest black flake8 mypy pre-commit
+uv pip install -e ".[dev]"
 
 # Run the application
 uv run bb2backup
@@ -150,11 +172,11 @@ uv run bb2backup
 # Run tests
 uv run pytest
 
-# Format code
-uv run black .
+# Format code (automatic with pre-commit hooks)
+uv run ruff format .
 
-# Lint code
-uv run flake8 .
+# Lint code (automatic with pre-commit hooks)
+uv run ruff check .
 
 # Type checking
 uv run mypy src/
@@ -170,11 +192,17 @@ uv run mypy src/
 
 ## 🐛 Troubleshooting
 
-- **Check Logs**: Look at `blackblaze_backup.log` for detailed error messages
+- **Check Logs**:
+  - **Windows**: `%USERPROFILE%\.blackblaze_backup\blackblaze_backup.log`
+  - **Ubuntu**: `~/.blackblaze_backup/blackblaze_backup.log`
 - **Permissions**: Ensure your BackBlaze B2 Application Key has necessary permissions
 - **Endpoint**: Verify your S3 endpoint URL is correct
 - **Disk Space**: Make sure you have sufficient disk space for temporary files
 - **Network**: Check your internet connection for upload issues
+- **Concurrent Backups**: If you see duplicate uploads, check that only one backup is running
+- **Installation Issues**:
+  - **Windows**: Try running MSI as administrator if shortcuts don't work
+  - **Ubuntu**: Use `sudo dpkg -i --force-overwrite` if installation conflicts occur
 
 ## ⚡ Why uv?
 
@@ -242,14 +270,23 @@ pre-commit run --all-files
 ## 📊 Project Status
 
 ✅ **Core Features Complete**
-- Cross-platform GUI application
-- Secure credential management
-- Background operation with system tray
-- Automatic scheduling (hourly, daily, weekly, monthly)
-- Real-time progress tracking
-- Organized S3 storage structure
-- Persistent configuration
-- Comprehensive error handling
+- Cross-platform GUI application (Windows 11 & Ubuntu 24.04)
+- Secure credential management with system keyring
+- Background operation with system tray support
+- Automatic scheduling (1min, 5min, 15min, hourly, daily, weekly, monthly)
+- Real-time progress tracking and status updates
+- Organized S3 storage structure with proper folder hierarchy
+- Persistent configuration with auto-save
+- Comprehensive error handling and logging
+- Incremental backup support for efficiency
+- Concurrent backup protection to prevent conflicts
+
+✅ **Packaging & Distribution Complete**
+- MSI installer for Windows with automatic upgrades
+- DEB package for Ubuntu with proper dependencies
+- GitHub Actions CI/CD pipeline with automated releases
+- Versioned packages with dynamic versioning
+- Cross-platform build system using uv
 
 ✅ **Testing Complete**
 - Unit tests for core functionality
@@ -257,9 +294,11 @@ pre-commit run --all-files
 - Integration tests with real S3 connectivity
 - Automated test data creation
 - CI/CD pipeline with GitHub Actions
+- Pre-commit hooks for code quality
 
 ✅ **Documentation Complete**
-- Comprehensive README
-- Security guidelines
-- Contributing guidelines
+- Comprehensive README with installation instructions
+- Security guidelines and best practices
+- Contributing guidelines with development setup
 - Build instructions for both platforms
+- Troubleshooting guide with log locations
