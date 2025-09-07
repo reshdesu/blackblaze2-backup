@@ -192,7 +192,7 @@ jobs:
         
         $wixContent = @"
         <?xml version="1.0" encoding="UTF-8"?>
-        <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:ui="http://schemas.microsoft.com/wix/2006/ui">
+        <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
           <Product Id="$productId" 
                    Name="BlackBlaze B2 Backup Tool" 
                    Language="1033" 
@@ -234,7 +234,7 @@ jobs:
             </ComponentGroup>
             
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-        <ui:WixUI_Minimal />
+        <UIRef Id="WixUI_Minimal" />
             
           </Product>
         </Wix>
@@ -245,7 +245,7 @@ jobs:
         # Build MSI installer
         cd installer
         candle.exe product.wxs -o product.wixobj
-        light.exe product.wixobj -o BlackBlaze-Backup-Tool.msi
+        light.exe -ext WixUIExtension product.wixobj -o BlackBlaze-Backup-Tool.msi
       shell: powershell
     
     - name: Upload DEB artifact
