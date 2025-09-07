@@ -556,13 +556,17 @@ class BackupService:
             # Initialize progress tracking
             self.progress_tracker.start_backup(backup_plan)
 
+            # Start backup
+            if status_callback:
+                status_callback("Starting backup operation...")
+
             # Execute backup
             for folder_path, bucket_name in backup_plan.items():
                 if self.backup_manager.cancelled:
                     break
 
                 if status_callback:
-                    status_callback(f"Backing up: {folder_path}")
+                    status_callback(f"Processing folder: {Path(folder_path).name}")
 
                 # Get files to backup with progress updates
                 files = self.backup_manager.get_files_to_backup(
@@ -612,8 +616,9 @@ class BackupService:
                             )
                         self.progress_tracker.complete_file()
 
-                    # Update progress after every file (more frequent updates)
-                    if progress_callback:
+                    # Update progress less frequently for better performance
+                    # Only update every 10 files to avoid UI slowness
+                    if progress_callback and (_i + 1) % 10 == 0:
                         progress_callback(self.progress_tracker.get_overall_progress())
 
                 self.progress_tracker.complete_folder()
@@ -623,13 +628,10 @@ class BackupService:
             if not self.backup_manager.cancelled:
                 if status_callback:
                     status_callback("Backup completed successfully!")
-                # Ensure progress shows 100% when backup completes
-                if progress_callback:
-                    progress_callback(100)
                 return True
             else:
                 if status_callback:
-                    status_callback("Backup cancelled")
+                    status_callback("Backup cancelled by user")
                 return False
 
         except Exception as e:

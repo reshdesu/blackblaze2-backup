@@ -533,8 +533,10 @@ class BlackBlazeBackupApp(QMainWindow):
         self.schedule_status.setStyleSheet("color: #666; font-style: italic;")
         layout.addWidget(self.schedule_status)
 
-        # Progress bar
+        # Progress bar (indeterminate for better performance)
         self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 0)  # Indeterminate mode - no percentages
+        self.progress_bar.setFormat("")  # No text format
         layout.addWidget(self.progress_bar)
 
         # Log text
@@ -861,7 +863,7 @@ class BlackBlazeBackupApp(QMainWindow):
         # Update UI immediately to show backup is starting
         self.start_backup_btn.setEnabled(False)
         self.cancel_backup_btn.setEnabled(True)
-        self.progress_bar.setValue(0)
+        self.progress_bar.setRange(0, 0)  # Set to indeterminate mode
         self.log_text.clear()
         self.is_backup_running = True  # Set backup running flag
 
@@ -901,13 +903,19 @@ class BlackBlazeBackupApp(QMainWindow):
         self.remove_folder_btn.setEnabled(True)
         self.folder_tree.setEnabled(True)
 
+        # Reset progress bar to normal mode
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+
         # Update status message
         self.statusBar().showMessage("Backup cancelled by user", 5000)
         self.logger.info("Backup cancelled by user")
 
     def update_progress(self, value):
-        """Update progress bar"""
-        self.progress_bar.setValue(value)
+        """Update progress bar (simplified for better performance)"""
+        # For indeterminate progress bar, we don't need to update values
+        # The bar will show activity without specific percentages
+        pass
 
     def update_status(self, message):
         """Update status text"""
@@ -929,8 +937,12 @@ class BlackBlazeBackupApp(QMainWindow):
         self.remove_folder_btn.setEnabled(True)
         self.folder_tree.setEnabled(True)
 
+        # Reset progress bar to normal mode
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+
         if success:
-            self.statusBar().showMessage(" Backup completed successfully!", 10000)
+            self.statusBar().showMessage("Backup completed successfully!", 10000)
             if self.tray_icon:
                 self.tray_icon.showMessage(
                     "Backup Complete",
@@ -940,7 +952,7 @@ class BlackBlazeBackupApp(QMainWindow):
                 )
         else:
             self.statusBar().showMessage(
-                " Backup failed. Check the log for details.", 10000
+                "Backup failed. Check the log for details.", 10000
             )
             if self.tray_icon:
                 self.tray_icon.showMessage(

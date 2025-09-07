@@ -246,15 +246,30 @@ class TestBackupProgressTracker:
 
     def test_get_overall_progress(self):
         """Test overall progress calculation"""
+        # Set up folder file counts (order matters for enumerate)
+        self.tracker.folder_file_counts = {
+            "folder1": 10,  # completed_folders=0, this is folder 0
+            "folder2": 5,  # completed_folders=1, this is folder 1
+            "folder3": 8,  # completed_folders=2, this is current folder
+            "folder4": 7,
+        }
+        self.tracker.total_files = 30
         self.tracker.total_folders = 4
         self.tracker.completed_folders = 2
+        self.tracker.completed_files = (
+            3  # 3 files completed in current folder (folder3)
+        )
+        self.tracker.current_folder = "folder3"
 
         progress = self.tracker.get_overall_progress()
-        assert progress == 50
+        # Should be: (10 + 5 + 3) / 30 * 100 = 60%
+        assert progress == 60
 
     def test_get_folder_progress(self):
         """Test folder progress calculation"""
-        self.tracker.total_files = 8
+        # Set up current folder
+        self.tracker.current_folder = "test_folder"
+        self.tracker.folder_file_counts = {"test_folder": 8}
         self.tracker.completed_files = 6
 
         progress = self.tracker.get_folder_progress()
