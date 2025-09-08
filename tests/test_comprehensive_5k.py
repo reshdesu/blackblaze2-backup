@@ -97,7 +97,7 @@ class Comprehensive5kPerformanceTest:
             subdir = random.choice(subdirs)
             file_path = (
                 subdir
-                / f"image_{i+len(existing_files):06d}_{random.randint(1000, 9999)}.{extension}"
+                / f"image_{i + len(existing_files):06d}_{random.randint(1000, 9999)}.{extension}"
             )
 
             image_args.append((file_path, width, height, format_type))
@@ -257,7 +257,7 @@ class Comprehensive5kPerformanceTest:
                 eta = (len(test_files) - (i + 1)) / rate if rate > 0 else 0
                 avg_time = sum(processing_times) / len(processing_times)
                 print(
-                    f"   Processed {i + 1:,}/{len(test_files):,} files ({rate:.1f}/sec, ETA: {eta/60:.1f}min, avg: {avg_time*1000:.1f}ms/file)"
+                    f"   Processed {i + 1:,}/{len(test_files):,} files ({rate:.1f}/sec, ETA: {eta / 60:.1f}min, avg: {avg_time * 1000:.1f}ms/file)"
                 )
 
         total_time = time.time() - total_start
@@ -274,11 +274,13 @@ class Comprehensive5kPerformanceTest:
         print(f"Cache Population Time: {cache_time:.3f}s")
         print(f"Cache Size: {cache_size:,} file hashes")
         print(f"Total Processing Time: {total_time:.3f}s")
-        print(f"Average Processing per File: {avg_processing_time*1000:.2f}ms")
-        print(f"Processing Time Range: {min_time*1000:.2f}ms - {max_time*1000:.2f}ms")
-        print(f"Processing Time Std Dev: {std_dev*1000:.2f}ms")
+        print(f"Average Processing per File: {avg_processing_time * 1000:.2f}ms")
+        print(
+            f"Processing Time Range: {min_time * 1000:.2f}ms - {max_time * 1000:.2f}ms"
+        )
+        print(f"Processing Time Std Dev: {std_dev * 1000:.2f}ms")
         print(f"Duplicates Found: {duplicates_found:,}")
-        print(f"Duplicate Rate: {(duplicates_found/len(test_files)*100):.1f}%")
+        print(f"Duplicate Rate: {(duplicates_found / len(test_files) * 100):.1f}%")
 
         # Performance metrics
         files_per_second = len(test_files) / total_time
@@ -331,12 +333,12 @@ class Comprehensive5kPerformanceTest:
             f.write(f"Cache Size: {results['cache_size']:,} file hashes\n")
             f.write(f"Total Processing Time: {results['total_time']:.3f}s\n")
             f.write(
-                f"Average Processing per File: {results['avg_processing_time']*1000:.2f}ms\n"
+                f"Average Processing per File: {results['avg_processing_time'] * 1000:.2f}ms\n"
             )
             f.write(
-                f"Processing Time Range: {results['min_time']*1000:.2f}ms - {results['max_time']*1000:.2f}ms\n"
+                f"Processing Time Range: {results['min_time'] * 1000:.2f}ms - {results['max_time'] * 1000:.2f}ms\n"
             )
-            f.write(f"Processing Time Std Dev: {results['std_dev']*1000:.2f}ms\n")
+            f.write(f"Processing Time Std Dev: {results['std_dev'] * 1000:.2f}ms\n")
             f.write(f"Duplicates Found: {results['duplicates_found']:,}\n")
             f.write(f"Duplicate Rate: {results['duplicate_rate']:.1f}%\n\n")
 
@@ -353,14 +355,14 @@ class Comprehensive5kPerformanceTest:
             f.write("Statistical Analysis:\n")
             f.write("-" * 20 + "\n")
             f.write(
-                f"Mean Processing Time: {results['avg_processing_time']*1000:.2f}ms\n"
+                f"Mean Processing Time: {results['avg_processing_time'] * 1000:.2f}ms\n"
             )
-            f.write(f"Standard Deviation: {results['std_dev']*1000:.2f}ms\n")
+            f.write(f"Standard Deviation: {results['std_dev'] * 1000:.2f}ms\n")
             f.write(
-                f"95th Percentile: {statistics.quantiles(results['processing_times'], n=20)[18]*1000:.2f}ms\n"
+                f"95th Percentile: {statistics.quantiles(results['processing_times'], n=20)[18] * 1000:.2f}ms\n"
             )
             f.write(
-                f"99th Percentile: {statistics.quantiles(results['processing_times'], n=100)[98]*1000:.2f}ms\n"
+                f"99th Percentile: {statistics.quantiles(results['processing_times'], n=100)[98] * 1000:.2f}ms\n"
             )
 
         print(f"Comprehensive results saved to: {results_file}")

@@ -106,7 +106,7 @@ class PerformanceBenchmark:
             subdir = random.choice(subdirs)
             file_path = (
                 subdir
-                / f"image_{i+len(existing_files):06d}_{random.randint(1000, 9999)}.{extension}"
+                / f"image_{i + len(existing_files):06d}_{random.randint(1000, 9999)}.{extension}"
             )
 
             image_args.append((file_path, width, height, format_type))
@@ -201,7 +201,7 @@ class PerformanceBenchmark:
             if i % 100 == 0 and i > 0:
                 avg_time = sum(processing_times) / len(processing_times)
                 print(
-                    f"    Processed {i:,}/{len(test_sample):,} files (avg: {avg_time*1000:.1f}ms)"
+                    f"    Processed {i:,}/{len(test_sample):,} files (avg: {avg_time * 1000:.1f}ms)"
                 )
 
         avg_processing_time = sum(processing_times) / len(processing_times)
@@ -209,14 +209,14 @@ class PerformanceBenchmark:
 
         print("   Results:")
         print(
-            f"      - Average processing time: {avg_processing_time*1000:.2f}ms per file"
+            f"      - Average processing time: {avg_processing_time * 1000:.2f}ms per file"
         )
         print(
             f"      - Total processing time: {total_time:.2f}s for {len(test_sample):,} files"
         )
         print(f"      - Duplicates found: {duplicates_found}")
         print(
-            f"      - Estimated time for 5k files: {(avg_processing_time * 5000)/60:.1f} minutes"
+            f"      - Estimated time for 5k files: {(avg_processing_time * 5000) / 60:.1f} minutes"
         )
 
         return {
@@ -302,7 +302,7 @@ class PerformanceBenchmark:
         print(f"      - Total time: {hash_time + cache_time + lookup_time:.2f}s")
         print(f"      - Duplicates found: {duplicates_found}")
         print(
-            f"      - Estimated time for 5k files: {((hash_time + lookup_time) * 5000/500)/60:.1f} minutes"
+            f"      - Estimated time for 5k files: {((hash_time + lookup_time) * 5000 / 500) / 60:.1f} minutes"
         )
 
         return {
@@ -341,11 +341,11 @@ class PerformanceBenchmark:
             if avg_time > self.benchmarks["processing_per_file_max"]:
                 passed = False
                 failures.append(
-                    f"Processing per file too slow: {avg_time*1000:.2f}ms > {self.benchmarks['processing_per_file_max']*1000}ms"
+                    f"Processing per file too slow: {avg_time * 1000:.2f}ms > {self.benchmarks['processing_per_file_max'] * 1000}ms"
                 )
             else:
                 print(
-                    f" Processing per file: {avg_time*1000:.2f}ms (benchmark: {self.benchmarks['processing_per_file_max']*1000}ms)"
+                    f" Processing per file: {avg_time * 1000:.2f}ms (benchmark: {self.benchmarks['processing_per_file_max'] * 1000}ms)"
                 )
 
         # Check total time
@@ -367,11 +367,11 @@ class PerformanceBenchmark:
             if avg_lookup > self.benchmarks["cache_lookup_max"]:
                 passed = False
                 failures.append(
-                    f"Cache lookup too slow: {avg_lookup*1000:.2f}ms > {self.benchmarks['cache_lookup_max']*1000}ms"
+                    f"Cache lookup too slow: {avg_lookup * 1000:.2f}ms > {self.benchmarks['cache_lookup_max'] * 1000}ms"
                 )
             else:
                 print(
-                    f" Cache lookup: {avg_lookup*1000:.2f}ms (benchmark: {self.benchmarks['cache_lookup_max']*1000}ms)"
+                    f" Cache lookup: {avg_lookup * 1000:.2f}ms (benchmark: {self.benchmarks['cache_lookup_max'] * 1000}ms)"
                 )
 
         if passed:
