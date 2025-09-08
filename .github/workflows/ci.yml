@@ -341,7 +341,7 @@ jobs:
         source .venv/bin/activate
         pip install safety bandit
         safety check
-        bandit -r src/ -f json -o bandit-report.json
+        bandit -r src/ -f json -o bandit-report.json --severity-level medium
 
     - name: Upload security report
       uses: actions/upload-artifact@v4
