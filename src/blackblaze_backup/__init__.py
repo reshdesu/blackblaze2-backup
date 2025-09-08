@@ -4,7 +4,7 @@ BlackBlaze B2 Backup Tool
 A cross-platform GUI application for backing up local folders to BackBlaze B2 S3 buckets.
 """
 
-__version__ = "1.0.74"
+__version__ = "1.0.75"
 __author__ = "reshdesu & Claude (Anthropic)"
 __email__ = "reshdesu@users.noreply.github.com"
 __description__ = "A cross-platform GUI application for backing up local folders to BackBlaze B2 S3 buckets"
