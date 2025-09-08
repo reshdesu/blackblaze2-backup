@@ -439,7 +439,8 @@ class BlackBlazeBackupApp(QMainWindow):
         """Get the current application version dynamically"""
         try:
             # Method 1: Try to get version from package metadata (works when installed)
-            return importlib.metadata.version("blackblaze-backup-tool")
+            version = importlib.metadata.version("blackblaze-backup-tool")
+            return version
         except importlib.metadata.PackageNotFoundError:
             pass
 
@@ -481,8 +482,8 @@ class BlackBlazeBackupApp(QMainWindow):
         except Exception:  # nosec B110
             pass
 
-        # Fallback: return a default version
-        return "1.0.73"
+        # Fallback: return a default version (this should rarely be used)
+        return "Unknown"
 
     def setup_ui(self):
         """Setup the user interface"""
@@ -1727,9 +1728,17 @@ def main():
     """Main application entry point"""
     app = QApplication(sys.argv)
 
+    # Get dynamic version
+    try:
+        from . import __version__
+
+        dynamic_version = __version__
+    except ImportError:
+        dynamic_version = "Unknown"
+
     # Set application properties
     app.setApplicationName("BlackBlaze B2 Backup Tool")
-    app.setApplicationVersion("1.0.73")
+    app.setApplicationVersion(dynamic_version)
     app.setOrganizationName("BlackBlaze Backup")
 
     # Create and show main window
