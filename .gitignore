@@ -195,11 +195,12 @@ cursor_*.md
 # Test photos for troubleshooting
 test_photos/
 
-# Performance test results (keep for reference)
+# Performance test results (generated files)
 performance_results.json
 PERFORMANCE_RESULTS.md
-
-# Temporary performance files (exclude)
 *_performance_results.txt
 performance_statistics.txt
 comprehensive_5k_performance_results.txt
+
+# PyInstaller spec files (generated)
+*.spec
