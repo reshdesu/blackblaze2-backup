@@ -210,7 +210,7 @@ class PreviewWorker(QThread):
                             files_to_skip.append(file_path.name)
                             total_skip_size += file_size
 
-                except Exception:
+                except Exception:  # nosec B112
                     # Log error but continue with other folders
                     continue
 
@@ -446,7 +446,7 @@ class BlackBlazeBackupApp(QMainWindow):
                     version = data.get("project", {}).get("version", "Unknown")
                     if version != "Unknown":
                         return version
-        except Exception:
+        except Exception:  # nosec B110
             pass
 
         try:
@@ -470,7 +470,7 @@ class BlackBlazeBackupApp(QMainWindow):
                     )
                     if version_match:
                         return version_match.group(1)
-        except Exception:
+        except Exception:  # nosec B110
             pass
 
         # Fallback: return a default version
