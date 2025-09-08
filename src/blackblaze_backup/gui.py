@@ -4,6 +4,7 @@ BlackBlaze B2 Backup Tool - GUI Layer
 Uses the core business logic for testable architecture
 """
 
+import importlib.metadata
 import logging
 import sys
 from pathlib import Path
@@ -426,9 +427,59 @@ class BlackBlazeBackupApp(QMainWindow):
             self.credentials_status.setText("No credentials saved")
             self.credentials_status.setStyleSheet("color: #666; font-style: italic;")
 
+    def get_version(self):
+        """Get the current application version dynamically"""
+        try:
+            # Method 1: Try to get version from package metadata (works when installed)
+            return importlib.metadata.version("blackblaze-backup-tool")
+        except importlib.metadata.PackageNotFoundError:
+            pass
+
+        try:
+            # Method 2: Try to read from pyproject.toml (works in development)
+            pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
+            if pyproject_path.exists():
+                import tomllib
+
+                with open(pyproject_path, "rb") as f:
+                    data = tomllib.load(f)
+                    version = data.get("project", {}).get("version", "Unknown")
+                    if version != "Unknown":
+                        return version
+        except Exception:
+            pass
+
+        try:
+            # Method 3: Try to read from __init__.py version attribute
+            from blackblaze_backup import __version__
+
+            return __version__
+        except (ImportError, AttributeError):
+            pass
+
+        try:
+            # Method 4: Try to read from setup.py or similar
+            setup_path = Path(__file__).parent.parent.parent / "setup.py"
+            if setup_path.exists():
+                with open(setup_path) as f:
+                    content = f.read()
+                    import re
+
+                    version_match = re.search(
+                        r'version\s*=\s*["\']([^"\']+)["\']', content
+                    )
+                    if version_match:
+                        return version_match.group(1)
+        except Exception:
+            pass
+
+        # Fallback: return a default version
+        return "1.0.0"
+
     def setup_ui(self):
         """Setup the user interface"""
-        self.setWindowTitle("BlackBlaze B2 Backup Tool")
+        version = self.get_version()
+        self.setWindowTitle(f"BlackBlaze B2 Backup Tool v{version}")
         self.setGeometry(100, 100, 650, 700)
 
         # Set window icon (use PNG for better cross-platform compatibility)
@@ -452,8 +503,9 @@ class BlackBlazeBackupApp(QMainWindow):
         self.setup_folders_tab(tab_widget)
         self.setup_backup_tab(tab_widget)
 
-        # Add status bar
-        self.statusBar().showMessage("Ready")
+        # Add status bar with version info
+        version = self.get_version()
+        self.statusBar().showMessage(f"Ready - Version {version}")
 
     def setup_credentials_tab(self, tab_widget):
         """Setup credentials configuration tab"""
@@ -563,6 +615,33 @@ class BlackBlazeBackupApp(QMainWindow):
 
         tab_widget.addTab(folders_widget, "Folders")
 
+    def show_version_info(self):
+        """Show version information in the log text area"""
+        version = self.get_version()
+
+        # Get additional system info
+        import platform
+
+        python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+
+        version_info = f"""
+=== VERSION INFORMATION ===
+BlackBlaze B2 Backup Tool
+Version: {version}
+Python: {python_version}
+Platform: {platform.system()} {platform.release()}
+Architecture: {platform.machine()}
+Built with PySide6 for cross-platform compatibility
+===============================
+
+"""
+
+        # Add version info to the log text area
+        self.log_text.append(version_info)
+
+        # Log it as well
+        self.logger.info(f"Version info displayed: {version}")
+
     def setup_backup_tab(self, tab_widget):
         """Setup backup execution tab"""
         backup_widget = QWidget()
@@ -584,6 +663,13 @@ class BlackBlazeBackupApp(QMainWindow):
         schedule_btn = QPushButton("Schedule Automatic Backups")
         schedule_btn.clicked.connect(self.show_schedule_dialog)
         controls_layout.addWidget(schedule_btn)
+
+        # Add version info button
+        self.version_info_btn = QPushButton("ℹ️")
+        self.version_info_btn.setToolTip("Show version information")
+        self.version_info_btn.setMaximumWidth(30)
+        self.version_info_btn.clicked.connect(self.show_version_info)
+        controls_layout.addWidget(self.version_info_btn)
 
         # Disable schedule button
         self.disable_schedule_btn = QPushButton("Disable Automatic Backups")
@@ -871,6 +957,9 @@ class BlackBlazeBackupApp(QMainWindow):
         self, files_to_upload, files_to_skip, total_upload_size, total_skip_size
     ):
         """Handle completed preview analysis"""
+        print(
+            f"DEBUG: Preview completed - Upload: {len(files_to_upload)}, Skip: {len(files_to_skip)}"
+        )
         self.start_backup_btn.setEnabled(True)
         self.start_backup_btn.setText("Start Backup")
 
@@ -914,6 +1003,7 @@ Skip size: {self._format_size(total_skip_size)}
 
     def on_preview_failed(self, error_message):
         """Handle preview analysis failure"""
+        print(f"DEBUG: Preview failed: {error_message}")
         self.start_backup_btn.setEnabled(True)
         self.start_backup_btn.setText("Start Backup")
         self.logger.error(f"Preview failed: {error_message}")
@@ -1009,6 +1099,7 @@ Skip size: {self._format_size(self.preview_results['total_skip_size'])}
                 self.log_text.setPlainText(preview_section)
         else:
             # For manual backups, just add a separator to show backup is starting
+            # Don't modify the log text since preview results are already displayed
             self.log_text.append("\n=== STARTING BACKUP ===\n")
 
             # Show current session summary if available
@@ -1031,7 +1122,9 @@ Skip size: {self._format_size(self.preview_results['total_skip_size'])}
         self.start_backup_btn.setEnabled(False)
         self.cancel_backup_btn.setEnabled(True)
         self.progress_bar.setRange(0, 0)  # Set to indeterminate mode
-        self.log_text.clear()
+        # Don't clear log for manual backups since preview results are already displayed
+        if is_scheduled:
+            self.log_text.clear()
         self.is_backup_running = True  # Set backup running flag
 
         # Show immediate feedback that backup is starting

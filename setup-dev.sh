@@ -21,6 +21,10 @@ pre-commit run --all-files
 echo "Running comprehensive format check..."
 python scripts/check-formatting.py
 
+# Sync version from pyproject.toml to __init__.py
+echo "Syncing version information..."
+python scripts/sync_version.py
+
 echo "✅ Development environment setup complete!"
 echo ""
 echo "Pre-commit hooks are now active and will automatically:"
