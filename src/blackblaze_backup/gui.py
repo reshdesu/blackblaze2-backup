@@ -951,44 +951,42 @@ CURRENT SESSION SUMMARY:
 
     def start_backup_immediately(self, incremental_enabled, is_scheduled=False):
         """Start backup immediately after preview confirmation"""
-        # Only clear log display for scheduled backups, not manual backups with preview
-        if is_scheduled:
-            # For scheduled backups, preserve any existing preview results
-            current_text = self.log_text.toPlainText()
+        # Always show preview results if available, regardless of backup type
+        preview_section = ""
 
-            # Check if there are preview results to preserve
-            preview_section = ""
-            if "=== BACKUP PREVIEW RESULTS ===" in current_text:
-                # Extract the preview section
-                lines = current_text.split("\n")
-                preview_lines = []
-                in_preview = False
+        # First, try to extract from current log
+        current_text = self.log_text.toPlainText()
+        if "=== BACKUP PREVIEW RESULTS ===" in current_text:
+            # Extract the preview section
+            lines = current_text.split("\n")
+            preview_lines = []
+            in_preview = False
 
-                for line in lines:
-                    if "=== BACKUP PREVIEW RESULTS ===" in line:
-                        in_preview = True
-                    if in_preview:
-                        preview_lines.append(line)
-                        if line.strip() == "===============================":
-                            break
+            for line in lines:
+                if "=== BACKUP PREVIEW RESULTS ===" in line:
+                    in_preview = True
+                if in_preview:
+                    preview_lines.append(line)
+                    if line.strip() == "===============================":
+                        break
 
-                if preview_lines:
-                    preview_section = "\n".join(preview_lines) + "\n\n"
-                    # Also preserve session summary if it exists
-                    if "CURRENT SESSION SUMMARY:" in current_text:
-                        summary_start = current_text.find("CURRENT SESSION SUMMARY:")
-                        if summary_start != -1:
-                            summary_end = current_text.find("\n\n", summary_start)
-                            if summary_end == -1:
-                                summary_end = len(current_text)
-                            summary_section = (
-                                current_text[summary_start:summary_end] + "\n\n"
-                            )
-                            preview_section += summary_section
-            else:
-                # If no preview results in log, check if we have stored preview results
-                if hasattr(self, "preview_results"):
-                    preview_text = f"""
+            if preview_lines:
+                preview_section = "\n".join(preview_lines) + "\n\n"
+                # Also preserve session summary if it exists
+                if "CURRENT SESSION SUMMARY:" in current_text:
+                    summary_start = current_text.find("CURRENT SESSION SUMMARY:")
+                    if summary_start != -1:
+                        summary_end = current_text.find("\n\n", summary_start)
+                        if summary_end == -1:
+                            summary_end = len(current_text)
+                        summary_section = (
+                            current_text[summary_start:summary_end] + "\n\n"
+                        )
+                        preview_section += summary_section
+
+        # If no preview in log, try stored preview results
+        if not preview_section and hasattr(self, "preview_results"):
+            preview_text = f"""
 === BACKUP PREVIEW RESULTS ===
 Files to upload: {self.preview_results['upload_count']}
 Files to skip: {self.preview_results['skip_count']}
@@ -997,9 +995,15 @@ Skip size: {self._format_size(self.preview_results['total_skip_size'])}
 ===============================
 
 """
-                    preview_section = preview_text
+            preview_section = preview_text
+            # Debug: print to console
+            print(
+                f"DEBUG: Restoring preview results from stored data: {self.preview_results}"
+            )
 
-            # Clear log but preserve preview results
+        # Handle log clearing based on backup type
+        if is_scheduled:
+            # For scheduled backups, clear log but preserve preview results
             self.log_text.clear()
             if preview_section:
                 self.log_text.setPlainText(preview_section)
