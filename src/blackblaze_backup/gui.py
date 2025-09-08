@@ -947,7 +947,32 @@ CURRENT SESSION SUMMARY:
         """Start backup immediately after preview confirmation"""
         # Only clear log display for scheduled backups, not manual backups with preview
         if is_scheduled:
+            # For scheduled backups, preserve any existing preview results
+            current_text = self.log_text.toPlainText()
+
+            # Check if there are preview results to preserve
+            preview_section = ""
+            if "=== BACKUP PREVIEW RESULTS ===" in current_text:
+                # Extract the preview section
+                lines = current_text.split("\n")
+                preview_lines = []
+                in_preview = False
+
+                for line in lines:
+                    if "=== BACKUP PREVIEW RESULTS ===" in line:
+                        in_preview = True
+                    if in_preview:
+                        preview_lines.append(line)
+                        if line.strip() == "===============================":
+                            break
+
+                if preview_lines:
+                    preview_section = "\n".join(preview_lines) + "\n\n"
+
+            # Clear log but preserve preview results
             self.log_text.clear()
+            if preview_section:
+                self.log_text.setPlainText(preview_section)
         else:
             # For manual backups, just add a separator to show backup is starting
             self.log_text.append("\n=== STARTING BACKUP ===\n")
