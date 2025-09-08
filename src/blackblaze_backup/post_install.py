@@ -4,7 +4,7 @@ Post-install script to set up desktop entry and icon for Ubuntu/Unity
 """
 
 import shutil
-import subprocess
+import subprocess  # nosec B404
 from pathlib import Path
 
 
@@ -44,7 +44,7 @@ def install_desktop_entry():
 
         # Update desktop database
         try:
-            subprocess.run(
+            subprocess.run(  # nosec B603, B607
                 ["update-desktop-database", str(desktop_dir)],
                 check=True,
                 capture_output=True,
@@ -55,7 +55,7 @@ def install_desktop_entry():
 
         # Update icon cache
         try:
-            subprocess.run(
+            subprocess.run(  # nosec B603, B607
                 ["gtk-update-icon-cache", "-f", "-t", str(icon_dir.parent)],
                 check=True,
                 capture_output=True,

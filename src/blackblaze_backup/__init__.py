@@ -26,7 +26,7 @@ try:
         from .post_install import install_desktop_entry
 
         install_desktop_entry()
-    except Exception:
+    except Exception:  # nosec B110
         pass  # Silently continue if post-install fails
 
     _GUI_AVAILABLE = True
