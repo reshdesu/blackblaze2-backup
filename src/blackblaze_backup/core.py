@@ -164,17 +164,14 @@ class BackupManager:
         incremental: bool = True,
         enable_deduplication: bool = True,
     ) -> bool:
-        """Check if file should be uploaded (incremental backup logic with deduplication)
+        """Check if file should be uploaded (simplified incremental backup logic)
 
-        Uses multi-level verification:
+        Uses size-only checking for reliability:
         1. File size check (fast, catches 99.9% of changes)
-        2. Hash comparison (definitive, handles edge cases)
-        3. Content deduplication (prevents uploading identical files to different locations)
+        2. Content deduplication (prevents uploading identical files to different locations)
 
-        Probability analysis:
-        - Different file sizes: ~99.9% chance files are different
-        - Same size + different hash: ~100% chance files are different
-        - Same size + same hash: ~0% chance files are different (MD5 collision ~1 in 2^128)
+        This approach avoids ETag/hash comparison issues with multi-part uploads
+        and provides reliable incremental backup for most use cases.
         """
         # If incremental backup is disabled, always upload
         if not incremental:
@@ -197,7 +194,6 @@ class BackupManager:
             try:
                 response = s3_client.head_object(Bucket=bucket_name, Key=s3_key)
                 s3_size = response.get("ContentLength", 0)
-                s3_etag = response.get("ETag", "").strip('"')
 
                 # LEVEL 1: File size check (fastest, catches 99.9% of changes)
                 if local_size != s3_size:
@@ -206,24 +202,8 @@ class BackupManager:
                     )
                     return True
 
-                # LEVEL 2: Hash verification (definitive check for same-size files)
-                if s3_etag:
-                    # Handle multi-part upload ETags (format: "hash-partcount")
-                    if "-" in s3_etag:
-                        # Multi-part upload - compare just the hash part
-                        s3_hash = s3_etag.split("-")[0]
-                        if local_hash != s3_hash:
-                            self.logger.debug(
-                                f"File hash changed (multi-part): {file_path.name}"
-                            )
-                            return True
-                    else:
-                        # Single-part upload - direct comparison
-                        if local_hash != s3_etag:
-                            self.logger.debug(f"File hash changed: {file_path.name}")
-                            return True
-
-                # File passed both size and hash checks - definitely unchanged
+                # Same size = assume unchanged (skip upload)
+                # Note: Removed ETag/hash comparison due to multi-part upload issues
                 self.logger.debug(f"Skipping unchanged file: {file_path.name}")
                 return False
 
