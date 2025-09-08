@@ -850,6 +850,11 @@ class BlackBlazeBackupApp(QMainWindow):
         self.start_backup_btn.setEnabled(False)
         self.start_backup_btn.setText("Analyzing...")
 
+        # Show progress bar during analysis
+        self.progress_bar.setRange(0, 0)  # Indeterminate progress
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setValue(0)
+
         # Start preview worker thread
         self.preview_worker = PreviewWorker(
             self.backup_service, self.incremental_backup_check.isChecked()
@@ -865,7 +870,17 @@ class BlackBlazeBackupApp(QMainWindow):
         self.start_backup_btn.setEnabled(True)
         self.start_backup_btn.setText("Start Backup")
 
-        # Show preview results at the top of the log (don't clear existing content)
+        # Store preview results for display
+        self.preview_results = {
+            "files_to_upload": files_to_upload,
+            "files_to_skip": files_to_skip,
+            "total_upload_size": total_upload_size,
+            "total_skip_size": total_skip_size,
+            "upload_count": len(files_to_upload),
+            "skip_count": len(files_to_skip),
+        }
+
+        # Show preview results in a dedicated summary area
         preview_text = f"""
 === BACKUP PREVIEW RESULTS ===
 Files to upload: {len(files_to_upload)}
@@ -883,6 +898,10 @@ Skip size: {self._format_size(total_skip_size)}
         # Scroll to top to show preview
         self.log_text.moveCursor(self.log_text.textCursor().Start)
 
+        # Reset progress bar to normal state
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+
         # Start backup immediately after preview
         incremental_enabled = self.incremental_backup_check.isChecked()
         self.start_backup_immediately(incremental_enabled, is_scheduled=False)
@@ -896,6 +915,10 @@ Skip size: {self._format_size(total_skip_size)}
             self, "Preview Failed", f"Could not analyze files: {error_message}"
         )
 
+        # Reset progress bar to normal state
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+
     def _format_size(self, size_bytes):
         """Format file size in human readable format"""
         for unit in ["B", "KB", "MB", "GB", "TB"]:
@@ -903,6 +926,22 @@ Skip size: {self._format_size(total_skip_size)}
                 return f"{size_bytes:.1f} {unit}"
             size_bytes /= 1024.0
         return f"{size_bytes:.1f} PB"
+
+    def show_session_summary(self):
+        """Show a summary of the current backup session analysis"""
+        if not hasattr(self, "preview_results"):
+            return
+
+        results = self.preview_results
+        summary_text = f"""
+CURRENT SESSION SUMMARY:
+   • Files to upload: {results['upload_count']}
+   • Files to skip: {results['skip_count']}
+   • Upload size: {self._format_size(results['total_upload_size'])}
+   • Skip size: {self._format_size(results['total_skip_size'])}
+   • Total files analyzed: {results['upload_count'] + results['skip_count']}
+"""
+        self.log_text.append(summary_text)
 
     def start_backup_immediately(self, incremental_enabled, is_scheduled=False):
         """Start backup immediately after preview confirmation"""
@@ -912,6 +951,10 @@ Skip size: {self._format_size(total_skip_size)}
         else:
             # For manual backups, just add a separator to show backup is starting
             self.log_text.append("\n=== STARTING BACKUP ===\n")
+
+            # Show current session summary if available
+            if hasattr(self, "preview_results"):
+                self.show_session_summary()
 
         # Reset cancellation state for new backup
         self.backup_service.reset_cancellation()
