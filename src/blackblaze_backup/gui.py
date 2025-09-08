@@ -865,12 +865,23 @@ class BlackBlazeBackupApp(QMainWindow):
         self.start_backup_btn.setEnabled(True)
         self.start_backup_btn.setText("Start Backup")
 
-        # Show preview results
-        self.log_text.append("Preview complete:")
-        self.log_text.append(f"  Files to upload: {len(files_to_upload)}")
-        self.log_text.append(f"  Files to skip: {len(files_to_skip)}")
-        self.log_text.append(f"  Upload size: {self._format_size(total_upload_size)}")
-        self.log_text.append(f"  Skip size: {self._format_size(total_skip_size)}")
+        # Show preview results at the top of the log (don't clear existing content)
+        preview_text = f"""
+=== BACKUP PREVIEW RESULTS ===
+Files to upload: {len(files_to_upload)}
+Files to skip: {len(files_to_skip)}
+Upload size: {self._format_size(total_upload_size)}
+Skip size: {self._format_size(total_skip_size)}
+===============================
+
+"""
+
+        # Insert preview at the beginning of the log
+        current_text = self.log_text.toPlainText()
+        self.log_text.setPlainText(preview_text + current_text)
+
+        # Scroll to top to show preview
+        self.log_text.moveCursor(self.log_text.textCursor().Start)
 
         # Start backup immediately after preview
         incremental_enabled = self.incremental_backup_check.isChecked()
@@ -895,8 +906,12 @@ class BlackBlazeBackupApp(QMainWindow):
 
     def start_backup_immediately(self, incremental_enabled, is_scheduled=False):
         """Start backup immediately after preview confirmation"""
-        # Clear log display for new backup
-        self.log_text.clear()
+        # Only clear log display for scheduled backups, not manual backups with preview
+        if is_scheduled:
+            self.log_text.clear()
+        else:
+            # For manual backups, just add a separator to show backup is starting
+            self.log_text.append("\n=== STARTING BACKUP ===\n")
 
         # Reset cancellation state for new backup
         self.backup_service.reset_cancellation()
