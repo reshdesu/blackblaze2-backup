@@ -299,7 +299,15 @@ class BackupManager:
                         file_hash = metadata.get("file-hash")
 
                         if file_hash:
+                            # Use custom metadata hash (preferred)
                             self._hash_cache[file_hash] = obj["Key"]
+                        else:
+                            # Fallback to ETag for files uploaded before metadata was implemented
+                            etag = response.get("ETag", "").strip('"')
+                            if (
+                                etag and "-" not in etag
+                            ):  # Only use single-part upload ETags
+                                self._hash_cache[etag] = obj["Key"]
 
                     except Exception as e:
                         # Skip objects that can't be read
@@ -597,8 +605,11 @@ class BackupService:
             # Create S3 client
             s3_client = self.backup_manager.create_s3_client(credentials)
 
-            # Reset deduplication cache for new backup session
-            self.backup_manager.reset_cache()
+            # Reset deduplication cache only if this is a completely new backup operation
+            # (not just processing another folder in the same backup session)
+            if not hasattr(self, "_backup_session_started"):
+                self.backup_manager.reset_cache()
+                self._backup_session_started = True
 
             # Get backup plan
             backup_plan = self.config.get_backup_plan()
@@ -686,15 +697,24 @@ class BackupService:
                     status_callback(
                         f"Backup completed successfully! Uploaded {uploaded_files_count} files in {time_str}"
                     )
+                # Reset session flag for next backup operation
+                if hasattr(self, "_backup_session_started"):
+                    delattr(self, "_backup_session_started")
                 return True
             else:
                 if status_callback:
                     status_callback("Backup cancelled by user")
+                # Reset session flag for next backup operation
+                if hasattr(self, "_backup_session_started"):
+                    delattr(self, "_backup_session_started")
                 return False
 
         except Exception as e:
             if error_callback:
                 error_callback(f"Backup failed: {str(e)}")
+            # Reset session flag for next backup operation
+            if hasattr(self, "_backup_session_started"):
+                delattr(self, "_backup_session_started")
             return False
 
     def cancel_backup(self):
