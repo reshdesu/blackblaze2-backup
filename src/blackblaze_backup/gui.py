@@ -482,7 +482,7 @@ class BlackBlazeBackupApp(QMainWindow):
             pass
 
         # Fallback: return a default version
-        return "1.0.0"
+        return "1.0.73"
 
     def setup_ui(self):
         """Setup the user interface"""
@@ -1729,7 +1729,7 @@ def main():
 
     # Set application properties
     app.setApplicationName("BlackBlaze B2 Backup Tool")
-    app.setApplicationVersion("1.0.0")
+    app.setApplicationVersion("1.0.73")
     app.setOrganizationName("BlackBlaze Backup")
 
     # Create and show main window
