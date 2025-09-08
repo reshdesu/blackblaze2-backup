@@ -321,6 +321,10 @@ class BlackBlazeBackupApp(QMainWindow):
 
                 def append_to_ui():
                     self.text_widget.append(msg)
+                    # Auto-scroll to bottom to show latest messages
+                    cursor = self.text_widget.textCursor()
+                    cursor.movePosition(cursor.MoveOperation.End)
+                    self.text_widget.setTextCursor(cursor)
 
                 QTimer.singleShot(0, append_to_ui)
 
@@ -896,7 +900,9 @@ Skip size: {self._format_size(total_skip_size)}
         self.log_text.setPlainText(preview_text + current_text)
 
         # Scroll to top to show preview
-        self.log_text.moveCursor(self.log_text.textCursor().Start)
+        cursor = self.log_text.textCursor()
+        cursor.movePosition(cursor.MoveOperation.Start)
+        self.log_text.setTextCursor(cursor)
 
         # Reset progress bar to normal state
         self.progress_bar.setRange(0, 100)
