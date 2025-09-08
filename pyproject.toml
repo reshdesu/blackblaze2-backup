@@ -16,7 +16,6 @@ dependencies = [
     "keyring>=24.0.0",
     "pillow>=11.3.0",
     "pyinstaller>=6.15.0",
-    "python-dotenv>=1.0.1",
 ]
 
 [project.optional-dependencies]

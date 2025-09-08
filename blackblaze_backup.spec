@@ -19,7 +19,6 @@ a = Analysis(
         'cryptography',
         'keyring',
         'PIL',
-        'python-dotenv',
     ],
     hookspath=[],
     hooksconfig={},
