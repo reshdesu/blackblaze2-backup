@@ -847,8 +847,8 @@ class BlackBlazeBackupApp(QMainWindow):
         self.log_text.append("Analyzing files to upload...")
 
         # Disable start backup button during preview
-        self.start_backup_button.setEnabled(False)
-        self.start_backup_button.setText("Analyzing...")
+        self.start_backup_btn.setEnabled(False)
+        self.start_backup_btn.setText("Analyzing...")
 
         # Start preview worker thread
         self.preview_worker = PreviewWorker(
@@ -862,8 +862,8 @@ class BlackBlazeBackupApp(QMainWindow):
         self, files_to_upload, files_to_skip, total_upload_size, total_skip_size
     ):
         """Handle completed preview analysis"""
-        self.start_backup_button.setEnabled(True)
-        self.start_backup_button.setText("Start Backup")
+        self.start_backup_btn.setEnabled(True)
+        self.start_backup_btn.setText("Start Backup")
 
         # Show preview results
         self.log_text.append("Preview complete:")
@@ -878,8 +878,8 @@ class BlackBlazeBackupApp(QMainWindow):
 
     def on_preview_failed(self, error_message):
         """Handle preview analysis failure"""
-        self.start_backup_button.setEnabled(True)
-        self.start_backup_button.setText("Start Backup")
+        self.start_backup_btn.setEnabled(True)
+        self.start_backup_btn.setText("Start Backup")
         self.logger.error(f"Preview failed: {error_message}")
         QMessageBox.warning(
             self, "Preview Failed", f"Could not analyze files: {error_message}"
