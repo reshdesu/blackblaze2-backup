@@ -1031,11 +1031,11 @@ Skip size: {self._format_size(total_skip_size)}
         results = self.preview_results
         summary_text = f"""
 CURRENT SESSION SUMMARY:
-   • Files to upload: {results['upload_count']}
-   • Files to skip: {results['skip_count']}
-   • Upload size: {self._format_size(results['total_upload_size'])}
-   • Skip size: {self._format_size(results['total_skip_size'])}
-   • Total files analyzed: {results['upload_count'] + results['skip_count']}
+   • Files to upload: {results["upload_count"]}
+   • Files to skip: {results["skip_count"]}
+   • Upload size: {self._format_size(results["total_upload_size"])}
+   • Skip size: {self._format_size(results["total_skip_size"])}
+   • Total files analyzed: {results["upload_count"] + results["skip_count"]}
 """
         self.log_text.append(summary_text)
 
@@ -1078,10 +1078,10 @@ CURRENT SESSION SUMMARY:
         if not preview_section and hasattr(self, "preview_results"):
             preview_text = f"""
 === BACKUP PREVIEW RESULTS ===
-Files to upload: {self.preview_results['upload_count']}
-Files to skip: {self.preview_results['skip_count']}
-Upload size: {self._format_size(self.preview_results['total_upload_size'])}
-Skip size: {self._format_size(self.preview_results['total_skip_size'])}
+Files to upload: {self.preview_results["upload_count"]}
+Files to skip: {self.preview_results["skip_count"]}
+Upload size: {self._format_size(self.preview_results["total_upload_size"])}
+Skip size: {self._format_size(self.preview_results["total_skip_size"])}
 ===============================
 
 """
