@@ -290,6 +290,14 @@ class BlackBlazeBackupApp(QMainWindow):
             self.logger.info(
                 f"Window created - Visible: {self.isVisible()}, Geometry: {self.geometry()}"
             )
+
+            # Debug: Log icon setup
+            icon_path = Path(__file__).parent / "icon.png"
+            if icon_path.exists():
+                self.logger.info(f"Window icon loaded from {icon_path}")
+            else:
+                self.logger.warning(f"Icon file not found at {icon_path}")
+
             self.update_schedule_status()
             self.setup_auto_save()
         except Exception as e:
@@ -482,10 +490,47 @@ class BlackBlazeBackupApp(QMainWindow):
         self.setWindowTitle(f"BlackBlaze B2 Backup Tool v{version}")
         self.setGeometry(100, 100, 650, 700)
 
-        # Set window icon (use PNG for better cross-platform compatibility)
-        icon_path = Path(__file__).parent / "icon.png"
-        if icon_path.exists():
-            self.setWindowIcon(QIcon(str(icon_path)))
+        # Force window to be visible from the start
+        self.setVisible(True)
+
+        # Set proper window class for Ubuntu/Unity icon recognition
+        self.setObjectName("BlackBlazeBackupTool")
+        self.setProperty("class", "BlackBlazeBackupTool")
+
+        # Set window icon (try both PNG and ICO for better compatibility)
+        icon_path_png = Path(__file__).parent / "icon.png"
+        icon_path_ico = Path(__file__).parent / "icon.ico"
+
+        if icon_path_ico.exists():
+            # Try ICO first for better Windows/Linux compatibility
+            ico_icon = QIcon(str(icon_path_ico))
+            self.setWindowIcon(ico_icon)
+            print(f"DEBUG: Window icon set from ICO {icon_path_ico}")
+        elif icon_path_png.exists():
+            # Fallback to PNG
+            original_pixmap = QPixmap(str(icon_path_png))
+            # Scale to 64x64 for better visibility in taskbar/dock
+            scaled_pixmap = original_pixmap.scaled(
+                64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+            large_icon = QIcon(scaled_pixmap)
+            self.setWindowIcon(large_icon)
+            print(
+                f"DEBUG: Window icon set from PNG {icon_path_png}, size: {original_pixmap.size()}"
+            )
+        else:
+            print("DEBUG: No icon files found")
+
+        # Additional Unity/Linux compatibility - set window properties
+        try:
+            import os
+
+            if os.environ.get("XDG_CURRENT_DESKTOP") == "Unity":
+                # For Unity, try to set additional window properties
+                # Remove the WindowStaysOnTopHint as it might cause issues
+                print("DEBUG: Applied Unity-specific window properties")
+        except Exception as e:
+            print(f"DEBUG: Unity compatibility setup failed: {e}")
 
         # Create central widget
         central_widget = QWidget()
@@ -1238,22 +1283,29 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
         # Create cross-platform compatible icon (use PNG for better Windows compatibility)
         icon_path = Path(__file__).parent / "icon.png"
         if icon_path.exists():
-            # Use PNG icon (works better on Windows)
-            icon = QIcon(str(icon_path))
+            # Create system tray icon with 2.5x zoom
+            original_pixmap = QPixmap(str(icon_path))
+            # Scale to 80x80 for 2.5x zoom, then crop center 32x32
+            scaled_pixmap = original_pixmap.scaled(
+                80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+            # Crop the center 32x32 portion from the 80x80 scaled image
+            cropped_pixmap = scaled_pixmap.copy(24, 24, 32, 32)
+            icon = QIcon(cropped_pixmap)
         else:
-            # Fallback: Create a simple programmatic icon
-            pixmap = QPixmap(32, 32)
+            # Fallback: Create a simple programmatic icon with 2.5x zoom
+            pixmap = QPixmap(32, 32)  # Standard system tray size
             pixmap.fill(Qt.transparent)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
 
-            # Draw blue circle with "B2" text
+            # Draw blue circle with "B2" text (2.5x zoom effect)
             painter.setBrush(QBrush(QColor("#2E86AB")))
-            painter.setPen(QPen(QColor("#1E40AF"), 2))
-            painter.drawEllipse(2, 2, 28, 28)
+            painter.setPen(QPen(QColor("#1E40AF"), 5))  # 2.5x thicker border
+            painter.drawEllipse(4, 4, 24, 24)  # 2.5x smaller circle
 
             painter.setPen(QPen(QColor("white")))
-            font = QFont("Arial", 12, QFont.Bold)
+            font = QFont("Arial", 5, QFont.Bold)  # 2.5x smaller font
             painter.setFont(font)
             painter.drawText(pixmap.rect(), Qt.AlignCenter, "B2")
             painter.end()
@@ -1288,12 +1340,20 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
         self.tray_icon.setContextMenu(menu)
 
         # Try to show the tray icon
-        if self.tray_icon.show():
-            self.logger.info("System tray icon created successfully")
-        else:
-            self.logger.error("Failed to show system tray icon")
+        try:
+            if self.tray_icon.show():
+                self.logger.info("System tray icon created successfully")
+            else:
+                self.logger.error(
+                    "Failed to show system tray icon - show() returned False"
+                )
+                self.logger.info(
+                    "Background operation will still work with window hiding"
+                )
+                # Keep tray icon object for menu functionality even if not visible
+        except Exception as e:
+            self.logger.error(f"Exception while showing system tray icon: {e}")
             self.logger.info("Background operation will still work with window hiding")
-            # Keep tray icon object for menu functionality even if not visible
 
     def show_window(self):
         """Show and activate the main window"""

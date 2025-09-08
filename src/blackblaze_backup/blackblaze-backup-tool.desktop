@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=BlackBlaze B2 Backup Tool
+Comment=Backup tool for BlackBlaze B2 cloud storage
+Exec=blackblaze-backup-tool
+Icon=blackblaze-backup-tool
+Terminal=false
+StartupNotify=true
+Categories=Utility;System;
+StartupWMClass=BlackBlazeBackupTool

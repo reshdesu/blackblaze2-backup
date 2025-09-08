@@ -1,0 +1,231 @@
+{
+  "ai_context": {
+    "critical_read_first": true,
+    "file_purpose": "Essential context for AI assistants working on BlackBlaze B2 Backup Tool",
+    "last_updated": "2025-09-08",
+    "version": "1.0.72"
+  },
+  "project": {
+    "name": "BlackBlaze B2 Backup Tool",
+    "type": "Cross-platform GUI backup application",
+    "tech_stack": ["Python", "PySide6", "AWS S3 (BackBlaze B2)", "uv package manager"],
+    "current_version": "1.0.72",
+    "entry_point": "main.py",
+    "core_modules": [
+      "src/blackblaze_backup/gui.py",
+      "src/blackblaze_backup/core.py"
+    ],
+    "key_features": [
+      "GUI backup tool for BackBlaze B2 S3 buckets",
+      "Incremental backup with deduplication",
+      "Scheduled backups with system tray integration",
+      "Cross-platform packages (Windows MSI, Ubuntu DEB)",
+      "Performance optimization with caching and statistical benchmarks"
+    ]
+  },
+  "never_delete_critical_files": {
+    "performance_data_highest_priority": [
+      "performance_results.json",
+      "comprehensive_5k_performance_results.txt",
+      "PERFORMANCE_RESULTS.md",
+      "DEVELOPMENT_NOTES.md"
+    ],
+    "performance_data_patterns": [
+      "Any files with 'performance', 'benchmark', 'results' in name",
+      "Test data directories like test_photos/",
+      "Any .json files with test results or data"
+    ],
+    "project_config": [
+      "pyproject.toml",
+      "requirements-ci.txt",
+      "blackblaze_backup.spec",
+      "sample.env",
+      "uv.lock",
+      ".pre-commit-config.yaml"
+    ],
+    "source_code_documentation": [
+      "src/blackblaze_backup/ directory and all contents",
+      "main.py",
+      "README.md",
+      "LICENSE",
+      "CONTRIBUTORS.md",
+      "SECURITY.md",
+      ".github/workflows/ directory and all workflow files",
+      "scripts/ directory and all utility scripts",
+      "tests/ directory and all test files"
+    ],
+    "safe_to_delete_temporary": [
+      "__pycache__/ directories",
+      ".pytest_cache/",
+      "htmlcov/",
+      "coverage.xml",
+      ".ruff_cache/ directory",
+      "dist/ and build/ directories (if they exist)"
+    ]
+  },
+  "ai_assistant_rules": {
+    "critical_package_principle": "Packages must work out of the box without requiring system-level changes or modifications to user's system preferences",
+    "never_modify_system": [
+      "Do not modify user's system preferences",
+      "Do not change desktop environment settings",
+      "Do not modify system-wide configurations",
+      "Do not require manual desktop entry installation",
+      "Do not modify user's home directory structure beyond app data",
+      "Do not change system-wide icon themes",
+      "Do not modify system PATH or environment variables"
+    ],
+    "proper_package_approach": [
+      "Include all necessary files in the package itself",
+      "Use application-level configuration only",
+      "Set proper window properties and class names",
+      "Include desktop entries and icons in package data",
+      "Use post-install scripts that only affect app-specific directories",
+      "Ensure cross-platform compatibility without system modifications"
+    ],
+    "never_do_without_asking": [
+      "Run expensive tests (5k photo generation takes 20+ minutes)",
+      "Commit code changes without user confirmation",
+      "Delete any files during cleanup without checking contents",
+      "Change version numbers without user request",
+      "Modify CI/CD pipeline files without understanding impact"
+    ],
+    "never_assume": [
+      "Files are safe to delete just because not in git",
+      "Performance test results can be easily recreated",
+      "User wants automatic commits",
+      "Cleanup means deleting everything that looks temporary",
+      "Test failures mean code is broken (could be test issues)"
+    ],
+    "always_check_first": [
+      "What files contain before deleting them",
+      "Git status to see what's tracked vs untracked",
+      "If expensive operations are really necessary",
+      "With user before making destructive changes",
+      "If existing solutions exist before creating new ones"
+    ]
+  },
+  "development_workflow": {
+    "environment": {
+      "os": "Ubuntu (primary), Windows (secondary)",
+      "package_manager": "uv (NOT pip)",
+      "command_prefix": "Always use 'uv run <command>' instead of 'python <command>'",
+      "virtual_environment": "Managed by uv automatically"
+    },
+    "code_quality": {
+      "linting": "uv run ruff check src/ tests/",
+      "formatting": "uv run ruff format src/ tests/",
+      "pre_commit": "Runs automatically, includes emoji checking",
+      "security": "uv run bandit -r src/ -f json -o bandit-report.json"
+    },
+    "version_management": {
+      "update_version": "Update version in pyproject.toml",
+      "sync_version": "uv run python scripts/sync_version.py (syncs to __init__.py)",
+      "detection_order": ["package metadata", "pyproject.toml", "__init__.py", "setup.py", "fallback"]
+    },
+    "release_process": [
+      "Update version in pyproject.toml",
+      "Run version sync script",
+      "Commit changes",
+      "Create git tag: git tag v1.0.XX",
+      "Push tag: git push origin v1.0.XX",
+      "Wait for GitHub Actions build",
+      "Create GitHub release with assets"
+    ]
+  },
+  "common_issues_solutions": {
+    "build_failures": {
+      "formatting": "Run 'uv run ruff format src/ tests/' before pushing",
+      "security_scan": "Add '# nosec B###' comments for false positives",
+      "missing_spec_file": "Ensure blackblaze_backup.spec exists and is tracked",
+      "pre_commit_hooks": "Fix issues and commit again, don't skip hooks"
+    },
+    "security_scan_bandit_issues": {
+      "B112": "Try, Except, Continue detected → Add '# nosec B112'",
+      "B110": "Try, Except, Pass detected → Add '# nosec B110'",
+      "test_locally": "uv run bandit -r src/ -f json -o bandit-report.json"
+    },
+    "git_tag_management": {
+      "when_fixing_issues_after_tag": [
+        "git tag -d v1.0.XX",
+        "git tag v1.0.XX",
+        "git push origin :refs/tags/v1.0.XX",
+        "git push origin v1.0.XX"
+      ]
+    }
+  },
+  "performance_benchmarks": {
+    "current_targets": {
+      "cache_population": "≤20s (target: avg + 6σ)",
+      "processing_per_file": "≤12ms (target: avg + 6σ)",
+      "total_time_500_files": "≤25s (target: avg + 6σ)",
+      "cache_lookup": "≤10ms (target: avg + 6σ)"
+    },
+    "test_command": "uv run python -m pytest tests/test_comprehensive_5k.py -v"
+  },
+  "recent_issues_fixed": [
+    "Preview Results Display: Fixed self.log_text.clear() clearing preview for manual backups",
+    "Performance Results Restoration: Recreated performance_results.json after accidental deletion",
+    "Dynamic Version Display: Multi-method version detection with inline display (no popups)",
+    "Release Build Failures: Fixed formatting and security scan issues",
+    "Bandit Security Issues: Added # nosec comments for false positives"
+  ],
+  "context_setup_new_conversations": {
+    "required_information": [
+      "Project Overview: Brief description and main issue",
+      "Key Files: Main files being worked with",
+      "Recent Changes: What modifications were made and why",
+      "Current State: What's working vs what's broken",
+      "Constraints: What NOT to modify/delete",
+      "Environment: OS, package manager, current app state"
+    ],
+    "example_good_context": "I'm working on BlackBlaze B2 Backup Tool - a cross-platform backup application. The main issue is that preview results disappear from the log during backup operations. Key files: main.py, src/blackblaze_backup/gui.py, src/blackblaze_backup/core.py. Recent changes: Modified preview display logic in gui.py to show results at top of log. Current state: App runs but preview results get cleared when backup starts. Please don't modify: performance_results.json, any benchmark files, or test data. Environment: Ubuntu, using uv, app is currently running locally. I need help fixing the preview results persistence issue."
+  },
+  "user_preferences": {
+    "no_modal_windows": "Use inline text notifications instead of popup dialogs",
+    "no_automatic_commits": "Always ask before committing code",
+    "preserve_performance_data": "Never delete benchmark or test result files",
+    "use_uv_commands": "Always use 'uv run <command>' instead of 'python <command>'",
+    "dynamic_version_display": "Version info should be inline in log text area"
+  },
+  "conversation_learnings": {
+    "2025-09-08_dynamic_version_display": {
+      "issue": "User wanted dynamic version display instead of popup dialogs",
+      "solution": "Implemented multi-method version detection with inline display in log text area",
+      "implementation": "Added get_version() method with fallbacks, version sync script, version info button",
+      "user_preference": "No modal windows, prefer inline text notifications"
+    },
+    "2025-09-08_release_process_learnings": {
+      "issue": "Build failures due to formatting and security scan issues",
+      "solution": "Fixed ruff formatting and bandit security scan false positives",
+      "learnings": [
+        "Always run 'uv run ruff format src/ tests/' before pushing",
+        "Add '# nosec B###' comments for bandit false positives",
+        "Update git tags when fixing issues after tag creation",
+        "Test bandit locally before pushing"
+      ]
+    },
+    "2025-09-08_ai_context_optimization": {
+      "issue": "DEVELOPMENT_NOTES.md needed optimization for AI consumption",
+      "solution": "Converted to JSON format for maximum AI efficiency",
+      "benefits": [
+        "Structured data for easy AI parsing",
+        "Query-friendly format",
+        "Validation capability",
+        "Extensible for new sections"
+      ]
+    },
+    "2025-09-08_package_development_principle": {
+      "issue": "User correctly pointed out that packages should not require system-level changes",
+      "problem": "Initially tried to manually install desktop entries and modify system preferences",
+      "solution": "Implemented proper package-level solution with included files and automatic setup",
+      "critical_principle": "Packages must work out of the box without requiring system-level changes",
+      "implementation": [
+        "Include desktop entries and icons in package data",
+        "Use post-install scripts that only affect app-specific directories",
+        "Set proper window properties and class names for system recognition",
+        "Never modify user's system preferences or desktop environment settings"
+      ],
+      "user_feedback": "Remember not to change system preferences for making a package work, that is illogical"
+    }
+  }
+}

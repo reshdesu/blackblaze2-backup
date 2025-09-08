@@ -21,6 +21,14 @@ from .core import (
 try:
     from .gui import BlackBlazeBackupApp, main
 
+    # Run post-install setup on first import
+    try:
+        from .post_install import install_desktop_entry
+
+        install_desktop_entry()
+    except Exception:
+        pass  # Silently continue if post-install fails
+
     _GUI_AVAILABLE = True
 except ImportError:
     # GUI not available (e.g., in CI environment without Qt)

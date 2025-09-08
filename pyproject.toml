@@ -44,6 +44,12 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/blackblaze_backup"]
+include = [
+    "src/blackblaze_backup/icon.png",
+    "src/blackblaze_backup/icon.ico",
+    "src/blackblaze_backup/blackblaze-backup-tool.desktop",
+    "src/blackblaze_backup/post_install.py"
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

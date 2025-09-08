@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=BlackBlaze B2 Backup Tool
+Comment=Backup tool for BlackBlaze B2 cloud storage
+Exec=uv run python main.py
+Icon=/home/yamnik/blackblaze2-backup/src/blackblaze_backup/icon.png
+Path=/home/yamnik/blackblaze2-backup
+Terminal=false
+StartupNotify=true
+Categories=Utility;System;
