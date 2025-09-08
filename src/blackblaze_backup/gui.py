@@ -974,6 +974,30 @@ CURRENT SESSION SUMMARY:
 
                 if preview_lines:
                     preview_section = "\n".join(preview_lines) + "\n\n"
+                    # Also preserve session summary if it exists
+                    if "CURRENT SESSION SUMMARY:" in current_text:
+                        summary_start = current_text.find("CURRENT SESSION SUMMARY:")
+                        if summary_start != -1:
+                            summary_end = current_text.find("\n\n", summary_start)
+                            if summary_end == -1:
+                                summary_end = len(current_text)
+                            summary_section = (
+                                current_text[summary_start:summary_end] + "\n\n"
+                            )
+                            preview_section += summary_section
+            else:
+                # If no preview results in log, check if we have stored preview results
+                if hasattr(self, "preview_results"):
+                    preview_text = f"""
+=== BACKUP PREVIEW RESULTS ===
+Files to upload: {self.preview_results['upload_count']}
+Files to skip: {self.preview_results['skip_count']}
+Upload size: {self._format_size(self.preview_results['total_upload_size'])}
+Skip size: {self._format_size(self.preview_results['total_skip_size'])}
+===============================
+
+"""
+                    preview_section = preview_text
 
             # Clear log but preserve preview results
             self.log_text.clear()
