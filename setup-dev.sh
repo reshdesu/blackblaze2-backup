@@ -17,6 +17,10 @@ pre-commit install
 echo "Running pre-commit hooks on all files..."
 pre-commit run --all-files
 
+# Run comprehensive format check
+echo "Running comprehensive format check..."
+python scripts/check-formatting.py
+
 echo "✅ Development environment setup complete!"
 echo ""
 echo "Pre-commit hooks are now active and will automatically:"
@@ -25,5 +29,11 @@ echo "- Remove trailing whitespace"
 echo "- Fix end-of-file issues"
 echo "- Check YAML syntax"
 echo "- Prevent large files and merge conflicts"
+echo "- Check all Python files are formatted"
+echo ""
+echo "Additional tools available:"
+echo "- python scripts/check-formatting.py (check formatting)"
+echo "- python scripts/check-formatting.py --fix (fix formatting)"
+echo "- python scripts/setup-precommit.sh (reinstall pre-commit hooks)"
 echo ""
 echo "These hooks will run automatically before each commit."
