@@ -89,6 +89,13 @@
       "Change version numbers without user request",
       "Modify CI/CD pipeline files without understanding impact"
     ],
+    "always_test_before_commit": [
+      "Run the application locally to verify it works",
+      "Test the specific feature being implemented",
+      "Check for any runtime errors or crashes",
+      "Verify the user experience is as expected",
+      "Only commit after confirming the code works properly"
+    ],
     "never_assume": [
       "Files are safe to delete just because not in git",
       "Performance test results can be easily recreated",
@@ -110,6 +117,21 @@
       "package_manager": "uv (NOT pip)",
       "command_prefix": "Always use 'uv run <command>' instead of 'python <command>'",
       "virtual_environment": "Managed by uv automatically"
+    },
+    "testing_before_commit": {
+      "mandatory_steps": [
+        "Run 'uv run python -m blackblaze_backup.gui' to test the app",
+        "Verify the specific feature being implemented works",
+        "Check for any runtime errors or crashes",
+        "Test user experience and UI behavior",
+        "Only commit after confirming everything works"
+      ],
+      "test_commands": {
+        "run_app": "uv run python -m blackblaze_backup.gui",
+        "run_tests": "uv run python -m pytest tests/ -v",
+        "lint_check": "uv run ruff check src/ tests/",
+        "format_check": "uv run ruff format --check src/ tests/"
+      }
     },
     "code_quality": {
       "linting": "uv run ruff check src/ tests/",
@@ -226,6 +248,21 @@
         "Never modify user's system preferences or desktop environment settings"
       ],
       "user_feedback": "Remember not to change system preferences for making a package work, that is illogical"
+    },
+    "2025-09-09_testing_before_commit_principle": {
+      "issue": "User correctly pointed out that we should always test before committing",
+      "problem": "Working directly on main branch and committing without proper testing",
+      "solution": "Implement proper Git workflow with development branches and mandatory testing",
+      "critical_principle": "Always test the application locally before committing any changes",
+      "implementation": [
+        "Create development branches for all feature work",
+        "Test the app with 'uv run python -m blackblaze_backup.gui' before committing",
+        "Verify the specific feature being implemented works correctly",
+        "Check for runtime errors, crashes, or UI issues",
+        "Only commit after confirming everything works properly",
+        "Use pull requests to merge development branches to main"
+      ],
+      "user_feedback": "We should always test it before committing it and add it to ai context"
     }
   }
 }
