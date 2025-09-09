@@ -300,6 +300,7 @@ class BlackBlazeBackupApp(QMainWindow):
 
             self.update_schedule_status()
             self.setup_auto_save()
+            self.setup_single_instance_listener()
         except Exception as e:
             logging.error(f"Error initializing application: {e}")
             raise
@@ -1363,13 +1364,6 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
         self.raise_()
         self.activateWindow()
 
-    def force_exit(self):
-        """Force exit the application (bypass closeEvent)"""
-        self.logger.info("Force exit requested from tray menu")
-        if self.tray_icon:
-            self.tray_icon.hide()
-        QApplication.quit()
-
     def show_schedule_dialog(self):
         """Show schedule dialog"""
         dialog = ScheduleDialog(self)
@@ -1705,6 +1699,72 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
             self.hide()
             event.ignore()
 
+    def force_exit(self):
+        """Force exit the application (bypass closeEvent)"""
+        self.logger.info("Force exit requested")
+
+        # Clean up single instance socket
+        app = QApplication.instance()
+        if hasattr(app, "_instance_socket"):
+            try:
+                app._instance_socket.close()
+                if hasattr(app, "_instance_socket_file"):
+                    app._instance_socket_file.unlink(missing_ok=True)
+            except Exception as e:
+                self.logger.warning(f"Error cleaning up instance socket: {e}")
+
+        if self.tray_icon:
+            self.tray_icon.hide()
+        QApplication.quit()
+
+    def setup_single_instance_listener(self):
+        """Setup listener for single instance communication"""
+        app = QApplication.instance()
+        if hasattr(app, "_instance_socket"):
+            # Start a timer to check for incoming messages
+            self.instance_timer = QTimer()
+            self.instance_timer.timeout.connect(self._check_instance_messages)
+            self.instance_timer.start(100)  # Check every 100ms
+
+    def _check_instance_messages(self):
+        """Check for messages from other instances"""
+        app = QApplication.instance()
+        if not hasattr(app, "_instance_socket"):
+            return
+
+        try:
+            # Check if there's a connection waiting
+            app._instance_socket.settimeout(0)  # Non-blocking
+            conn, addr = app._instance_socket.accept()
+
+            # Read the message
+            data = conn.recv(1024)
+            if data == b"focus_window":
+                self.logger.info("Received focus request from another instance")
+                self._bring_to_front()
+
+            conn.close()
+        except OSError:
+            # No connection waiting, this is normal
+            pass
+        except Exception as e:
+            self.logger.warning(f"Error checking instance messages: {e}")
+
+    def _bring_to_front(self):
+        """Bring the window to the front and focus it"""
+        self.logger.info("Bringing window to front")
+
+        # Show the window if it's hidden
+        if self.isHidden():
+            self.show()
+
+        # Bring to front and focus
+        self.raise_()
+        self.activateWindow()
+
+        # On some systems, we need to set the window state
+        self.setWindowState(self.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
+
     def minimize_to_background(self):
         """Minimize application to background (Ubuntu compatible)"""
         self.logger.info("Minimizing to background")
@@ -1724,6 +1784,76 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
             self.hide()
 
 
+def _ensure_single_instance(app):
+    """Ensure only one instance of the application is running.
+
+    Returns True if this is the first instance, False if another instance is already running.
+    If another instance is running, it will be brought to focus and this instance will exit.
+    """
+    import socket
+    import tempfile
+    from pathlib import Path
+
+    # Create a unique socket name for this application
+    socket_name = "blackblaze_backup_tool_single_instance"
+
+    # Try to create a socket to check if another instance is running
+    try:
+        # Create a temporary socket file path
+        temp_dir = Path(tempfile.gettempdir())
+        socket_file = temp_dir / f"{socket_name}.sock"
+
+        # Try to bind to the socket
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.bind(str(socket_file))
+
+        # If we get here, no other instance is running
+        # Keep the socket open to prevent other instances
+        sock.listen(1)
+
+        # Store the socket in the app for cleanup
+        app._instance_socket = sock
+        app._instance_socket_file = socket_file
+
+        return True
+
+    except OSError:
+        # Socket already exists, another instance is running
+        try:
+            # Try to connect to the existing instance
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.connect(str(socket_file))
+
+            # Send a message to bring the existing window to focus
+            sock.send(b"focus_window")
+            sock.close()
+
+            # Show a brief message to the user
+            from PySide6.QtWidgets import QMessageBox
+
+            msg = QMessageBox()
+            msg.setWindowTitle("BlackBlaze B2 Backup Tool")
+            msg.setText("BlackBlaze B2 Backup Tool is already running.")
+            msg.setInformativeText("The existing window has been brought to focus.")
+            msg.setIcon(QMessageBox.Information)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec()
+
+        except Exception:
+            # If we can't communicate with the existing instance,
+            # just show a simple message
+            from PySide6.QtWidgets import QMessageBox
+
+            msg = QMessageBox()
+            msg.setWindowTitle("BlackBlaze B2 Backup Tool")
+            msg.setText("BlackBlaze B2 Backup Tool is already running.")
+            msg.setIcon(QMessageBox.Information)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec()
+
+        return False
+
+
 def main():
     """Main application entry point"""
     app = QApplication(sys.argv)
@@ -1740,6 +1870,10 @@ def main():
     app.setApplicationName("BlackBlaze B2 Backup Tool")
     app.setApplicationVersion(dynamic_version)
     app.setOrganizationName("BlackBlaze Backup")
+
+    # Single instance check
+    if not _ensure_single_instance(app):
+        return 0  # Exit gracefully if another instance is already running
 
     # Create and show main window
     try:
