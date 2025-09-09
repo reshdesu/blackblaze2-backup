@@ -103,6 +103,13 @@
       "Keep the context current with project evolution and user preferences",
       "Include user feedback and corrections in the learning system"
     ],
+    "never_commit_secrets": [
+      "Check every commit for secrets, passwords, API keys, tokens, credentials",
+      "Use pre-commit hooks to automatically scan for secrets",
+      "Never commit .env files, config files with secrets, or hardcoded credentials",
+      "Use environment variables or secure credential storage instead",
+      "Scan for common secret patterns: passwords, keys, tokens, database URLs"
+    ],
     "never_assume": [
       "Files are safe to delete just because not in git",
       "Performance test results can be easily recreated",
@@ -160,8 +167,26 @@
     "code_quality": {
       "linting": "uv run ruff check src/ tests/",
       "formatting": "uv run ruff format src/ tests/",
-      "pre_commit": "Runs automatically, includes emoji checking",
-      "security": "uv run bandit -r src/ -f json -o bandit-report.json"
+      "pre_commit": "Runs automatically, includes emoji checking and secret detection",
+      "security": "uv run bandit -r src/ -f json -o bandit-report.json",
+      "secret_detection": "Pre-commit hook scans for secrets, passwords, API keys, tokens"
+    },
+    "security_checklist": {
+      "before_every_commit": [
+        "Check for hardcoded passwords, API keys, tokens",
+        "Verify no .env files are being committed",
+        "Scan for database connection strings with credentials",
+        "Look for AWS keys, GitHub tokens, or other secrets",
+        "Use pre-commit hooks to automate secret detection"
+      ],
+      "secret_patterns_to_avoid": [
+        "password=, passwd=, pwd=",
+        "api_key=, apikey=, access_key=",
+        "secret=, token=, auth_token=",
+        "database_url=, db_url=, connection_string=",
+        "aws_access_key, aws_secret_key",
+        "github_token, git_token"
+      ]
     },
     "version_management": {
       "update_version": "Update version in pyproject.toml",
@@ -300,6 +325,28 @@
       ],
       "importance": "AI context should be self-aware and include guidance about its own evolution",
       "user_feedback": "Does the ai context also tell you to update the ai context frequently"
+    },
+    "2025-09-09_secret_detection_system": {
+      "issue": "User requested secret detection system to prevent committing credentials",
+      "problem": "No automated system to check for secrets before commits",
+      "solution": "Implemented comprehensive secret detection pre-commit hook",
+      "implementation": [
+        "Added 'never_commit_secrets' to ai_assistant_rules",
+        "Created 'security_checklist' in development_workflow",
+        "Built custom secret detection script (scripts/check_secrets.py)",
+        "Added check-secrets hook to .pre-commit-config.yaml",
+        "Configured patterns for passwords, API keys, tokens, database URLs",
+        "Added specific patterns for AWS keys, GitHub tokens, OpenAI keys"
+      ],
+      "security_patterns": [
+        "password=, api_key=, secret=, token= assignments",
+        "AWS Access Key IDs (AKIA pattern)",
+        "GitHub tokens (ghp_, gho_, ghu_, ghs_, ghr_ patterns)",
+        "OpenAI API keys (sk- pattern)",
+        "Database connection strings with credentials",
+        "Bearer tokens and authorization headers"
+      ],
+      "user_feedback": "Also add to the ai context if not already added that we need to make sure no secrets are committed to git and check everytime we commit, make a system for this if possible using what we have. precommit and ruff"
     }
   }
 }

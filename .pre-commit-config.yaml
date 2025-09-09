@@ -26,3 +26,10 @@ repos:
         language: system
         files: \.(py|md|txt|yml|yaml)$
         pass_filenames: true
+
+      - id: check-secrets
+        name: Check for secrets and credentials
+        entry: .venv/bin/python scripts/check_secrets.py
+        language: system
+        files: \.(py|js|ts|json|yml|yaml|env|ini|cfg|conf|txt|md)$
+        pass_filenames: true

@@ -1,6 +1,6 @@
 {
   "errors": [],
-  "generated_at": "2025-09-08T02:40:10Z",
+  "generated_at": "2025-09-08T03:43:52Z",
   "metrics": {
     "_totals": {
       "CONFIDENCE.HIGH": 0,
@@ -11,9 +11,9 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 1987,
+      "loc": 2090,
       "nosec": 0,
-      "skipped_tests": 3
+      "skipped_tests": 9
     },
     "src/blackblaze_backup/__init__.py": {
       "CONFIDENCE.HIGH": 0,
@@ -24,9 +24,9 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 35,
+      "loc": 40,
       "nosec": 0,
-      "skipped_tests": 0
+      "skipped_tests": 1
     },
     "src/blackblaze_backup/config.py": {
       "CONFIDENCE.HIGH": 0,
@@ -63,9 +63,22 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 1227,
+      "loc": 1275,
       "nosec": 0,
       "skipped_tests": 3
+    },
+    "src/blackblaze_backup/post_install.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 50,
+      "nosec": 0,
+      "skipped_tests": 5
     },
     "src/blackblaze_backup/utils.py": {
       "CONFIDENCE.HIGH": 0,
