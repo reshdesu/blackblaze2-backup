@@ -282,6 +282,7 @@ jobs:
 
             <!-- Custom action to gracefully close application (immediate) -->
             <CustomAction Id="CloseAppImmediate"
+                          Directory="TARGETDIR"
                           ExeCommand="powershell -Command &quot;Get-Process -Name 'BlackBlaze-Backup-Tool' -ErrorAction SilentlyContinue | ForEach-Object { try { $_.CloseMainWindow(); Start-Sleep -Seconds 2; if (!$_.HasExited) { $_.Kill(); Start-Sleep -Seconds 1 } } catch { $_.Kill() } }&quot;"
                           Execute="immediate"
                           Return="ignore" />
