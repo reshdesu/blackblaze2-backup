@@ -7,8 +7,9 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('src/blackblaze_backup/icon.png', 'src/blackblaze_backup'),
-        ('src/blackblaze_backup/icon.ico', 'src/blackblaze_backup'),
+        ('src/blackblaze_backup/icon.png', 'blackblaze_backup'),
+        ('src/blackblaze_backup/icon.ico', 'blackblaze_backup'),
+        ('src/blackblaze_backup/blackblaze-backup-tool.desktop', 'blackblaze_backup'),
     ],
     hiddenimports=[
         'PySide6.QtCore',
