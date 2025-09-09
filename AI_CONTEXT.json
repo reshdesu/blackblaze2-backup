@@ -89,6 +89,27 @@
       "Change version numbers without user request",
       "Modify CI/CD pipeline files without understanding impact"
     ],
+    "always_test_before_commit": [
+      "Run the application locally to verify it works",
+      "Test the specific feature being implemented",
+      "Check for any runtime errors or crashes",
+      "Verify the user experience is as expected",
+      "Only commit after confirming the code works properly"
+    ],
+    "update_ai_context_frequently": [
+      "Add new learnings to conversation_learnings section after each significant interaction",
+      "Update ai_assistant_rules when new patterns or issues are discovered",
+      "Document solutions to problems for future reference",
+      "Keep the context current with project evolution and user preferences",
+      "Include user feedback and corrections in the learning system"
+    ],
+    "never_commit_secrets": [
+      "Check every commit for secrets, passwords, API keys, tokens, credentials",
+      "Use pre-commit hooks to automatically scan for secrets",
+      "Never commit .env files, config files with secrets, or hardcoded credentials",
+      "Use environment variables or secure credential storage instead",
+      "Scan for common secret patterns: passwords, keys, tokens, database URLs"
+    ],
     "never_assume": [
       "Files are safe to delete just because not in git",
       "Performance test results can be easily recreated",
@@ -111,11 +132,61 @@
       "command_prefix": "Always use 'uv run <command>' instead of 'python <command>'",
       "virtual_environment": "Managed by uv automatically"
     },
+    "testing_before_commit": {
+      "mandatory_steps": [
+        "Run 'uv run python -m blackblaze_backup.gui' to test the app",
+        "Verify the specific feature being implemented works",
+        "Check for any runtime errors or crashes",
+        "Test user experience and UI behavior",
+        "Only commit after confirming everything works"
+      ],
+      "test_commands": {
+        "run_app": "uv run python -m blackblaze_backup.gui",
+        "run_tests": "uv run python -m pytest tests/ -v",
+        "lint_check": "uv run ruff check src/ tests/",
+        "format_check": "uv run ruff format --check src/ tests/"
+      }
+    },
+    "ai_context_maintenance": {
+      "update_frequency": "After each significant interaction or when new patterns emerge",
+      "what_to_update": [
+        "conversation_learnings section with new insights",
+        "ai_assistant_rules when discovering new patterns",
+        "common_issues_solutions when solving problems",
+        "user_preferences when user provides feedback",
+        "development_workflow when processes change"
+      ],
+      "update_triggers": [
+        "User provides feedback or corrections",
+        "New problems are solved",
+        "Workflow improvements are discovered",
+        "User preferences change",
+        "New best practices emerge"
+      ]
+    },
     "code_quality": {
       "linting": "uv run ruff check src/ tests/",
       "formatting": "uv run ruff format src/ tests/",
-      "pre_commit": "Runs automatically, includes emoji checking",
-      "security": "uv run bandit -r src/ -f json -o bandit-report.json"
+      "pre_commit": "Runs automatically, includes emoji checking and secret detection",
+      "security": "uv run bandit -r src/ -f json -o bandit-report.json",
+      "secret_detection": "Pre-commit hook scans for secrets, passwords, API keys, tokens"
+    },
+    "security_checklist": {
+      "before_every_commit": [
+        "Check for hardcoded passwords, API keys, tokens",
+        "Verify no .env files are being committed",
+        "Scan for database connection strings with credentials",
+        "Look for AWS keys, GitHub tokens, or other secrets",
+        "Use pre-commit hooks to automate secret detection"
+      ],
+      "secret_patterns_to_avoid": [
+        "password=, passwd=, pwd=",
+        "api_key=, apikey=, access_key=",
+        "secret=, token=, auth_token=",
+        "database_url=, db_url=, connection_string=",
+        "aws_access_key, aws_secret_key",
+        "github_token, git_token"
+      ]
     },
     "version_management": {
       "update_version": "Update version in pyproject.toml",
@@ -226,6 +297,74 @@
         "Never modify user's system preferences or desktop environment settings"
       ],
       "user_feedback": "Remember not to change system preferences for making a package work, that is illogical"
+    },
+    "2025-09-09_testing_before_commit_principle": {
+      "issue": "User correctly pointed out that we should always test before committing",
+      "problem": "Working directly on main branch and committing without proper testing",
+      "solution": "Implement proper Git workflow with development branches and mandatory testing",
+      "critical_principle": "Always test the application locally before committing any changes",
+      "implementation": [
+        "Create development branches for all feature work",
+        "Test the app with 'uv run python -m blackblaze_backup.gui' before committing",
+        "Verify the specific feature being implemented works correctly",
+        "Check for runtime errors, crashes, or UI issues",
+        "Only commit after confirming everything works properly",
+        "Use pull requests to merge development branches to main"
+      ],
+      "user_feedback": "We should always test it before committing it and add it to ai context"
+    },
+    "2025-09-09_ai_context_self_awareness": {
+      "issue": "User asked if AI context tells the assistant to update itself frequently",
+      "discovery": "The AI context was missing guidance about its own maintenance and updates",
+      "solution": "Added comprehensive AI context maintenance guidelines",
+      "implementation": [
+        "Added 'update_ai_context_frequently' to ai_assistant_rules",
+        "Created 'ai_context_maintenance' section in development_workflow",
+        "Defined update triggers and frequency guidelines",
+        "Documented what sections to update and when"
+      ],
+      "importance": "AI context should be self-aware and include guidance about its own evolution",
+      "user_feedback": "Does the ai context also tell you to update the ai context frequently"
+    },
+    "2025-09-09_secret_detection_system": {
+      "issue": "User requested secret detection system to prevent committing credentials",
+      "problem": "No automated system to check for secrets before commits",
+      "solution": "Implemented comprehensive secret detection pre-commit hook",
+      "implementation": [
+        "Added 'never_commit_secrets' to ai_assistant_rules",
+        "Created 'security_checklist' in development_workflow",
+        "Built custom secret detection script (scripts/check_secrets.py)",
+        "Added check-secrets hook to .pre-commit-config.yaml",
+        "Configured patterns for passwords, API keys, tokens, database URLs",
+        "Added specific patterns for AWS keys, GitHub tokens, OpenAI keys"
+      ],
+      "security_patterns": [
+        "password=, api_key=, secret=, token= assignments",
+        "AWS Access Key IDs (AKIA pattern)",
+        "GitHub tokens (ghp_, gho_, ghu_, ghs_, ghr_ patterns)",
+        "OpenAI API keys (sk- pattern)",
+        "Database connection strings with credentials",
+        "Bearer tokens and authorization headers"
+      ],
+      "user_feedback": "Also add to the ai context if not already added that we need to make sure no secrets are committed to git and check everytime we commit, make a system for this if possible using what we have. precommit and ruff"
+    },
+    "2025-09-09_ci_build_fix": {
+      "issue": "Build failed on development branch due to invalid version parsing",
+      "problem": "CI workflow was trying to build packages on all branches, including dev branches with invalid version names like 'dev/single-instance-protection'",
+      "solution": "Added condition to build-packages job to only run on proper version tags",
+      "implementation": [
+        "Added 'if: startsWith(github.ref, 'refs/tags/v')' to build-packages job",
+        "This prevents package building on development branches",
+        "Only runs on proper version tags like 'v1.0.78'",
+        "Maintains existing condition on release job"
+      ],
+      "technical_details": [
+        "Version extraction uses GITHUB_REF_NAME which is branch name on dev branches",
+        "Branch names like 'dev/single-instance-protection' contain invalid characters for Debian versions",
+        "Debian version format requires valid characters, no slashes or special chars",
+        "Build should only happen on release tags, not development branches"
+      ],
+      "user_feedback": "note that build failed"
     }
   }
 }

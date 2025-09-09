@@ -300,6 +300,8 @@ class BlackBlazeBackupApp(QMainWindow):
 
             self.update_schedule_status()
             self.setup_auto_save()
+            self.setup_single_instance_listener()
+            self.setup_signal_handler()
         except Exception as e:
             logging.error(f"Error initializing application: {e}")
             raise
@@ -1363,13 +1365,6 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
         self.raise_()
         self.activateWindow()
 
-    def force_exit(self):
-        """Force exit the application (bypass closeEvent)"""
-        self.logger.info("Force exit requested from tray menu")
-        if self.tray_icon:
-            self.tray_icon.hide()
-        QApplication.quit()
-
     def show_schedule_dialog(self):
         """Show schedule dialog"""
         dialog = ScheduleDialog(self)
@@ -1705,6 +1700,55 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
             self.hide()
             event.ignore()
 
+    def force_exit(self):
+        """Force exit the application (bypass closeEvent)"""
+        self.logger.info("Force exit requested")
+
+        # Clean up single instance lock file
+        app = QApplication.instance()
+        if hasattr(app, "_instance_lock_file"):
+            try:
+                app._instance_lock_file.unlink(missing_ok=True)
+            except Exception as e:
+                self.logger.warning(f"Error cleaning up instance lock file: {e}")
+
+        if self.tray_icon:
+            self.tray_icon.hide()
+        QApplication.quit()
+
+    def setup_single_instance_listener(self):
+        """Setup listener for single instance communication"""
+        # This method is kept for compatibility but now uses signals
+        pass
+
+    def _bring_to_front(self):
+        """Bring the window to the front and focus it"""
+        self.logger.info("Bringing window to front")
+
+        # Show the window if it's hidden
+        if self.isHidden():
+            self.show()
+
+        # Bring to front and focus
+        self.raise_()
+        self.activateWindow()
+
+        # On some systems, we need to set the window state
+        self.setWindowState(self.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
+
+    def setup_signal_handler(self):
+        """Setup signal handler for single instance communication"""
+        import signal
+
+        def signal_handler(signum, frame):
+            if signum == signal.SIGUSR1:
+                self.logger.info(
+                    "Another instance tried to start - bringing window to front"
+                )
+                self._bring_to_front()
+
+        signal.signal(signal.SIGUSR1, signal_handler)
+
     def minimize_to_background(self):
         """Minimize application to background (Ubuntu compatible)"""
         self.logger.info("Minimizing to background")
@@ -1724,6 +1768,63 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
             self.hide()
 
 
+def _ensure_single_instance(app):
+    """Ensure only one instance of the application is running.
+
+    Returns True if this is the first instance, False if another instance is already running.
+    If another instance is running, it will be brought to focus and this instance will exit.
+    """
+    import os
+    import signal
+    import tempfile
+    from pathlib import Path
+
+    # Create a unique lock file for this application
+    lock_name = "blackblaze_backup_tool_single_instance.lock"
+    temp_dir = Path(tempfile.gettempdir())
+    lock_file = temp_dir / lock_name
+
+    # Check if lock file exists
+    if lock_file.exists():
+        try:
+            # Read the PID from the lock file
+            with open(lock_file) as f:
+                pid = int(f.read().strip())
+
+            # Check if the process is still running
+            try:
+                os.kill(pid, 0)  # This will raise an exception if process doesn't exist
+                # Process is still running, another instance exists
+                # Send focus signal to existing instance
+                try:
+                    os.kill(pid, signal.SIGUSR1)  # Send signal to existing instance
+                except (OSError, ProcessLookupError):
+                    pass  # Signal failed, but that's okay
+
+                return False
+            except (OSError, ProcessLookupError):
+                # Process doesn't exist, remove stale lock file
+                lock_file.unlink(missing_ok=True)
+
+        except (ValueError, FileNotFoundError):
+            # Invalid lock file, remove it
+            lock_file.unlink(missing_ok=True)
+
+    # Create lock file with current PID
+    try:
+        with open(lock_file, "w") as f:
+            f.write(str(os.getpid()))
+
+        # Store the lock file path for cleanup
+        app._instance_lock_file = lock_file
+
+        return True
+
+    except Exception as e:
+        print(f"Error creating lock file: {e}")
+        return True  # Continue anyway
+
+
 def main():
     """Main application entry point"""
     app = QApplication(sys.argv)
@@ -1740,6 +1841,10 @@ def main():
     app.setApplicationName("BlackBlaze B2 Backup Tool")
     app.setApplicationVersion(dynamic_version)
     app.setOrganizationName("BlackBlaze Backup")
+
+    # Single instance check
+    if not _ensure_single_instance(app):
+        return 0  # Exit gracefully if another instance is already running
 
     # Create and show main window
     try:
