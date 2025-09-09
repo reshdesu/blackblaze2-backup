@@ -347,6 +347,24 @@
         "Bearer tokens and authorization headers"
       ],
       "user_feedback": "Also add to the ai context if not already added that we need to make sure no secrets are committed to git and check everytime we commit, make a system for this if possible using what we have. precommit and ruff"
+    },
+    "2025-09-09_ci_build_fix": {
+      "issue": "Build failed on development branch due to invalid version parsing",
+      "problem": "CI workflow was trying to build packages on all branches, including dev branches with invalid version names like 'dev/single-instance-protection'",
+      "solution": "Added condition to build-packages job to only run on proper version tags",
+      "implementation": [
+        "Added 'if: startsWith(github.ref, 'refs/tags/v')' to build-packages job",
+        "This prevents package building on development branches",
+        "Only runs on proper version tags like 'v1.0.78'",
+        "Maintains existing condition on release job"
+      ],
+      "technical_details": [
+        "Version extraction uses GITHUB_REF_NAME which is branch name on dev branches",
+        "Branch names like 'dev/single-instance-protection' contain invalid characters for Debian versions",
+        "Debian version format requires valid characters, no slashes or special chars",
+        "Build should only happen on release tags, not development branches"
+      ],
+      "user_feedback": "note that build failed"
     }
   }
 }
