@@ -221,6 +221,8 @@ jobs:
 
             <!-- Suppress the "close application" dialog -->
             <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+            <Property Id="MSIDISABLERMRESTART" Value="1" />
+            <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
 
             <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
                           AllowSameVersionUpgrades="yes"
@@ -283,14 +285,14 @@ jobs:
             <!-- Custom action to gracefully close application (immediate) -->
             <CustomAction Id="CloseAppImmediate"
                           Directory="TARGETDIR"
-                          ExeCommand="powershell -Command &quot;Get-Process -Name 'BlackBlaze-Backup-Tool' -ErrorAction SilentlyContinue | ForEach-Object { try { $_.CloseMainWindow(); Start-Sleep -Seconds 2; if (!$_.HasExited) { $_.Kill(); Start-Sleep -Seconds 1 } } catch { $_.Kill() } }&quot;"
+                          ExeCommand="taskkill /F /IM BlackBlaze-Backup-Tool.exe"
                           Execute="immediate"
                           Return="ignore" />
 
             <!-- Custom action to gracefully close application (deferred) -->
             <CustomAction Id="CloseAppGracefully"
                           Directory="INSTALLFOLDER"
-                          ExeCommand="powershell -Command &quot;Get-Process -Name 'BlackBlaze-Backup-Tool' -ErrorAction SilentlyContinue | ForEach-Object { try { $_.CloseMainWindow(); Start-Sleep -Seconds 2; if (!$_.HasExited) { $_.Kill(); Start-Sleep -Seconds 1 } } catch { $_.Kill() } }&quot;"
+                          ExeCommand="taskkill /F /IM BlackBlaze-Backup-Tool.exe"
                           Execute="deferred"
                           Return="ignore" />
 
@@ -298,6 +300,10 @@ jobs:
               <Custom Action="CloseAppImmediate" Before="InstallValidate">1</Custom>
               <Custom Action="CloseAppGracefully" Before="InstallFiles">1</Custom>
             </InstallExecuteSequence>
+
+            <InstallUISequence>
+              <Custom Action="CloseAppImmediate" Before="InstallValidate">1</Custom>
+            </InstallUISequence>
 
           </Product>
         </Wix>
