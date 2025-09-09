@@ -219,6 +219,9 @@ jobs:
 
             <MediaTemplate EmbedCab="yes" />
 
+            <!-- Suppress the "close application" dialog -->
+            <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+
             <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
                           AllowSameVersionUpgrades="yes"
                           Schedule="afterInstallValidate" />
@@ -277,15 +280,22 @@ jobs:
               </Component>
             </ComponentGroup>
 
-            <!-- Custom action to gracefully close application -->
+            <!-- Custom action to gracefully close application (immediate) -->
+            <CustomAction Id="CloseAppImmediate"
+                          ExeCommand="powershell -Command &quot;Get-Process -Name 'BlackBlaze-Backup-Tool' -ErrorAction SilentlyContinue | ForEach-Object { try { $_.CloseMainWindow(); Start-Sleep -Seconds 2; if (!$_.HasExited) { $_.Kill(); Start-Sleep -Seconds 1 } } catch { $_.Kill() } }&quot;"
+                          Execute="immediate"
+                          Return="ignore" />
+
+            <!-- Custom action to gracefully close application (deferred) -->
             <CustomAction Id="CloseAppGracefully"
                           Directory="INSTALLFOLDER"
-                          ExeCommand="powershell -Command &quot;Get-Process -Name 'BlackBlaze-Backup-Tool' -ErrorAction SilentlyContinue | ForEach-Object { $_.CloseMainWindow(); Start-Sleep -Seconds 3; if (!$_.HasExited) { $_.Kill() } }&quot;"
+                          ExeCommand="powershell -Command &quot;Get-Process -Name 'BlackBlaze-Backup-Tool' -ErrorAction SilentlyContinue | ForEach-Object { try { $_.CloseMainWindow(); Start-Sleep -Seconds 2; if (!$_.HasExited) { $_.Kill(); Start-Sleep -Seconds 1 } } catch { $_.Kill() } }&quot;"
                           Execute="deferred"
                           Return="ignore" />
 
             <InstallExecuteSequence>
-              <Custom Action="CloseAppGracefully" Before="InstallFiles">NOT Installed</Custom>
+              <Custom Action="CloseAppImmediate" Before="InstallValidate">1</Custom>
+              <Custom Action="CloseAppGracefully" Before="InstallFiles">1</Custom>
             </InstallExecuteSequence>
 
           </Product>
