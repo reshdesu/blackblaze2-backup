@@ -301,7 +301,7 @@ jobs:
             </InstallExecuteSequence>
 
             <InstallUISequence>
-              <Custom Action="CloseAppImmediate" Before="InstallValidate">1</Custom>
+              <Custom Action="CloseAppImmediate" Before="LaunchConditions">1</Custom>
             </InstallUISequence>
 
           </Product>
