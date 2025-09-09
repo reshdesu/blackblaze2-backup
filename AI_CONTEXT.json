@@ -96,6 +96,13 @@
       "Verify the user experience is as expected",
       "Only commit after confirming the code works properly"
     ],
+    "update_ai_context_frequently": [
+      "Add new learnings to conversation_learnings section after each significant interaction",
+      "Update ai_assistant_rules when new patterns or issues are discovered",
+      "Document solutions to problems for future reference",
+      "Keep the context current with project evolution and user preferences",
+      "Include user feedback and corrections in the learning system"
+    ],
     "never_assume": [
       "Files are safe to delete just because not in git",
       "Performance test results can be easily recreated",
@@ -132,6 +139,23 @@
         "lint_check": "uv run ruff check src/ tests/",
         "format_check": "uv run ruff format --check src/ tests/"
       }
+    },
+    "ai_context_maintenance": {
+      "update_frequency": "After each significant interaction or when new patterns emerge",
+      "what_to_update": [
+        "conversation_learnings section with new insights",
+        "ai_assistant_rules when discovering new patterns",
+        "common_issues_solutions when solving problems",
+        "user_preferences when user provides feedback",
+        "development_workflow when processes change"
+      ],
+      "update_triggers": [
+        "User provides feedback or corrections",
+        "New problems are solved",
+        "Workflow improvements are discovered",
+        "User preferences change",
+        "New best practices emerge"
+      ]
     },
     "code_quality": {
       "linting": "uv run ruff check src/ tests/",
@@ -263,6 +287,19 @@
         "Use pull requests to merge development branches to main"
       ],
       "user_feedback": "We should always test it before committing it and add it to ai context"
+    },
+    "2025-09-09_ai_context_self_awareness": {
+      "issue": "User asked if AI context tells the assistant to update itself frequently",
+      "discovery": "The AI context was missing guidance about its own maintenance and updates",
+      "solution": "Added comprehensive AI context maintenance guidelines",
+      "implementation": [
+        "Added 'update_ai_context_frequently' to ai_assistant_rules",
+        "Created 'ai_context_maintenance' section in development_workflow",
+        "Defined update triggers and frequency guidelines",
+        "Documented what sections to update and when"
+      ],
+      "importance": "AI context should be self-aware and include guidance about its own evolution",
+      "user_feedback": "Does the ai context also tell you to update the ai context frequently"
     }
   }
 }
