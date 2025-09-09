@@ -301,6 +301,7 @@ class BlackBlazeBackupApp(QMainWindow):
             self.update_schedule_status()
             self.setup_auto_save()
             self.setup_single_instance_listener()
+            self.setup_signal_handler()
         except Exception as e:
             logging.error(f"Error initializing application: {e}")
             raise
@@ -1703,15 +1704,13 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
         """Force exit the application (bypass closeEvent)"""
         self.logger.info("Force exit requested")
 
-        # Clean up single instance socket
+        # Clean up single instance lock file
         app = QApplication.instance()
-        if hasattr(app, "_instance_socket"):
+        if hasattr(app, "_instance_lock_file"):
             try:
-                app._instance_socket.close()
-                if hasattr(app, "_instance_socket_file"):
-                    app._instance_socket_file.unlink(missing_ok=True)
+                app._instance_lock_file.unlink(missing_ok=True)
             except Exception as e:
-                self.logger.warning(f"Error cleaning up instance socket: {e}")
+                self.logger.warning(f"Error cleaning up instance lock file: {e}")
 
         if self.tray_icon:
             self.tray_icon.hide()
@@ -1719,36 +1718,8 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
 
     def setup_single_instance_listener(self):
         """Setup listener for single instance communication"""
-        app = QApplication.instance()
-        if hasattr(app, "_instance_socket"):
-            # Start a timer to check for incoming messages
-            self.instance_timer = QTimer()
-            self.instance_timer.timeout.connect(self._check_instance_messages)
-            self.instance_timer.start(100)  # Check every 100ms
-
-    def _check_instance_messages(self):
-        """Check for messages from other instances"""
-        app = QApplication.instance()
-        if not hasattr(app, "_instance_socket"):
-            return
-
-        try:
-            # Check if there's a connection waiting
-            app._instance_socket.settimeout(0)  # Non-blocking
-            conn, addr = app._instance_socket.accept()
-
-            # Read the message
-            data = conn.recv(1024)
-            if data == b"focus_window":
-                self.logger.info("Received focus request from another instance")
-                self._bring_to_front()
-
-            conn.close()
-        except OSError:
-            # No connection waiting, this is normal
-            pass
-        except Exception as e:
-            self.logger.warning(f"Error checking instance messages: {e}")
+        # This method is kept for compatibility but now uses signals
+        pass
 
     def _bring_to_front(self):
         """Bring the window to the front and focus it"""
@@ -1764,6 +1735,19 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
 
         # On some systems, we need to set the window state
         self.setWindowState(self.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
+
+    def setup_signal_handler(self):
+        """Setup signal handler for single instance communication"""
+        import signal
+
+        def signal_handler(signum, frame):
+            if signum == signal.SIGUSR1:
+                self.logger.info(
+                    "Another instance tried to start - bringing window to front"
+                )
+                self._bring_to_front()
+
+        signal.signal(signal.SIGUSR1, signal_handler)
 
     def minimize_to_background(self):
         """Minimize application to background (Ubuntu compatible)"""
@@ -1790,68 +1774,55 @@ def _ensure_single_instance(app):
     Returns True if this is the first instance, False if another instance is already running.
     If another instance is running, it will be brought to focus and this instance will exit.
     """
-    import socket
+    import os
+    import signal
     import tempfile
     from pathlib import Path
 
-    # Create a unique socket name for this application
-    socket_name = "blackblaze_backup_tool_single_instance"
+    # Create a unique lock file for this application
+    lock_name = "blackblaze_backup_tool_single_instance.lock"
+    temp_dir = Path(tempfile.gettempdir())
+    lock_file = temp_dir / lock_name
 
-    # Try to create a socket to check if another instance is running
+    # Check if lock file exists
+    if lock_file.exists():
+        try:
+            # Read the PID from the lock file
+            with open(lock_file) as f:
+                pid = int(f.read().strip())
+
+            # Check if the process is still running
+            try:
+                os.kill(pid, 0)  # This will raise an exception if process doesn't exist
+                # Process is still running, another instance exists
+                # Send focus signal to existing instance
+                try:
+                    os.kill(pid, signal.SIGUSR1)  # Send signal to existing instance
+                except (OSError, ProcessLookupError):
+                    pass  # Signal failed, but that's okay
+
+                return False
+            except (OSError, ProcessLookupError):
+                # Process doesn't exist, remove stale lock file
+                lock_file.unlink(missing_ok=True)
+
+        except (ValueError, FileNotFoundError):
+            # Invalid lock file, remove it
+            lock_file.unlink(missing_ok=True)
+
+    # Create lock file with current PID
     try:
-        # Create a temporary socket file path
-        temp_dir = Path(tempfile.gettempdir())
-        socket_file = temp_dir / f"{socket_name}.sock"
+        with open(lock_file, "w") as f:
+            f.write(str(os.getpid()))
 
-        # Try to bind to the socket
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sock.bind(str(socket_file))
-
-        # If we get here, no other instance is running
-        # Keep the socket open to prevent other instances
-        sock.listen(1)
-
-        # Store the socket in the app for cleanup
-        app._instance_socket = sock
-        app._instance_socket_file = socket_file
+        # Store the lock file path for cleanup
+        app._instance_lock_file = lock_file
 
         return True
 
-    except OSError:
-        # Socket already exists, another instance is running
-        try:
-            # Try to connect to the existing instance
-            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            sock.connect(str(socket_file))
-
-            # Send a message to bring the existing window to focus
-            sock.send(b"focus_window")
-            sock.close()
-
-            # Show a brief message to the user
-            from PySide6.QtWidgets import QMessageBox
-
-            msg = QMessageBox()
-            msg.setWindowTitle("BlackBlaze B2 Backup Tool")
-            msg.setText("BlackBlaze B2 Backup Tool is already running.")
-            msg.setInformativeText("The existing window has been brought to focus.")
-            msg.setIcon(QMessageBox.Information)
-            msg.setStandardButtons(QMessageBox.Ok)
-            msg.exec()
-
-        except Exception:
-            # If we can't communicate with the existing instance,
-            # just show a simple message
-            from PySide6.QtWidgets import QMessageBox
-
-            msg = QMessageBox()
-            msg.setWindowTitle("BlackBlaze B2 Backup Tool")
-            msg.setText("BlackBlaze B2 Backup Tool is already running.")
-            msg.setIcon(QMessageBox.Information)
-            msg.setStandardButtons(QMessageBox.Ok)
-            msg.exec()
-
-        return False
+    except Exception as e:
+        print(f"Error creating lock file: {e}")
+        return True  # Continue anyway
 
 
 def main():
