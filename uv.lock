@@ -26,7 +26,7 @@ wheels = [
 
 [[package]]
 name = "blackblaze-backup-tool"
-version = "1.0.79"
+version = "1.0.80"
 source = { editable = "." }
 dependencies = [
     { name = "boto3" },

@@ -29,48 +29,103 @@ def setup_logging():
     )
 
 
+def _ensure_single_instance(app):
+    """Ensure only one instance of the application is running.
+
+    Returns True if this is the first instance, False if another instance is already running.
+    If another instance is running, it will be brought to focus and this instance will exit.
+    """
+    import os
+    import signal
+    import tempfile
+    from pathlib import Path
+
+    # Create a unique lock file for this application
+    lock_name = "blackblaze_backup_tool_single_instance.lock"
+    temp_dir = Path(tempfile.gettempdir())
+    lock_file = temp_dir / lock_name
+
+    # Check if lock file exists
+    if lock_file.exists():
+        try:
+            # Read the PID from the lock file
+            with open(lock_file) as f:
+                pid = int(f.read().strip())
+
+            # Check if the process is still running
+            try:
+                os.kill(pid, 0)  # This will raise an exception if process doesn't exist
+                # Process is still running, another instance exists
+                # Send focus signal to existing instance
+                try:
+                    os.kill(pid, signal.SIGUSR1)  # Send signal to existing instance
+                except (OSError, ProcessLookupError):
+                    pass  # Signal failed, but that's okay
+
+                return False
+            except (OSError, ProcessLookupError):
+                # Process doesn't exist, remove stale lock file
+                lock_file.unlink(missing_ok=True)
+
+        except (ValueError, FileNotFoundError):
+            # Invalid lock file, remove it
+            lock_file.unlink(missing_ok=True)
+
+    # Create lock file with current PID
+    try:
+        with open(lock_file, "w") as f:
+            f.write(str(os.getpid()))
+
+        # Store the lock file path for cleanup
+        app._instance_lock_file = lock_file
+
+        return True
+
+    except Exception as e:
+        print(f"Error creating lock file: {e}")
+        return True  # Continue anyway
+
+
 def main():
     """Main application entry point"""
-    import os
-    import subprocess
-
-    # Kill any existing instances before starting
-    try:
-        # Find and kill existing bb2backup processes
-        result = subprocess.run(
-            ["pgrep", "-f", "bb2backup"], capture_output=True, text=True
-        )
-        if result.stdout.strip():
-            pids = result.stdout.strip().split("\n")
-            for pid in pids:
-                if pid and pid != str(os.getpid()):  # Don't kill ourselves
-                    try:
-                        subprocess.run(["kill", pid], check=True)
-                        print(f"Killed existing bb2backup process (PID: {pid})")
-                    except subprocess.CalledProcessError:
-                        pass  # Process might have already exited
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass  # pgrep or kill commands not available, continue anyway
-
     setup_logging()
 
     app = QApplication(sys.argv)
 
+    # Get dynamic version
+    try:
+        from blackblaze_backup import __version__
+
+        dynamic_version = __version__
+    except ImportError:
+        dynamic_version = "Unknown"
+
     # Set application properties
     app.setApplicationName("BlackBlaze B2 Backup Tool")
-    app.setApplicationVersion("1.0.0")
+    app.setApplicationVersion(dynamic_version)
     app.setOrganizationName("BlackBlaze Backup")
+
+    # Single instance check
+    if not _ensure_single_instance(app):
+        return 0  # Exit gracefully if another instance is already running
 
     # Create and show main window
     try:
         window = BlackBlazeBackupApp()
 
-        # Ensure window is visible on Windows
-        window.show()
-        window.raise_()
-        window.activateWindow()
+        # Setup signal handler for single instance communication
+        import signal
 
-        logging.info("Main window created and shown")
+        def signal_handler(signum, frame):
+            if signum == signal.SIGUSR1:
+                logging.info(
+                    "Another instance tried to start - bringing window to front"
+                )
+                window._bring_to_front()
+
+        signal.signal(signal.SIGUSR1, signal_handler)
+
+        window.show()
 
         # Start event loop
         sys.exit(app.exec())

@@ -365,6 +365,19 @@
         "Build should only happen on release tags, not development branches"
       ],
       "user_feedback": "note that build failed"
+    },
+    "2025-09-09_single_instance_protection_not_working": {
+      "issue": "Single instance protection not working in packaged version",
+      "problem": "The single instance protection works in development but fails in the installed DEB package",
+      "symptoms": [
+        "Multiple app instances can run simultaneously",
+        "No lock file created in /tmp/blackblaze_backup_tool_single_instance.lock",
+        "No single instance protection messages in logs",
+        "Works in development (uv run python -m blackblaze_backup.gui) but not in packaged version"
+      ],
+      "root_cause": "Single instance protection code may not be included in packaged version or not executing properly",
+      "critical_impact": "Users can accidentally run multiple instances causing confusion and resource conflicts",
+      "user_feedback": "2 apps are running, do you see the issue"
     }
   }
 }
