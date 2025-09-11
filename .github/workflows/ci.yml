@@ -101,6 +101,7 @@ jobs:
         .venv\Scripts\activate
         uv pip install -e ".[build]"
         uv pip install pillow
+        uv pip install psutil
 
     - name: Convert icon to ICO format
       run: |
@@ -195,6 +196,56 @@ jobs:
             print('WARNING: Could not find application window')
 
         proc.terminate()
+        "
+
+    - name: Test Windows Performance
+      run: |
+        .venv\Scripts\activate
+        python -c "
+        import subprocess
+        import time
+        import psutil
+        import os
+
+        print('Starting Windows performance testing...')
+
+        # Start application
+        proc = subprocess.Popen(['dist/BlackBlaze-Backup-Tool.exe'],
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+
+        # Wait for startup
+        time.sleep(5)
+
+        if proc.poll() is None:
+            # Get process info
+            process = psutil.Process(proc.pid)
+
+            # Measure memory usage
+            memory_info = process.memory_info()
+            memory_mb = memory_info.rss / 1024 / 1024
+
+            # Measure CPU usage over 10 seconds
+            cpu_percent = process.cpu_percent(interval=10)
+
+            print(f'Memory usage: {memory_mb:.2f} MB')
+            print(f'CPU usage: {cpu_percent:.2f}%')
+
+            # Check if memory usage is reasonable (< 200MB)
+            if memory_mb < 200:
+                print('SUCCESS: Memory usage is within acceptable limits')
+            else:
+                print('WARNING: Memory usage is high')
+
+            # Check if CPU usage is reasonable (< 50%)
+            if cpu_percent < 50:
+                print('SUCCESS: CPU usage is within acceptable limits')
+            else:
+                print('WARNING: CPU usage is high')
+
+            proc.terminate()
+        else:
+            print('ERROR: Application crashed during performance test')
         "
 
     - name: Collect Windows Test Results

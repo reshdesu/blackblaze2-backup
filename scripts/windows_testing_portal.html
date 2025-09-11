@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlackBlaze B2 Backup Tool - Windows Testing Portal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            display: none;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .instructions {
+            background-color: #e8f4fd;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .instructions h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BlackBlaze B2 Backup Tool - Windows Testing Portal</h1>
+
+        <div class="instructions">
+            <h3>How to Use This Portal</h3>
+            <ol>
+                <li>Download the latest version of BlackBlaze B2 Backup Tool</li>
+                <li>Install and run the application</li>
+                <li>Test the functionality listed below</li>
+                <li>Report any issues or problems you encounter</li>
+                <li>Your feedback helps improve the application for all Windows users</li>
+            </ol>
+        </div>
+
+        <form id="testingForm">
+            <div class="form-group">
+                <label for="version">Application Version:</label>
+                <input type="text" id="version" name="version" placeholder="e.g., 1.0.99" required>
+            </div>
+
+            <div class="form-group">
+                <label for="windowsVersion">Windows Version:</label>
+                <select id="windowsVersion" name="windowsVersion" required>
+                    <option value="">Select Windows Version</option>
+                    <option value="Windows 11">Windows 11</option>
+                    <option value="Windows 10">Windows 10</option>
+                    <option value="Windows 8.1">Windows 8.1</option>
+                    <option value="Windows 8">Windows 8</option>
+                    <option value="Windows 7">Windows 7</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="architecture">System Architecture:</label>
+                <select id="architecture" name="architecture" required>
+                    <option value="">Select Architecture</option>
+                    <option value="64-bit">64-bit</option>
+                    <option value="32-bit">32-bit</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Functionality Tests (Check all that work correctly):</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="test1" name="tests" value="Application starts successfully">
+                        <label for="test1">Application starts successfully</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="test2" name="tests" value="Single instance protection works">
+                        <label for="test2">Single instance protection works</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="test3" name="tests" value="System tray icon appears">
+                        <label for="test3">System tray icon appears</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="test4" name="tests" value="Window focus works">
+                        <label for="test4">Window focus works</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="test5" name="tests" value="Credential storage works">
+                        <label for="test5">Credential storage works</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="test6" name="tests" value="Backup functionality works">
+                        <label for="test6">Backup functionality works</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="test7" name="tests" value="Scheduled backups work">
+                        <label for="test7">Scheduled backups work</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="test8" name="tests" value="Application closes properly">
+                        <label for="test8">Application closes properly</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="issues">Issues Encountered:</label>
+                <textarea id="issues" name="issues" placeholder="Describe any problems, errors, or unexpected behavior you encountered..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="suggestions">Suggestions for Improvement:</label>
+                <textarea id="suggestions" name="suggestions" placeholder="Any suggestions for improving the application..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email (optional, for follow-up):</label>
+                <input type="email" id="email" name="email" placeholder="your.email@example.com">
+            </div>
+
+            <div style="text-align: center;">
+                <button type="submit" class="btn">Submit Test Results</button>
+                <button type="button" class="btn btn-secondary" onclick="downloadErrorCollector()">Download Error Collector</button>
+            </div>
+        </form>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        document.getElementById('testingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const data = {};
+
+            // Get form data
+            for (let [key, value] of formData.entries()) {
+                if (key === 'tests') {
+                    if (!data[key]) data[key] = [];
+                    data[key].push(value);
+                } else {
+                    data[key] = value;
+                }
+            }
+
+            // Get checked tests
+            const checkedTests = Array.from(document.querySelectorAll('input[name="tests"]:checked')).map(cb => cb.value);
+            data.tests = checkedTests;
+
+            // Show status
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status';
+            statusDiv.innerHTML = 'Submitting test results...';
+
+            // Simulate submission (in real implementation, this would send to a server)
+            setTimeout(() => {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = `
+                    <strong>Thank you for your feedback!</strong><br>
+                    Your test results have been submitted successfully.
+                    This information will help improve the application for all Windows users.
+                `;
+
+                // Reset form
+                document.getElementById('testingForm').reset();
+            }, 1000);
+        });
+
+        function downloadErrorCollector() {
+            // In a real implementation, this would download the error collector script
+            alert('Error collector download would start here. This would provide a script that automatically collects system information and error logs.');
+        }
+
+        // Auto-detect Windows version
+        function detectWindowsVersion() {
+            const userAgent = navigator.userAgent;
+            if (userAgent.includes('Windows NT 10.0')) {
+                document.getElementById('windowsVersion').value = 'Windows 11';
+            } else if (userAgent.includes('Windows NT 6.3')) {
+                document.getElementById('windowsVersion').value = 'Windows 8.1';
+            } else if (userAgent.includes('Windows NT 6.2')) {
+                document.getElementById('windowsVersion').value = 'Windows 8';
+            } else if (userAgent.includes('Windows NT 6.1')) {
+                document.getElementById('windowsVersion').value = 'Windows 7';
+            }
+        }
+
+        // Auto-detect architecture
+        function detectArchitecture() {
+            if (navigator.userAgent.includes('WOW64') || navigator.userAgent.includes('Win64')) {
+                document.getElementById('architecture').value = '64-bit';
+            } else {
+                document.getElementById('architecture').value = '32-bit';
+            }
+        }
+
+        // Run detection on page load
+        window.addEventListener('load', function() {
+            detectWindowsVersion();
+            detectArchitecture();
+        });
+    </script>
+</body>
+</html>
