@@ -1986,6 +1986,33 @@ def _ensure_single_instance(app):
                                     f"Process {pid} not found via os.kill, removing stale lock file"
                                 )
                                 lock_file.unlink(missing_ok=True)
+
+                        # Additional check: Look for any BlackBlaze processes running
+                        try:
+                            result = subprocess.run(
+                                [
+                                    "tasklist",
+                                    "/FI",
+                                    "IMAGENAME eq BlackBlaze-Backup-Tool.exe",
+                                ],
+                                capture_output=True,
+                                text=True,
+                                check=False,
+                            )
+                            logging.info(f"All BlackBlaze processes: {result.stdout}")
+                            # If we find other BlackBlaze processes, treat as existing instance
+                            if (
+                                "BlackBlaze-Backup-Tool.exe" in result.stdout
+                                and str(current_pid) not in result.stdout
+                            ):
+                                logging.info(
+                                    "Found other BlackBlaze processes running, treating as existing instance"
+                                )
+                                return _handle_existing_instance(pid, current_pid)
+                        except Exception as e:
+                            logging.info(
+                                f"Error checking for BlackBlaze processes: {e}"
+                            )
                     else:
                         # Unix/Linux process check
                         try:
