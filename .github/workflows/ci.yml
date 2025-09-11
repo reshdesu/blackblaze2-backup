@@ -169,14 +169,9 @@ jobs:
         # Check if first instance is actually running by process name
         print('Checking for BlackBlaze processes...')
         try:
-            result = subprocess.run(
-                ["tasklist", "/FI", "IMAGENAME eq BlackBlaze-Backup-Tool.exe"],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
+            result = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq BlackBlaze-Backup-Tool.exe'], capture_output=True, text=True, check=False)
             print('BlackBlaze processes found:', result.stdout)
-            if "BlackBlaze-Backup-Tool.exe" in result.stdout:
+            if 'BlackBlaze-Backup-Tool.exe' in result.stdout:
                 print('SUCCESS: First instance is running')
             else:
                 print('ERROR: First instance not found in process list')
