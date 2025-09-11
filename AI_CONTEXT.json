@@ -818,6 +818,19 @@
             ],
             "user_feedback": "same issue, didn't fix. add a pid or something to the logs if it can help you",
             "status": "COMPLETED - Enhanced logging implemented in v1.0.94 for debugging"
+        },
+        "2025-09-11_emoji_violation_reminder": {
+            "issue": "AI assistant used emoji in chat despite explicit user instruction not to use emotes",
+            "problem": "Used ✅ emoji in chat response when user explicitly said not to use emotes",
+            "solution": "Reinforce no emoji rule and acknowledge mistake",
+            "implementation": [
+                "User explicitly stated: 'can you please add a note to not use emotes in the chat, I don't want to see them every'",
+                "Rule documented in AI context: 'no_emotes' preference",
+                "AI assistant violated this rule by using ✅ in chat response",
+                "Need to strictly follow this rule in all future responses"
+            ],
+            "user_feedback": "in your chat you used ✅ even when I told you not to use emotes",
+            "status": "ACKNOWLEDGED - Rule violation noted, will strictly follow no emoji rule"
         }
   }
 }
