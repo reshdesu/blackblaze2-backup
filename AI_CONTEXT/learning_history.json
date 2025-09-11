@@ -107,6 +107,31 @@
       ],
       "user_feedback": "the rules what we ahve in precommit, why don't you add them as something you have to follow, seems like you don't follow those rules",
       "status": "COMPLETED - Pre-commit rules now mandatory and enforced"
+    },
+    "2025-09-11_icon_management_rules": {
+      "issue": "AI assistant created wrong icons instead of using existing ones",
+      "problem": "When user requested 2.5x zoom, AI created completely new icon designs instead of applying zoom to existing icons",
+      "root_cause": "AI assistant misunderstood the request and created new icons rather than modifying existing ones",
+      "solution": "Add strict icon management rules to prevent creating new icons",
+      "implementation": [
+        "Added 'icon_management_rules' to ai_assistant_rules",
+        "Made it CRITICAL to NEVER create new icons or change existing icon design",
+        "Documented that only specific requested modifications should be applied",
+        "Added rule to ALWAYS use existing icon files: src/blackblaze_backup/icon.png and src/blackblaze_backup/icon.ico",
+        "Added rule to preserve original icon design and only apply specific requested changes"
+      ],
+      "icon_management_rules": [
+        "CRITICAL: NEVER create new icons or change the existing icon design",
+        "The project has specific existing icons that must be preserved",
+        "When user requests icon changes, ONLY apply the requested modification (e.g., zoom, resize)",
+        "DO NOT create new icon designs, symbols, or visual elements",
+        "ALWAYS use the existing icon files: src/blackblaze_backup/icon.png and src/blackblaze_backup/icon.ico",
+        "If user requests zoom, resize, or other modifications, apply ONLY to the existing icon content",
+        "NEVER replace the icon with a completely new design or symbol",
+        "Preserve the original icon design and only apply the specific requested changes"
+      ],
+      "user_feedback": "you are using wrong icon stop doing that add to context",
+      "status": "COMPLETED - Icon management rules added to prevent creating wrong icons"
     }
   },
   "current_session_context": [

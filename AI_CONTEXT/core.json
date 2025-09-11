@@ -89,6 +89,16 @@
       "This applies to: signals, system calls, imports, function calls, variable names, etc.",
       "This prevents incomplete fixes that cause the same error to persist",
       "UNIVERSAL RULE: Every change must be comprehensive across the entire codebase"
+    ],
+    "icon_management_rules": [
+      "CRITICAL: NEVER create new icons or change the existing icon design",
+      "The project has specific existing icons that must be preserved",
+      "When user requests icon changes, ONLY apply the requested modification (e.g., zoom, resize)",
+      "DO NOT create new icon designs, symbols, or visual elements",
+      "ALWAYS use the existing icon files: src/blackblaze_backup/icon.png and src/blackblaze_backup/icon.ico",
+      "If user requests zoom, resize, or other modifications, apply ONLY to the existing icon content",
+      "NEVER replace the icon with a completely new design or symbol",
+      "Preserve the original icon design and only apply the specific requested changes"
     ]
   },
   "never_delete_critical_files": {
