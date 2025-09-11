@@ -26,7 +26,7 @@
     ]
   },
   "ai_assistant_rules": {
-    "mandatory_context_usage": "CRITICAL: Always read AI_CONTEXT folder at start of every conversation - core.json, architecture.json, user_experience.json, troubleshooting.json, learning_history.json",
+    "mandatory_context_usage": "CRITICAL: Always read ALL ai_context files at start of every conversation - core.json (rules), architecture.json (project structure), user_experience.json (user needs), troubleshooting.json (debugging), learning_history.json (learnings)",
     "critical_package_principle": "Packages must work out of the box without requiring system-level changes or modifications to user's system preferences",
     "never_modify_system": [
       "Do not modify user's system preferences",
@@ -114,6 +114,29 @@
       "Use clear, concise language without visual decorations",
       "This applies to ALL chat responses, not just code files",
       "NO EXCEPTIONS: Never use emojis in any chat communication"
+    ],
+    "mandatory_ai_context_usage": [
+      "CRITICAL: Must read and use ALL ai_context files, not just mandatory rules",
+      "core.json: Contains mandatory rules and project info",
+      "architecture.json: Contains project structure, dependencies, and release process",
+      "user_experience.json: Contains user needs, pain points, and journey",
+      "troubleshooting.json: Contains debugging guides and common issues",
+      "learning_history.json: Contains conversation learnings and solutions",
+      "NEVER ignore any ai_context file - they all contain valuable information",
+      "Use information from ALL files to provide comprehensive assistance",
+      "The ai_context files work together as a complete knowledge base"
+    ],
+    "mandatory_ai_context_maintenance": [
+      "CRITICAL: Regularly review and reorganize ai_context for optimal learning",
+      "After each significant conversation, evaluate if ai_context needs updates",
+      "Reorganize information when it becomes cluttered or hard to navigate",
+      "Consolidate duplicate information across files",
+      "Move information to more appropriate files when structure improves",
+      "Add new categories or sections when needed",
+      "Remove outdated or irrelevant information",
+      "Ensure information is easily findable and logically organized",
+      "Proactively suggest ai_context improvements to user",
+      "The goal is to maintain a clean, efficient, and useful knowledge base"
     ],
     "icon_management_rules": [
       "CRITICAL: NEVER create new icons or change the existing icon design",

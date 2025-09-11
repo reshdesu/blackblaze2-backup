@@ -428,6 +428,82 @@
       },
       "user_feedback": "you have started to use emojis in your chat, read ai context, we had agreed on no emojis, make it mandatory",
       "status": "IMPLEMENTED - No emojis rule now mandatory in AI_CONTEXT"
+    },
+    "2025-09-11_ai_context_usage_gap": {
+      "issue": "AI assistant only reads mandatory rules from core.json but ignores other valuable AI_CONTEXT files",
+      "root_cause": "Focusing only on mandatory rules instead of using complete AI_CONTEXT knowledge base",
+      "user_feedback": "what use are those other files if you never look at them in ai context and only look at mandatory",
+      "solution": "Added mandatory_ai_context_usage rule to ensure ALL ai_context files are read and used",
+      "implementation": [
+        "Updated mandatory_context_usage to emphasize reading ALL files",
+        "Added mandatory_ai_context_usage rule with detailed file purposes",
+        "Specified that ai_context files work together as complete knowledge base",
+        "Made it mandatory to use information from ALL files, not just rules"
+      ],
+      "ai_context_files": {
+        "core.json": "Contains mandatory rules and project info",
+        "architecture.json": "Contains project structure, dependencies, and release process",
+        "user_experience.json": "Contains user needs, pain points, and journey",
+        "troubleshooting.json": "Contains debugging guides and common issues",
+        "learning_history.json": "Contains conversation learnings and solutions"
+      },
+      "key_principle": "NEVER ignore any ai_context file - they all contain valuable information",
+      "status": "IMPLEMENTED - ai_context usage now mandatory for all files"
+    },
+    "2025-09-11_ai_context_maintenance_rule": {
+      "issue": "ai_context needs regular maintenance and reorganization for optimal learning",
+      "user_suggestion": "should we add a mandatory rule for you to look at the ai context and frequently reorganize it as per you see fit for your learning",
+      "solution": "Added mandatory_ai_context_maintenance rule for proactive ai_context optimization",
+      "implementation": [
+        "Added mandatory_ai_context_maintenance rule to core.json",
+        "Made ai_context review and reorganization mandatory after significant conversations",
+        "Added requirements for consolidating duplicates and removing outdated information",
+        "Made proactive ai_context improvement suggestions mandatory"
+      ],
+      "maintenance_activities": [
+        "Regular review and reorganization for optimal learning",
+        "Evaluate ai_context needs after each significant conversation",
+        "Reorganize when information becomes cluttered or hard to navigate",
+        "Consolidate duplicate information across files",
+        "Move information to more appropriate files when structure improves",
+        "Add new categories or sections when needed",
+        "Remove outdated or irrelevant information",
+        "Ensure information is easily findable and logically organized",
+        "Proactively suggest ai_context improvements to user"
+      ],
+      "goal": "Maintain a clean, efficient, and useful knowledge base",
+      "benefits": [
+        "ai_context stays optimized for learning",
+        "Information remains organized and accessible",
+        "Knowledge base grows smarter over time",
+        "Prevents accumulation of outdated or duplicate information",
+        "Ensures ai_context structure evolves with project needs"
+      ],
+      "status": "IMPLEMENTED - ai_context maintenance now mandatory"
+    },
+    "2025-09-11_folder_naming_consistency_fix": {
+      "issue": "AI_CONTEXT folder was uppercase while all other folders are lowercase - anti-pattern",
+      "user_feedback": "the folder name is uppper case but no other folders are upper case is that anti pattern",
+      "solution": "Renamed AI_CONTEXT to ai_context to follow project's lowercase folder convention",
+      "implementation": [
+        "Renamed AI_CONTEXT folder to ai_context",
+        "Updated all references in core.json from AI_CONTEXT to ai_context",
+        "Updated all references in learning_history.json from AI_CONTEXT to ai_context",
+        "Updated all references in maintain.py from AI_CONTEXT to ai_context",
+        "Updated all references in scripts/check_secrets.py from AI_CONTEXT to ai_context"
+      ],
+      "project_folder_convention": {
+        "lowercase_folders": ["scripts/", "src/", "tests/", "htmlcov/", "test_photos/", "blackblaze-backup-ubuntu-deb/", "blackblaze-backup-windows-msi/"],
+        "inconsistent_folder": "AI_CONTEXT/ (was uppercase)",
+        "fixed_folder": "ai_context/ (now lowercase)"
+      },
+      "benefits": [
+        "Consistent folder naming convention across project",
+        "Follows standard Python project structure",
+        "Eliminates anti-pattern in project organization",
+        "Makes project structure more professional and maintainable"
+      ],
+      "status": "IMPLEMENTED - Folder naming consistency restored"
     }
   }
 }
