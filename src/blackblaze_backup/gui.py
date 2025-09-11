@@ -1809,6 +1809,86 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
             self.hide()
 
 
+def _handle_existing_instance(pid, current_pid):
+    """Handle the case where another instance is already running"""
+    import logging
+    import os
+    import signal
+
+    # Send focus signal to existing instance (Unix only)
+    try:
+        if hasattr(signal, "SIGUSR1"):
+            os.kill(pid, signal.SIGUSR1)  # Send signal to existing instance
+    except (OSError, ProcessLookupError):
+        pass  # Signal failed, but that's okay
+
+    # Log that another instance is running
+    logging.info(
+        f"Another instance is already running (PID: {pid}), current PID: {current_pid}"
+    )
+
+    # Try to bring existing window to focus (Windows-specific)
+    try:
+        import platform
+
+        if platform.system() == "Windows":
+            # Use Windows API to find and activate the existing window
+            import ctypes
+
+            # Define Windows constants
+            SW_RESTORE = 9
+
+            # Try multiple window finding methods
+            hwnd = None
+
+            # Method 1: Find by exact title
+            hwnd = ctypes.windll.user32.FindWindowW(None, "BlackBlaze B2 Backup Tool")
+            if hwnd:
+                logging.info(f"Found window by title (HWND: {hwnd})")
+            else:
+                # Method 2: Find by Qt class name
+                hwnd = ctypes.windll.user32.FindWindowW(
+                    "Qt5QWindowIcon", "BlackBlaze B2 Backup Tool"
+                )
+                if hwnd:
+                    logging.info(f"Found window by Qt class (HWND: {hwnd})")
+                else:
+                    # Method 3: Find by partial title match
+                    hwnd = ctypes.windll.user32.FindWindowW(None, "BlackBlaze")
+                    if hwnd:
+                        logging.info(f"Found window by partial title (HWND: {hwnd})")
+
+            if hwnd:
+                # Bring window to front with multiple methods
+                try:
+                    # Method 1: SetForegroundWindow
+                    ctypes.windll.user32.SetForegroundWindow(hwnd)
+                    logging.info("SetForegroundWindow called")
+
+                    # Method 2: ShowWindow with restore
+                    ctypes.windll.user32.ShowWindow(hwnd, SW_RESTORE)
+                    logging.info("ShowWindow SW_RESTORE called")
+
+                    # Method 3: Bring to top
+                    ctypes.windll.user32.BringWindowToTop(hwnd)
+                    logging.info("BringWindowToTop called")
+
+                    # Method 4: Set active window
+                    ctypes.windll.user32.SetActiveWindow(hwnd)
+                    logging.info("SetActiveWindow called")
+
+                    logging.info("Successfully brought existing window to focus")
+
+                except Exception as e:
+                    logging.info(f"Error bringing window to focus: {e}")
+            else:
+                logging.info("Could not find existing window to focus")
+    except Exception as e:
+        logging.info(f"Could not bring existing window to focus: {e}")
+
+    return False
+
+
 def _ensure_single_instance(app):
     """Ensure only one instance of the application is running.
 
@@ -1816,7 +1896,6 @@ def _ensure_single_instance(app):
     If another instance is running, it will be brought to focus and this instance will exit.
     """
     import os
-    import signal
     import tempfile
     from pathlib import Path
 
@@ -1839,314 +1918,170 @@ def _ensure_single_instance(app):
     except Exception as e:
         logging.info(f"Could not create temp directory: {e}")
 
-    # Check if lock file exists
-    if lock_file.exists():
+    # Atomic lock file creation with retry mechanism
+    max_retries = 3
+    retry_delay = 0.1  # 100ms delay between retries
+
+    for attempt in range(max_retries):
         logging.info(
-            f"Lock file exists, checking if process is still running (PID: {current_pid})"
+            f"Single instance check attempt {attempt + 1}/{max_retries} (PID: {current_pid})"
         )
-        try:
-            # Read the PID from the lock file
-            with open(lock_file) as f:
-                pid = int(f.read().strip())
 
+        # Check if lock file exists
+        if lock_file.exists():
             logging.info(
-                f"Found lock file with PID: {pid}, checking if process is still running"
+                f"Lock file exists, checking if process is still running (PID: {current_pid})"
             )
-
-            # Check if the process is still running
             try:
-                import platform
+                # Read the PID from the lock file
+                with open(lock_file) as f:
+                    pid = int(f.read().strip())
 
-                if platform.system() == "Windows":
-                    # Windows-specific process check
-                    import subprocess
-
-                    try:
-                        # Use tasklist to check if process is running
-                        result = subprocess.run(
-                            ["tasklist", "/FI", f"PID eq {pid}"],
-                            capture_output=True,
-                            text=True,
-                            check=False,
-                        )
-                        logging.info(f"Tasklist result for PID {pid}: {result.stdout}")
-                        if str(pid) not in result.stdout:
-                            # Process not found, remove stale lock file
-                            logging.info(
-                                f"Process {pid} not found in tasklist, removing stale lock file (PID: {current_pid})"
-                            )
-                            lock_file.unlink(missing_ok=True)
-                            return True  # Continue with new instance
-                        else:
-                            logging.info(
-                                f"Process {pid} is still running, another instance exists"
-                            )
-                    except Exception as e:
-                        logging.info(f"Error checking process with tasklist: {e}")
-                        # Fallback to os.kill
-                        os.kill(pid, 0)
-                else:
-                    # Unix/Linux process check
-                    os.kill(
-                        pid, 0
-                    )  # This will raise an exception if process doesn't exist
-                # Process is still running, another instance exists
-                # Send focus signal to existing instance (Unix only)
-                try:
-                    if hasattr(signal, "SIGUSR1"):
-                        os.kill(pid, signal.SIGUSR1)  # Send signal to existing instance
-                except (OSError, ProcessLookupError):
-                    pass  # Signal failed, but that's okay
-
-                # Log that another instance is running
                 logging.info(
-                    f"Another instance is already running (PID: {pid}), current PID: {current_pid}"
+                    f"Found lock file with PID: {pid}, checking if process is still running"
                 )
 
-                # Try to bring existing window to focus (Windows-specific)
+                # Check if the process is still running
                 try:
                     import platform
 
                     if platform.system() == "Windows":
-                        # Use Windows API to find and activate the existing window
-                        import ctypes
+                        # Windows-specific process check
+                        import subprocess
 
-                        # Define Windows constants
-                        SW_RESTORE = 9
-
-                        # Try multiple window finding methods
-                        hwnd = None
-
-                        # Method 1: Find by exact title
-                        hwnd = ctypes.windll.user32.FindWindowW(
-                            None, "BlackBlaze B2 Backup Tool"
-                        )
-                        if hwnd:
-                            logging.info(f"Found window by title (HWND: {hwnd})")
-                        else:
-                            # Method 2: Find by Qt class name
-                            hwnd = ctypes.windll.user32.FindWindowW(
-                                "Qt5QWindowIcon", "BlackBlaze B2 Backup Tool"
+                        try:
+                            # Use tasklist to check if process is running
+                            result = subprocess.run(
+                                ["tasklist", "/FI", f"PID eq {pid}"],
+                                capture_output=True,
+                                text=True,
+                                check=False,
                             )
-                            if hwnd:
-                                logging.info(f"Found window by Qt class (HWND: {hwnd})")
+                            logging.info(
+                                f"Tasklist result for PID {pid}: {result.stdout}"
+                            )
+                            if str(pid) not in result.stdout:
+                                # Process not found, remove stale lock file
+                                logging.info(
+                                    f"Process {pid} not found in tasklist, removing stale lock file (PID: {current_pid})"
+                                )
+                                lock_file.unlink(missing_ok=True)
+                                # Continue to lock file creation below
                             else:
-                                # Method 3: Find by partial title match
-                                hwnd = ctypes.windll.user32.FindWindowW(
-                                    None, "BlackBlaze"
-                                )
-                                if hwnd:
-                                    logging.info(
-                                        f"Found window by partial title (HWND: {hwnd})"
-                                    )
-                                else:
-                                    # Method 4: Find by process name
-                                    import subprocess
-
-                                    try:
-                                        # Get all windows for the process
-                                        result = subprocess.run(
-                                            [
-                                                "tasklist",
-                                                "/FI",
-                                                f"PID eq {pid}",
-                                                "/FO",
-                                                "CSV",
-                                            ],
-                                            capture_output=True,
-                                            text=True,
-                                            check=False,
-                                        )
-                                        if str(pid) in result.stdout:
-                                            logging.info(
-                                                f"Process {pid} is running, trying to find window"
-                                            )
-
-                                            # Try to find window by enumerating all windows
-                                            found_hwnd = None
-
-                                            def enum_windows_callback(
-                                                window_hwnd, lparam
-                                            ):
-                                                nonlocal found_hwnd
-                                                if ctypes.windll.user32.IsWindowVisible(
-                                                    window_hwnd
-                                                ):
-                                                    # Get window title
-                                                    length = ctypes.windll.user32.GetWindowTextLengthW(
-                                                        window_hwnd
-                                                    )
-                                                    if length > 0:
-                                                        buffer = ctypes.create_unicode_buffer(
-                                                            length + 1
-                                                        )
-                                                        ctypes.windll.user32.GetWindowTextW(
-                                                            window_hwnd,
-                                                            buffer,
-                                                            length + 1,
-                                                        )
-                                                        title = buffer.value
-                                                        if "BlackBlaze" in title:
-                                                            logging.info(
-                                                                f"Found window by enumeration: {title} (HWND: {window_hwnd})"
-                                                            )
-                                                            found_hwnd = window_hwnd
-                                                            return False  # Stop enumeration
-                                                return True  # Continue enumeration
-
-                                            # Define the callback function type
-                                            EnumWindowsProc = ctypes.WINFUNCTYPE(
-                                                ctypes.c_bool,
-                                                ctypes.POINTER(ctypes.c_int),
-                                                ctypes.POINTER(ctypes.c_int),
-                                            )
-                                            callback = EnumWindowsProc(
-                                                enum_windows_callback
-                                            )
-
-                                            # Enumerate all windows
-                                            ctypes.windll.user32.EnumWindows(
-                                                callback, 0
-                                            )
-
-                                            # Use the found window handle
-                                            if found_hwnd:
-                                                hwnd = found_hwnd
-                                                logging.info(
-                                                    f"Using found window handle: {hwnd}"
-                                                )
-
-                                            # If still not found, try alternative methods
-                                            if not hwnd:
-                                                # Try to find any window with our app name
-                                                hwnd = ctypes.windll.user32.FindWindowW(
-                                                    None, "BlackBlaze"
-                                                )
-                                                if hwnd:
-                                                    logging.info(
-                                                        f"Found window by fallback method (HWND: {hwnd})"
-                                                    )
-                                    except Exception as e:
-                                        logging.info(f"Error checking process: {e}")
-
-                        if hwnd:
-                            # Bring window to front with multiple methods
-                            try:
-                                # Method 1: SetForegroundWindow
-                                ctypes.windll.user32.SetForegroundWindow(hwnd)
-                                logging.info("SetForegroundWindow called")
-
-                                # Method 2: ShowWindow with restore
-                                ctypes.windll.user32.ShowWindow(hwnd, SW_RESTORE)
-                                logging.info("ShowWindow SW_RESTORE called")
-
-                                # Method 3: Bring to top
-                                ctypes.windll.user32.BringWindowToTop(hwnd)
-                                logging.info("BringWindowToTop called")
-
-                                # Method 4: Set active window
-                                ctypes.windll.user32.SetActiveWindow(hwnd)
-                                logging.info("SetActiveWindow called")
-
                                 logging.info(
-                                    "Successfully brought existing window to focus"
+                                    f"Process {pid} is still running, another instance exists"
                                 )
-
-                            except Exception as e:
-                                logging.info(f"Error bringing window to focus: {e}")
-                        else:
-                            logging.info("Could not find existing window to focus")
-
-                            # Alternative approach: Try to send a message to the existing instance
+                                # Process is still running, handle existing instance
+                                return _handle_existing_instance(pid, current_pid)
+                        except Exception as e:
+                            logging.info(f"Error checking process with tasklist: {e}")
+                            # Fallback to os.kill
                             try:
-                                # Try to find the window by process and send a message
-                                import subprocess
-
-                                result = subprocess.run(
-                                    ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV"],
-                                    capture_output=True,
-                                    text=True,
-                                    check=False,
-                                )
-                                if str(pid) in result.stdout:
-                                    logging.info(
-                                        f"Process {pid} is running, trying alternative focus method"
-                                    )
-
-                                    # Try to find window by class name variations
-                                    window_classes = [
-                                        "Qt5QWindowIcon",
-                                        "Qt6QWindowIcon",
-                                        "QWidget",
-                                        "BlackBlaze B2 Backup Tool",
-                                    ]
-
-                                    for class_name in window_classes:
-                                        hwnd = ctypes.windll.user32.FindWindowW(
-                                            class_name, None
-                                        )
-                                        if hwnd:
-                                            logging.info(
-                                                f"Found window by class {class_name} (HWND: {hwnd})"
-                                            )
-                                            # Try to bring it to focus
-                                            ctypes.windll.user32.SetForegroundWindow(
-                                                hwnd
-                                            )
-                                            ctypes.windll.user32.ShowWindow(
-                                                hwnd, SW_RESTORE
-                                            )
-                                            ctypes.windll.user32.BringWindowToTop(hwnd)
-                                            logging.info(
-                                                "Attempted to bring window to focus with alternative method"
-                                            )
-                                            break
-                            except Exception as e:
+                                os.kill(pid, 0)
+                                # Process is still running, handle existing instance
+                                return _handle_existing_instance(pid, current_pid)
+                            except (OSError, ProcessLookupError):
+                                # Process doesn't exist, remove stale lock file
                                 logging.info(
-                                    f"Error with alternative focus method: {e}"
+                                    f"Process {pid} not found via os.kill, removing stale lock file"
                                 )
+                                lock_file.unlink(missing_ok=True)
+                    else:
+                        # Unix/Linux process check
+                        try:
+                            os.kill(
+                                pid, 0
+                            )  # This will raise an exception if process doesn't exist
+                            # Process is still running, handle existing instance
+                            return _handle_existing_instance(pid, current_pid)
+                        except (OSError, ProcessLookupError):
+                            # Process doesn't exist, remove stale lock file
+                            logging.info(
+                                f"Process {pid} not found via os.kill, removing stale lock file"
+                            )
+                            lock_file.unlink(missing_ok=True)
                 except Exception as e:
-                    logging.info(f"Could not bring existing window to focus: {e}")
+                    logging.info(f"Error checking process: {e}")
+                    # Continue to lock file creation below
 
-                return False
-            except (OSError, ProcessLookupError):
-                # Process doesn't exist, remove stale lock file
+            except (ValueError, FileNotFoundError):
+                # Invalid lock file, remove it
                 logging.info(
-                    f"Stale lock file found, removing it (PID: {pid}, current PID: {current_pid})"
+                    f"Invalid lock file found, removing it (PID: {current_pid})"
                 )
                 lock_file.unlink(missing_ok=True)
 
-        except (ValueError, FileNotFoundError):
-            # Invalid lock file, remove it
-            logging.info(f"Invalid lock file found, removing it (PID: {current_pid})")
-            lock_file.unlink(missing_ok=True)
-
-    # No lock file exists, create one with current PID
+    # No lock file exists, create one atomically with retry mechanism
     logging.info(f"No lock file found, creating new one (PID: {current_pid})")
-    try:
-        with open(lock_file, "w") as f:
-            f.write(str(current_pid))
 
-        # Store the lock file path for cleanup
-        app._instance_lock_file = lock_file
+    # Try to create lock file atomically with retry mechanism
+    max_retries = 3
+    retry_delay = 0.1  # 100ms delay between retries
 
-        logging.info(
-            f"Single instance lock file created: {lock_file} (PID: {current_pid})"
-        )
+    for attempt in range(max_retries):
+        try:
+            # Use atomic file creation with exclusive lock
+            with open(
+                lock_file, "x"
+            ) as f:  # 'x' mode creates file exclusively, fails if exists
+                f.write(str(current_pid))
+                f.flush()
+                os.fsync(f.fileno())  # Force write to disk
 
-        # Verify lock file was created successfully
-        if lock_file.exists():
-            logging.info(f"Lock file verification successful (PID: {current_pid})")
-        else:
-            logging.error(
-                f"Lock file verification failed - file not found after creation (PID: {current_pid})"
+            logging.info(
+                f"Lock file created atomically on attempt {attempt + 1} (PID: {current_pid})"
             )
 
-        return True
+            # Store the lock file path for cleanup
+            app._instance_lock_file = lock_file
 
-    except Exception as e:
-        logging.error(f"Error creating lock file: {e} (PID: {current_pid})")
-        return True  # Continue anyway
+            # Verify lock file was created successfully
+            if lock_file.exists():
+                logging.info(f"Lock file verification successful (PID: {current_pid})")
+                return True
+            else:
+                logging.error(
+                    f"Lock file verification failed - file not found after creation (PID: {current_pid})"
+                )
+                return True  # Continue anyway
+
+        except FileExistsError:
+            # Lock file was created by another instance between our check and creation
+            logging.info(
+                f"Lock file created by another instance during attempt {attempt + 1} (PID: {current_pid})"
+            )
+            if attempt < max_retries - 1:
+                import time
+
+                time.sleep(retry_delay)
+                continue
+            else:
+                # Final attempt failed, another instance exists
+                logging.info(
+                    f"All retry attempts failed, another instance exists (PID: {current_pid})"
+                )
+                return False
+
+        except Exception as e:
+            logging.error(
+                f"Error creating lock file on attempt {attempt + 1}: {e} (PID: {current_pid})"
+            )
+            if attempt < max_retries - 1:
+                import time
+
+                time.sleep(retry_delay)
+                continue
+            else:
+                logging.error(
+                    f"All retry attempts failed, continuing anyway (PID: {current_pid})"
+                )
+                return True  # Continue anyway
+
+    # If we get here, all retries failed
+    logging.error(
+        f"Failed to create lock file after {max_retries} attempts (PID: {current_pid})"
+    )
+    return True  # Continue anyway
 
 
 def setup_logging():

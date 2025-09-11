@@ -1,6 +1,6 @@
 [project]
 name = "blackblaze-backup-tool"
-version = "1.0.98"
+version = "1.0.99"
 description = "A cross-platform GUI application for backing up local folders to BackBlaze B2 S3 buckets"
 authors = [
     {name = "reshdesu", email = "reshdesu@users.noreply.github.com"},

@@ -26,6 +26,7 @@
     ]
   },
   "ai_assistant_rules": {
+    "mandatory_context_usage": "CRITICAL: Always read AI_CONTEXT folder at start of every conversation - core.json, architecture.json, user_experience.json, troubleshooting.json, learning_history.json",
     "critical_package_principle": "Packages must work out of the box without requiring system-level changes or modifications to user's system preferences",
     "never_modify_system": [
       "Do not modify user's system preferences",
