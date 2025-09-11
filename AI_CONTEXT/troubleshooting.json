@@ -1,0 +1,94 @@
+{
+  "troubleshooting_guide": {
+    "common_issues": {
+      "single_instance_protection": {
+        "symptoms": "Multiple app instances can be opened",
+        "root_causes": ["Lock file not created", "Process check failing", "Window focus not working"],
+        "debugging_steps": [
+          "Check lock file creation in temp directory",
+          "Verify process existence with tasklist",
+          "Test window enumeration and focus methods",
+          "Check logs for PID tracking and error messages"
+        ],
+        "fixes_applied": [
+          "Enhanced logging with PID tracking",
+          "Windows-specific process checking with tasklist",
+          "Multiple window detection methods",
+          "Alternative focus methods with different window classes"
+        ]
+      },
+      "system_tray_issues": {
+        "symptoms": "Tray icon not showing or not working",
+        "root_causes": ["Windows tray icon initialization", "Icon scaling issues", "Tray availability check"],
+        "debugging_steps": [
+          "Check system tray availability",
+          "Test icon creation and scaling",
+          "Verify tray icon show() return value",
+          "Test alternative display methods"
+        ],
+        "fixes_applied": [
+          "Windows-specific tray availability check",
+          "Simplified icon scaling (32x32)",
+          "Multiple fallback display attempts",
+          "Enhanced error logging"
+        ]
+      },
+      "build_failures": {
+        "symptoms": "Build process fails or produces errors",
+        "root_causes": ["Syntax errors", "Import issues", "Pre-commit hook failures"],
+        "debugging_steps": [
+          "Check syntax with py_compile",
+          "Verify all imports are correct",
+          "Run pre-commit hooks manually",
+          "Check for linting and formatting issues"
+        ],
+        "fixes_applied": [
+          "Comprehensive syntax checking",
+          "Pre-commit hook integration",
+          "Automated formatting and linting",
+          "Build failure detection within 15 seconds"
+        ]
+      }
+    },
+    "debugging_tools": {
+      "logging": {
+        "location": "~/.blackblaze_backup/blackblaze_backup.log",
+        "levels": "INFO, WARNING, ERROR",
+        "key_events": ["Startup", "Single instance check", "System tray", "Backup operations"],
+        "pid_tracking": "All log messages include PID for process identification"
+      },
+      "testing_commands": [
+        "uv run python -m py_compile src/blackblaze_backup/gui.py",
+        "uv run python -m blackblaze_backup.gui",
+        "uv run pytest tests/ -v",
+        "uv run ruff check .",
+        "uv run ruff format ."
+      ],
+      "monitoring": {
+        "process_check": "tasklist /FI \"PID eq <pid>\"",
+        "lock_file": "C:\\Users\\<user>\\AppData\\Local\\Temp\\blackblaze_backup_tool_single_instance.lock",
+        "log_file": "C:\\Users\\<user>\\.blackblaze_backup\\blackblaze_backup.log"
+      }
+    }
+  },
+  "common_issues_solutions": {
+    "build_failures": {
+      "formatting": "Run 'uv run ruff format src/ tests/' before pushing",
+      "security_scan": "Add '# nosec B###' comments for false positives",
+      "missing_spec_file": "Ensure blackblaze_backup.spec exists and is tracked",
+      "pre_commit_hooks": "Fix issues and commit again, don't skip hooks"
+    },
+    "runtime_errors": {
+      "import_errors": "Check PYTHONPATH and module structure",
+      "permission_errors": "Verify file permissions and user access",
+      "network_errors": "Check internet connection and firewall settings",
+      "credential_errors": "Verify BackBlaze B2 credentials and permissions"
+    },
+    "cross_platform_issues": {
+      "windows_specific": "Check Windows API calls and path handling",
+      "ubuntu_specific": "Verify desktop entry and system tray integration",
+      "path_issues": "Use pathlib for cross-platform path handling",
+      "signal_issues": "Check for platform-specific signal handling"
+    }
+  }
+}

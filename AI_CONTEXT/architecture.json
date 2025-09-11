@@ -1,0 +1,69 @@
+{
+  "project_architecture": {
+    "module_dependencies": {
+      "main.py": ["src/blackblaze_backup/gui.py"],
+      "gui.py": ["core.py", "config.py", "utils.py"],
+      "core.py": ["config.py", "utils.py"],
+      "config.py": ["utils.py"],
+      "utils.py": []
+    },
+    "data_flow": {
+      "user_input": "gui.py -> core.py -> s3_operations",
+      "configuration": "config.py -> all_modules",
+      "logging": "all_modules -> centralized_logging",
+      "credentials": "gui.py -> core.py -> system_keyring",
+      "backup_process": "gui.py -> core.py -> s3_upload -> progress_callback -> gui.py"
+    },
+    "key_design_patterns": {
+      "mvc_pattern": "gui.py (view) -> core.py (model) -> config.py (controller)",
+      "observer_pattern": "progress_callbacks from core.py to gui.py",
+      "singleton_pattern": "single instance protection in gui.py",
+      "factory_pattern": "s3 client creation in core.py"
+    },
+    "critical_components": {
+      "single_instance_protection": "gui.py - prevents multiple app instances",
+      "system_tray_integration": "gui.py - background operation support",
+      "credential_management": "core.py - secure storage via system keyring",
+      "backup_engine": "core.py - s3 upload with deduplication",
+      "scheduling_system": "gui.py - automatic backup scheduling"
+    }
+  },
+  "development_workflow": {
+    "feature_development_process": [
+      "1. Understand requirement and user need",
+      "2. Search entire codebase for related code (comprehensive approach)",
+      "3. Analyze impact on all modules",
+      "4. Implement with cross-platform compatibility",
+      "5. Test locally on both Windows and Ubuntu",
+      "6. Run pre-commit hooks and fix issues",
+      "7. Update AI context with learnings",
+      "8. Create release and test on target platform"
+    ],
+    "quality_gates": [
+      "Pre-commit hooks must pass (ruff, formatting, security checks)",
+      "Build must succeed without errors",
+      "Tests must pass (unit, integration, performance)",
+      "User testing required on target platform",
+      "AI context must be updated with learnings"
+    ],
+    "release_process": [
+      "1. Update version numbers in pyproject.toml and __init__.py",
+      "2. Commit changes with descriptive message",
+      "3. Create git tag for version",
+      "4. Push to trigger CI/CD pipeline",
+      "5. Monitor build status and fix any issues",
+      "6. Test released package on target platform",
+      "7. Update AI context with release status"
+    ]
+  },
+  "decision_history": {
+    "why_pyside6": "Cross-platform GUI framework with excellent Windows support and modern Qt features",
+    "why_uv": "10-100x faster package management than pip, better dependency resolution",
+    "why_system_keyring": "Secure credential storage without plain text, OS-native security",
+    "why_single_instance": "Prevent resource conflicts, user confusion, and multiple backup processes",
+    "why_s3_compatible_api": "BackBlaze B2 provides S3-compatible API for familiar boto3 integration",
+    "why_incremental_backups": "Efficiency and cost savings by only uploading changed files",
+    "why_system_tray": "Background operation without cluttering taskbar, user-friendly experience",
+    "why_comprehensive_logging": "Debugging cross-platform issues requires detailed logging with PIDs"
+  }
+}

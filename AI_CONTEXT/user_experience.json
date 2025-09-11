@@ -1,0 +1,109 @@
+{
+  "user_experience": {
+    "primary_use_cases": [
+      "Backup photos and documents to BackBlaze B2",
+      "Schedule automatic backups (1min to monthly)",
+      "Monitor backup progress in real-time",
+      "Manage credentials securely without plain text storage",
+      "Run backups in background with system tray integration"
+    ],
+    "user_pain_points_resolved": [
+      "Windows compatibility issues (installer, signals, system tray)",
+      "Single instance protection (prevent multiple app instances)",
+      "System tray integration (background operation)",
+      "Startup performance (75% improvement achieved)",
+      "Icon packaging issues (PyInstaller bundle fixes)"
+    ],
+    "user_pain_points_ongoing": [
+      "Windows single instance protection (window focus not working)",
+      "Cross-platform system tray reliability",
+      "Backup performance with large file sets"
+    ],
+    "user_journey": {
+      "first_time_setup": [
+        "Download and install package",
+        "Launch application",
+        "Configure BackBlaze B2 credentials",
+        "Select folders to backup",
+        "Test backup functionality",
+        "Set up automatic scheduling"
+      ],
+      "regular_usage": [
+        "Application runs in background",
+        "Scheduled backups execute automatically",
+        "User can manually trigger backups",
+        "Progress monitoring via system tray",
+        "Credential management when needed"
+      ]
+    }
+  },
+  "technical_debt": {
+    "known_issues": [
+      "Windows single instance protection window focus not working",
+      "System tray icon reliability on Windows",
+      "PyInstaller bundle size optimization needed",
+      "Error handling could be more granular"
+    ],
+    "maintenance_priorities": [
+      "Fix Windows single instance protection window focus",
+      "Improve cross-platform system tray reliability",
+      "Optimize backup performance for large file sets",
+      "Enhance error handling and user feedback"
+    ],
+    "performance_optimization_areas": [
+      "Backup deduplication algorithm",
+      "S3 upload concurrency",
+      "Memory usage during large backups",
+      "Startup time optimization"
+    ]
+  },
+  "development_insights": {
+    "cross_platform_challenges": {
+      "windows_specific": [
+        "Signal handling (SIGUSR1 not available)",
+        "System tray icon behavior",
+        "Window focus and enumeration",
+        "Process management with tasklist",
+        "Path handling and temp directories"
+      ],
+      "ubuntu_specific": [
+        "Desktop entry integration",
+        "System tray availability",
+        "Signal handling for single instance",
+        "Package management with dpkg"
+      ],
+      "common_issues": [
+        "PyInstaller bundle differences",
+        "Icon packaging and scaling",
+        "Log file location handling",
+        "Configuration file paths"
+      ]
+    },
+    "performance_insights": {
+      "startup_optimization": "75% improvement achieved through smart environment detection",
+      "backup_performance": "502.4 files per second with 5k test images",
+      "memory_usage": "Efficient hash caching for deduplication",
+      "network_optimization": "S3 batch operations and connection pooling"
+    },
+    "user_feedback_patterns": {
+      "positive_feedback": [
+        "Fast startup time",
+        "Reliable backup process",
+        "Good cross-platform support",
+        "Secure credential storage"
+      ],
+      "negative_feedback": [
+        "Windows single instance protection issues",
+        "System tray reliability problems",
+        "Build failures and syntax errors",
+        "Window focus not working"
+      ],
+      "improvement_requests": [
+        "Better Windows compatibility",
+        "More reliable system tray integration",
+        "Improved error handling",
+        "Better user feedback and notifications"
+      ]
+    }
+  }
+}
