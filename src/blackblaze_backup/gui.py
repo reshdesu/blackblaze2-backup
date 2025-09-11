@@ -1825,6 +1825,15 @@ def _ensure_single_instance(app):
     temp_dir = Path(tempfile.gettempdir())
     lock_file = temp_dir / lock_name
 
+    # Log the lock file path for debugging
+    logging.info(f"Checking single instance lock file: {lock_file}")
+
+    # Ensure temp directory exists (Windows-specific)
+    try:
+        temp_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        logging.info(f"Could not create temp directory: {e}")
+
     # Check if lock file exists
     if lock_file.exists():
         try:
@@ -1834,7 +1843,36 @@ def _ensure_single_instance(app):
 
             # Check if the process is still running
             try:
-                os.kill(pid, 0)  # This will raise an exception if process doesn't exist
+                import platform
+
+                if platform.system() == "Windows":
+                    # Windows-specific process check
+                    import subprocess
+
+                    try:
+                        # Use tasklist to check if process is running
+                        result = subprocess.run(
+                            ["tasklist", "/FI", f"PID eq {pid}"],
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                        )
+                        if str(pid) not in result.stdout:
+                            # Process not found, remove stale lock file
+                            logging.info(
+                                f"Process {pid} not found in tasklist, removing stale lock file"
+                            )
+                            lock_file.unlink(missing_ok=True)
+                            return True  # Continue with new instance
+                    except Exception as e:
+                        logging.info(f"Error checking process with tasklist: {e}")
+                        # Fallback to os.kill
+                        os.kill(pid, 0)
+                else:
+                    # Unix/Linux process check
+                    os.kill(
+                        pid, 0
+                    )  # This will raise an exception if process doesn't exist
                 # Process is still running, another instance exists
                 # Send focus signal to existing instance (Unix only)
                 try:
@@ -1864,7 +1902,18 @@ def _ensure_single_instance(app):
                             ctypes.windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
                             logging.info("Brought existing window to focus")
                         else:
-                            logging.info("Could not find existing window to focus")
+                            # Try alternative window finding methods
+                            hwnd = ctypes.windll.user32.FindWindowW(
+                                "Qt5QWindowIcon", "BlackBlaze B2 Backup Tool"
+                            )
+                            if hwnd:
+                                ctypes.windll.user32.SetForegroundWindow(hwnd)
+                                ctypes.windll.user32.ShowWindow(hwnd, 9)
+                                logging.info(
+                                    "Brought existing window to focus (alternative method)"
+                                )
+                            else:
+                                logging.info("Could not find existing window to focus")
                 except Exception as e:
                     logging.info(f"Could not bring existing window to focus: {e}")
 
@@ -1890,6 +1939,15 @@ def _ensure_single_instance(app):
         logging.info(
             f"Single instance lock file created: {lock_file} (PID: {os.getpid()})"
         )
+
+        # Verify lock file was created successfully
+        if lock_file.exists():
+            logging.info("Lock file verification successful")
+        else:
+            logging.error(
+                "Lock file verification failed - file not found after creation"
+            )
+
         return True
 
     except Exception as e:
