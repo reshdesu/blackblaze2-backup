@@ -1843,13 +1843,40 @@ def _ensure_single_instance(app):
                 except (OSError, ProcessLookupError):
                     pass  # Signal failed, but that's okay
 
+                # Log that another instance is running
+                logging.info(f"Another instance is already running (PID: {pid})")
+
+                # Try to bring existing window to focus (Windows-specific)
+                try:
+                    import platform
+
+                    if platform.system() == "Windows":
+                        # Use Windows API to find and activate the existing window
+                        import ctypes
+
+                        # Find window by class name or title
+                        hwnd = ctypes.windll.user32.FindWindowW(
+                            None, "BlackBlaze B2 Backup Tool"
+                        )
+                        if hwnd:
+                            # Bring window to front
+                            ctypes.windll.user32.SetForegroundWindow(hwnd)
+                            ctypes.windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                            logging.info("Brought existing window to focus")
+                        else:
+                            logging.info("Could not find existing window to focus")
+                except Exception as e:
+                    logging.info(f"Could not bring existing window to focus: {e}")
+
                 return False
             except (OSError, ProcessLookupError):
                 # Process doesn't exist, remove stale lock file
+                logging.info(f"Stale lock file found, removing it (PID: {pid})")
                 lock_file.unlink(missing_ok=True)
 
         except (ValueError, FileNotFoundError):
             # Invalid lock file, remove it
+            logging.info("Invalid lock file found, removing it")
             lock_file.unlink(missing_ok=True)
 
     # Create lock file with current PID
@@ -1860,15 +1887,32 @@ def _ensure_single_instance(app):
         # Store the lock file path for cleanup
         app._instance_lock_file = lock_file
 
+        logging.info(
+            f"Single instance lock file created: {lock_file} (PID: {os.getpid()})"
+        )
         return True
 
     except Exception as e:
-        print(f"Error creating lock file: {e}")
+        logging.error(f"Error creating lock file: {e}")
         return True  # Continue anyway
+
+
+def setup_logging():
+    """Setup logging configuration"""
+    from .config import config
+
+    log_file_path = config.log_file
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler(log_file_path), logging.StreamHandler()],
+    )
 
 
 def main():
     """Main application entry point"""
+    setup_logging()
+
     app = QApplication(sys.argv)
 
     # Get dynamic version

@@ -89,6 +89,11 @@
       "Change version numbers without user request",
       "Modify CI/CD pipeline files without understanding impact"
     ],
+    "communication_preferences": [
+      "Do not use emotes/emojis in chat responses - user prefers clean text without emotes",
+      "Keep responses professional and focused on the technical content",
+      "Use clear, concise language without decorative elements"
+    ],
     "always_test_before_commit": [
       "Run the application locally to verify it works",
       "Test the specific feature being implemented",
@@ -106,6 +111,17 @@
       "MANDATORY: Update current_project_status after each release or major fix",
       "ALWAYS: Document version numbers, release status, and testing results"
     ],
+    "comprehensive_fix_approach": [
+      "CRITICAL: For EVERY fix, change, or modification, ALWAYS search the ENTIRE codebase",
+      "Use grep to search for patterns across ALL modules, not just the obvious ones",
+      "Check ALL modules that might be affected by the change (not just the main entry point)",
+      "Fix the issue in EVERY module that uses it, not just the first one found",
+      "Test thoroughly to ensure no references are missed anywhere",
+      "Examples: grep -r 'pattern' src/ --include='*.py' to find ALL usage",
+      "This applies to: signals, system calls, imports, function calls, variable names, etc.",
+      "This prevents incomplete fixes that cause the same error to persist",
+      "UNIVERSAL RULE: Every change must be comprehensive across the entire codebase"
+    ],
     "never_commit_secrets": [
       "Check every commit for secrets, passwords, API keys, tokens, credentials",
       "Use pre-commit hooks to automatically scan for secrets",
@@ -114,15 +130,15 @@
       "Scan for common secret patterns: passwords, keys, tokens, database URLs"
     ],
     "current_session_context": [
-      "Working on BlackBlaze B2 Backup Tool v1.0.90",
+      "Working on BlackBlaze B2 Backup Tool v1.0.91",
       "Single instance protection: ✅ FIXED and working",
       "App startup slowness: ✅ FIXED and tested (0.5s startup, 75% improvement)",
       "Icon packaging: ✅ FIXED and tested (no more 'Icon file not found' errors)",
       "Windows installer popup: ✅ FIXED and tested (comprehensive popup elimination)",
-      "Windows signal error: ✅ FIXED and tested (SIGUSR1 cross-platform compatibility)",
+      "Windows signal error: ✅ FIXED and tested (complete SIGUSR1 cross-platform compatibility)",
       "Windows system tray icon: ✅ FIXED and tested (show() returned False error resolved)",
-      "Latest release: v1.0.90 with Windows system tray icon fix",
-      "All critical Windows compatibility issues resolved"
+      "Latest release: v1.0.91 with complete Windows signal error fix",
+      "All critical Windows compatibility issues resolved - comprehensive fix approach documented"
     ],
     "never_assume": [
       "Files are safe to delete just because not in git",
@@ -136,7 +152,10 @@
       "Git status to see what's tracked vs untracked",
       "If expensive operations are really necessary",
       "With user before making destructive changes",
-      "If existing solutions exist before creating new ones"
+      "If existing solutions exist before creating new ones",
+      "CRITICAL: Search the ENTIRE codebase for any pattern before making changes",
+      "Use grep to find ALL occurrences of what you're changing",
+      "Check ALL modules that might be affected, not just the obvious ones"
     ]
   },
   "development_workflow": {
@@ -265,12 +284,13 @@
     ],
     "example_good_context": "I'm working on BlackBlaze B2 Backup Tool - a cross-platform backup application. The main issue is that preview results disappear from the log during backup operations. Key files: main.py, src/blackblaze_backup/gui.py, src/blackblaze_backup/core.py. Recent changes: Modified preview display logic in gui.py to show results at top of log. Current state: App runs but preview results get cleared when backup starts. Please don't modify: performance_results.json, any benchmark files, or test data. Environment: Ubuntu, using uv, app is currently running locally. I need help fixing the preview results persistence issue."
   },
-  "user_preferences": {
+    "user_preferences": {
     "no_modal_windows": "Use inline text notifications instead of popup dialogs",
     "no_automatic_commits": "Always ask before committing code",
     "preserve_performance_data": "Never delete benchmark or test result files",
     "use_uv_commands": "Always use 'uv run <command>' instead of 'python <command>'",
-    "dynamic_version_display": "Version info should be inline in log text area"
+    "dynamic_version_display": "Version info should be inline in log text area",
+    "no_emotes": "Do not use emotes/emojis in chat responses - user prefers clean text without emotes"
   },
   "conversation_learnings": {
     "2025-09-08_dynamic_version_display": {
@@ -693,6 +713,37 @@
             "user_feedback": "are you updating ai context as you go along? if not make a note in the ai context to update ai context regulary and strictly follow it",
             "importance": "AI context maintenance is critical for project continuity and knowledge preservation",
             "status": "COMPLETED - AI context update rules strengthened and enforced"
+        },
+        "2025-09-11_comprehensive_fix_approach_universal": {
+            "issue": "Signal handling fix was incomplete - only fixed main.py but not gui.py",
+            "problem": "Fixed SIGUSR1 in main.py but missed signal references in gui.py, causing same error to persist",
+            "root_cause": "Did not search comprehensively across ALL modules for signal usage",
+            "solution": "UNIVERSAL RULE: Always search ALL modules comprehensively for EVERY change or fix",
+            "implementation": [
+                "Use grep to search for patterns across entire codebase",
+                "Check ALL modules, not just the main entry point",
+                "Fix the issue in EVERY module that uses it",
+                "Test thoroughly to ensure no references are missed anywhere",
+                "This applies to: signals, system calls, imports, function calls, variable names, etc."
+            ],
+            "critical_learning": "For EVERY fix, change, or modification, ALWAYS search the ENTIRE codebase for the pattern",
+            "search_command": "grep -r 'pattern' src/ --include='*.py'",
+            "user_feedback": "not just signal handling but everythign you do needs to be looked at from all code",
+            "universal_rule": "Every change must be comprehensive across the entire codebase",
+            "status": "COMPLETED - Universal comprehensive fix approach documented and enforced"
+        },
+        "2025-09-11_no_emotes_preference": {
+            "issue": "User prefers clean text without emotes/emojis in chat responses",
+            "problem": "AI assistant using emotes/emojis in responses which user finds distracting",
+            "solution": "Added no_emotes preference to user_preferences and communication_preferences",
+            "implementation": [
+                "Added 'no_emotes' to user_preferences section",
+                "Added 'communication_preferences' to ai_assistant_rules",
+                "Specified to keep responses professional and focused on technical content",
+                "Use clear, concise language without decorative elements"
+            ],
+            "user_feedback": "can you please add a note to not use emotes in the chat, I don't want to see them every",
+            "status": "COMPLETED - No emotes preference documented and enforced"
         }
   }
 }
