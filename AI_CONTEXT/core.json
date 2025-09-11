@@ -107,6 +107,14 @@
       "When in doubt about whether something should be mandatory, add it as a mandatory rule",
       "Better to have too many mandatory rules than to miss critical procedures"
     ],
+    "mandatory_communication_rules": [
+      "CRITICAL: NEVER use emojis or emotes in chat responses",
+      "User prefers clean, professional text without decorative elements",
+      "Keep all responses professional and focused on technical content",
+      "Use clear, concise language without visual decorations",
+      "This applies to ALL chat responses, not just code files",
+      "NO EXCEPTIONS: Never use emojis in any chat communication"
+    ],
     "icon_management_rules": [
       "CRITICAL: NEVER create new icons or change the existing icon design",
       "The project has specific existing icons that must be preserved",

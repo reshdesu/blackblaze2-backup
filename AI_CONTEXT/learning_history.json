@@ -409,6 +409,25 @@
         "reporting": "Issues automatically created in GitHub"
       },
       "status": "COMPLETED - Comprehensive Windows testing automation solution implemented"
+    },
+    "2025-09-11_mandatory_no_emojis_rule": {
+      "issue": "AI assistant started using emojis in chat responses despite previous agreement",
+      "root_cause": "No emoji rule was not in mandatory rules section, only in communication preferences",
+      "solution": "Added mandatory_communication_rules to enforce no emojis in chat responses",
+      "implementation": [
+        "Added mandatory_communication_rules section to AI_CONTEXT/core.json",
+        "Made no emojis rule CRITICAL and mandatory",
+        "Specified this applies to ALL chat responses, not just code files",
+        "Added NO EXCEPTIONS clause to prevent future violations"
+      ],
+      "rule_details": {
+        "rule": "CRITICAL: NEVER use emojis or emotes in chat responses",
+        "scope": "ALL chat responses, not just code files",
+        "enforcement": "NO EXCEPTIONS - Never use emojis in any chat communication",
+        "purpose": "User prefers clean, professional text without decorative elements"
+      },
+      "user_feedback": "you have started to use emojis in your chat, read ai context, we had agreed on no emojis, make it mandatory",
+      "status": "IMPLEMENTED - No emojis rule now mandatory in AI_CONTEXT"
     }
   }
 }
