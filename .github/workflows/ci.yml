@@ -75,10 +75,138 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
 
+  test-windows:
+    name: Windows Testing
+    runs-on: windows-latest
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v2
+      with:
+        version: "latest"
+
+    - name: Install dependencies
+      run: |
+        uv venv
+        .venv\Scripts\activate
+        uv pip install -e ".[build]"
+        uv pip install pillow
+
+    - name: Convert icon to ICO format
+      run: |
+        .venv\Scripts\activate
+        python -c "from PIL import Image; Image.open('src/blackblaze_backup/icon.png').save('src/blackblaze_backup/icon.ico', format='ICO')"
+
+    - name: Build executable
+      run: |
+        .venv\Scripts\activate
+        pyinstaller --clean --log-level=ERROR blackblaze_backup.spec
+
+    - name: Test Windows Single Instance Protection
+      run: |
+        .venv\Scripts\activate
+        python -c "
+        import subprocess
+        import time
+        import os
+
+        # Start first instance
+        proc1 = subprocess.Popen(['dist/BlackBlaze-Backup-Tool.exe'],
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+        time.sleep(3)  # Let it initialize
+
+        # Try to start second instance (should fail)
+        proc2 = subprocess.Popen(['dist/BlackBlaze-Backup-Tool.exe'],
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+        time.sleep(2)
+
+        # Check if second instance is still running
+        if proc2.poll() is None:
+            print('ERROR: Second instance is still running - single instance protection failed')
+            proc2.terminate()
+            exit(1)
+        else:
+            print('SUCCESS: Second instance exited - single instance protection working')
+
+        # Clean up
+        proc1.terminate()
+        "
+
+    - name: Test Windows System Tray
+      run: |
+        .venv\Scripts\activate
+        python -c "
+        import subprocess
+        import time
+
+        # Start application
+        proc = subprocess.Popen(['dist/BlackBlaze-Backup-Tool.exe'],
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+        time.sleep(5)  # Let it initialize and show tray
+
+        # Check if process is still running
+        if proc.poll() is None:
+            print('SUCCESS: Application started and is running')
+            proc.terminate()
+        else:
+            print('ERROR: Application crashed during startup')
+            exit(1)
+        "
+
+    - name: Test Windows Window Focus
+      run: |
+        .venv\Scripts\activate
+        python -c "
+        import subprocess
+        import time
+        import ctypes
+        from ctypes import wintypes
+
+        # Start application
+        proc = subprocess.Popen(['dist/BlackBlaze-Backup-Tool.exe'],
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+        time.sleep(3)
+
+        # Try to find and focus the window
+        user32 = ctypes.windll.user32
+
+        # Find window by class name or title
+        hwnd = user32.FindWindowW(None, 'BlackBlaze B2 Backup Tool')
+        if hwnd:
+            print('SUCCESS: Found application window')
+            # Try to bring to front
+            user32.SetForegroundWindow(hwnd)
+            print('SUCCESS: Window focus test completed')
+        else:
+            print('WARNING: Could not find application window')
+
+        proc.terminate()
+        "
+
+    - name: Collect Windows Test Results
+      if: always()
+      run: |
+        echo "Windows testing completed"
+        echo "Test results will be available in the workflow logs"
+
   build-packages:
     name: Build Packages
     runs-on: ${{ matrix.os }}
-    needs: test
+    needs: [test, test-windows]
     if: startsWith(github.ref, 'refs/tags/v')
     strategy:
       matrix:

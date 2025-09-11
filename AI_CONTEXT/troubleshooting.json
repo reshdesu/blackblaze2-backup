@@ -64,6 +64,12 @@
         "uv run ruff check .",
         "uv run ruff format ."
       ],
+      "windows_testing": {
+        "automated_ci_tests": "GitHub Actions Windows runner tests single instance, system tray, and window focus",
+        "error_collector": "scripts/windows_error_collector.py - collects system info and logs",
+        "test_suite": "scripts/windows_test_suite.py - comprehensive Windows functionality testing",
+        "ci_integration": "Windows tests run automatically on every tag and PR"
+      },
       "monitoring": {
         "process_check": "tasklist /FI \"PID eq <pid>\"",
         "lock_file": "C:\\Users\\<user>\\AppData\\Local\\Temp\\blackblaze_backup_tool_single_instance.lock",

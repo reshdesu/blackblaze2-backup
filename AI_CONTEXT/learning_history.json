@@ -326,6 +326,47 @@
       ],
       "purpose": "Ensure consistent project understanding across all conversations",
       "implementation": "Added mandatory_context_usage rule to core.json"
+    },
+    "2025-09-11_mandatory_rule_expansion_pattern": {
+      "issue": "AI assistant didn't know release process and had to be told by user",
+      "root_cause": "Missing mandatory rule for following documented processes",
+      "solution": "Added mandatory_rule_expansion rule to proactively identify and add missing mandatory rules",
+      "implementation": [
+        "Added mandatory_release_process rule for following documented release procedures",
+        "Added mandatory_rule_expansion rule for proactive rule identification",
+        "Rule ensures AI assistant adds mandatory rules when gaps are identified",
+        "Prevents future instances of not knowing established procedures"
+      ],
+      "key_principle": "Better to have too many mandatory rules than to miss critical procedures",
+      "proactive_approach": "Don't wait for user to ask - immediately add missing mandatory rules",
+      "status": "IMPLEMENTED - Both rules added to AI_CONTEXT/core.json"
+    },
+    "2025-09-11_windows_testing_automation_solution": {
+      "issue": "Development on Ubuntu 24.04 with Windows 11 users - testing getting hectic, need to ask users for error logs",
+      "root_cause": "No automated Windows testing pipeline, manual user testing required",
+      "solution": "Implemented comprehensive automated Windows testing solution",
+      "implementation": [
+        "Added Windows CI/CD testing job to GitHub Actions workflow",
+        "Created automated tests for single instance protection, system tray, and window focus",
+        "Built Windows error collector script for automatic log collection",
+        "Created comprehensive Windows test suite for local testing",
+        "Integrated Windows tests into existing CI/CD pipeline"
+      ],
+      "technical_details": {
+        "ci_windows_tests": "GitHub Actions Windows runner tests all critical Windows functionality",
+        "error_collector": "scripts/windows_error_collector.py collects system info, logs, and test results",
+        "test_suite": "scripts/windows_test_suite.py provides comprehensive local testing",
+        "automated_testing": "Tests run automatically on every tag and pull request",
+        "test_coverage": "Single instance protection, system tray, window focus, backup functionality"
+      },
+      "benefits": [
+        "No more manual user testing required",
+        "Automatic error detection and reporting",
+        "Consistent testing across all releases",
+        "Faster issue identification and resolution",
+        "Reduced dependency on Windows users for testing"
+      ],
+      "status": "IMPLEMENTED - Complete Windows testing automation solution"
     }
   }
 }

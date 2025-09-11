@@ -91,6 +91,22 @@
       "This prevents incomplete fixes that cause the same error to persist",
       "UNIVERSAL RULE: Every change must be comprehensive across the entire codebase"
     ],
+    "mandatory_release_process": [
+      "CRITICAL: Always follow the documented release process from AI_CONTEXT/architecture.json",
+      "NEVER create releases without checking the established release process first",
+      "The release process is: 1) Update version numbers, 2) Commit changes, 3) Create git tag, 4) Push to trigger CI/CD, 5) Monitor build status, 6) Test released package, 7) Update AI context",
+      "Always check AI_CONTEXT/architecture.json for the current release process before proceeding",
+      "Do not invent or assume release procedures - use the documented process"
+    ],
+    "mandatory_rule_expansion": [
+      "CRITICAL: Always add new mandatory rules when gaps are identified",
+      "If I discover a process, procedure, or pattern that should be mandatory, immediately add it to the mandatory rules",
+      "Do not wait for user to ask - proactively identify and add missing mandatory rules",
+      "Examples: release processes, build procedures, testing protocols, deployment steps, etc.",
+      "The goal is to prevent future instances of not knowing established procedures",
+      "When in doubt about whether something should be mandatory, add it as a mandatory rule",
+      "Better to have too many mandatory rules than to miss critical procedures"
+    ],
     "icon_management_rules": [
       "CRITICAL: NEVER create new icons or change the existing icon design",
       "The project has specific existing icons that must be preserved",
