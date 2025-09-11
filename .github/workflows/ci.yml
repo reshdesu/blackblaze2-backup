@@ -296,12 +296,12 @@ jobs:
                           Return="ignore" />
 
             <InstallExecuteSequence>
-              <Custom Action="CloseAppImmediate" Before="InstallValidate">1</Custom>
+              <Custom Action="CloseAppImmediate" After="CostFinalize">1</Custom>
               <Custom Action="CloseAppGracefully" Before="InstallFiles">1</Custom>
             </InstallExecuteSequence>
 
             <InstallUISequence>
-              <Custom Action="CloseAppImmediate" Before="LaunchConditions">1</Custom>
+              <Custom Action="CloseAppImmediate" After="CostFinalize">1</Custom>
             </InstallUISequence>
 
           </Product>
