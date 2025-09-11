@@ -109,6 +109,14 @@
       "ALWAYS run 'git add . && git commit' to trigger pre-commit hooks",
       "Fix any pre-commit failures before proceeding"
     ],
+    "mandatory_build_check_rules": [
+      "CRITICAL: Always check builds for failure within 15 seconds",
+      "After any build command, wait maximum 15 seconds and check for failure",
+      "If build fails, immediately investigate and fix the issue",
+      "Do not proceed with other tasks until build is successful",
+      "This applies to all build types: compilation, packaging, testing, etc.",
+      "Build check protocol: Run build -> Wait max 15s -> Check exit code -> Fix if failed -> Repeat until success"
+    ],
     "always_test_before_commit": [
       "Run the application locally to verify it works",
       "Test the specific feature being implemented",
@@ -831,6 +839,28 @@
             ],
             "user_feedback": "in your chat you used ✅ even when I told you not to use emotes",
             "status": "ACKNOWLEDGED - Rule violation noted, will strictly follow no emoji rule"
+        },
+        "2025-09-11_build_failure_check_rule": {
+            "issue": "AI assistant needs to always check builds for failure within 15 seconds",
+            "problem": "Build failures can occur and need immediate detection and response",
+            "solution": "Add mandatory rule to check builds for failure within 15 seconds",
+            "implementation": [
+                "CRITICAL RULE: Always check builds for failure within 15 seconds",
+                "After any build command, wait maximum 15 seconds and check for failure",
+                "If build fails, immediately investigate and fix the issue",
+                "Do not proceed with other tasks until build is successful",
+                "This applies to all build types: compilation, packaging, testing, etc."
+            ],
+            "build_check_protocol": [
+                "Run build command",
+                "Wait maximum 15 seconds",
+                "Check exit code and output for errors",
+                "If failure detected, immediately investigate and fix",
+                "Repeat until build succeeds",
+                "Only then proceed with other tasks"
+            ],
+            "user_feedback": "add a context to always check builds for failure in 15 seconds",
+            "status": "IMPLEMENTED - Build failure check rule added to AI context"
         }
   }
 }
