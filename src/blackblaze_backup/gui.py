@@ -1963,28 +1963,34 @@ def _ensure_single_instance(app):
                                             )
 
                                             # Try to find window by enumerating all windows
-                                            def enum_windows_callback(hwnd, lparam):
-                                                nonlocal hwnd
+                                            found_hwnd = None
+
+                                            def enum_windows_callback(
+                                                window_hwnd, lparam
+                                            ):
+                                                nonlocal found_hwnd
                                                 if ctypes.windll.user32.IsWindowVisible(
-                                                    hwnd
+                                                    window_hwnd
                                                 ):
                                                     # Get window title
                                                     length = ctypes.windll.user32.GetWindowTextLengthW(
-                                                        hwnd
+                                                        window_hwnd
                                                     )
                                                     if length > 0:
                                                         buffer = ctypes.create_unicode_buffer(
                                                             length + 1
                                                         )
                                                         ctypes.windll.user32.GetWindowTextW(
-                                                            hwnd, buffer, length + 1
+                                                            window_hwnd,
+                                                            buffer,
+                                                            length + 1,
                                                         )
                                                         title = buffer.value
                                                         if "BlackBlaze" in title:
                                                             logging.info(
-                                                                f"Found window by enumeration: {title} (HWND: {hwnd})"
+                                                                f"Found window by enumeration: {title} (HWND: {window_hwnd})"
                                                             )
-                                                            hwnd = hwnd
+                                                            found_hwnd = window_hwnd
                                                             return False  # Stop enumeration
                                                 return True  # Continue enumeration
 
@@ -2002,6 +2008,13 @@ def _ensure_single_instance(app):
                                             ctypes.windll.user32.EnumWindows(
                                                 callback, 0
                                             )
+
+                                            # Use the found window handle
+                                            if found_hwnd:
+                                                hwnd = found_hwnd
+                                                logging.info(
+                                                    f"Using found window handle: {hwnd}"
+                                                )
 
                                             # If still not found, try alternative methods
                                             if not hwnd:
