@@ -1281,20 +1281,40 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
             self.tray_icon = None
             return
 
+        # Windows-specific system tray availability check
+        import platform
+
+        if platform.system() == "Windows":
+            # On Windows, sometimes the system tray is available but not properly initialized
+            # We'll try to create a temporary tray icon to test
+            try:
+                test_icon = QSystemTrayIcon(self)
+                if not test_icon.isSystemTrayAvailable():
+                    self.logger.warning("Windows system tray not properly initialized")
+                    self.logger.info(
+                        "Background operation will use window hiding instead"
+                    )
+                    self.tray_icon = None
+                    return
+            except Exception as e:
+                self.logger.warning(f"Windows system tray test failed: {e}")
+                self.logger.info("Background operation will use window hiding instead")
+                self.tray_icon = None
+                return
+
         self.logger.info("Setting up cross-platform system tray icon...")
 
         # Create cross-platform compatible icon (use PNG for better Windows compatibility)
         icon_path = Path(__file__).parent / "icon.png"
         if icon_path.exists():
-            # Create system tray icon with 2.5x zoom
+            # Create system tray icon with proper Windows compatibility
             original_pixmap = QPixmap(str(icon_path))
-            # Scale to 80x80 for 2.5x zoom, then crop center 32x32
+            # Windows prefers 16x16 or 32x32 icons for system tray
+            # Scale to 32x32 for better Windows compatibility
             scaled_pixmap = original_pixmap.scaled(
-                80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation
             )
-            # Crop the center 32x32 portion from the 80x80 scaled image
-            cropped_pixmap = scaled_pixmap.copy(24, 24, 32, 32)
-            icon = QIcon(cropped_pixmap)
+            icon = QIcon(scaled_pixmap)
         else:
             # Fallback: Create a simple programmatic icon with 2.5x zoom
             pixmap = QPixmap(32, 32)  # Standard system tray size
@@ -1342,18 +1362,37 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
 
         self.tray_icon.setContextMenu(menu)
 
-        # Try to show the tray icon
+        # Windows-specific system tray icon fixes
         try:
+            # Set the icon again to ensure it's properly set
+            self.tray_icon.setIcon(icon)
+
+            # For Windows, we need to ensure the icon is visible
+            # Try multiple approaches to make it work
             if self.tray_icon.show():
                 self.logger.info("System tray icon created successfully")
             else:
-                self.logger.error(
-                    "Failed to show system tray icon - show() returned False"
+                # Windows fallback: try to show again after a short delay
+                self.logger.warning(
+                    "Initial tray icon show failed, trying Windows-specific fix..."
                 )
-                self.logger.info(
-                    "Background operation will still work with window hiding"
-                )
-                # Keep tray icon object for menu functionality even if not visible
+
+                # Try setting the icon again and showing
+                self.tray_icon.setIcon(icon)
+                self.tray_icon.setVisible(True)
+
+                if self.tray_icon.isVisible():
+                    self.logger.info(
+                        "System tray icon created successfully (Windows fix applied)"
+                    )
+                else:
+                    self.logger.error(
+                        "Failed to show system tray icon - show() returned False"
+                    )
+                    self.logger.info(
+                        "Background operation will still work with window hiding"
+                    )
+                    # Keep tray icon object for menu functionality even if not visible
         except Exception as e:
             self.logger.error(f"Exception while showing system tray icon: {e}")
             self.logger.info("Background operation will still work with window hiding")
