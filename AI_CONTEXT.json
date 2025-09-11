@@ -94,6 +94,21 @@
       "Keep responses professional and focused on the technical content",
       "Use clear, concise language without decorative elements"
     ],
+    "mandatory_pre_commit_rules": [
+      "CRITICAL: Always follow ALL pre-commit rules before making any changes",
+      "ruff: Run linter with --fix to catch and fix code issues",
+      "ruff-format: Run formatter to ensure consistent code style",
+      "trailing-whitespace: Remove trailing whitespace from all lines",
+      "end-of-file-fixer: Ensure files end with newline",
+      "check-yaml: Validate YAML syntax",
+      "check-added-large-files: Prevent large files from being committed",
+      "check-merge-conflict: Check for merge conflict markers",
+      "check-json: Validate JSON syntax",
+      "check-emojis: NO EMOJIS in code files (py, md, txt, yml, yaml)",
+      "check-secrets: NO secrets, passwords, API keys, tokens, credentials in code",
+      "ALWAYS run 'git add . && git commit' to trigger pre-commit hooks",
+      "Fix any pre-commit failures before proceeding"
+    ],
     "always_test_before_commit": [
       "Run the application locally to verify it works",
       "Test the specific feature being implemented",
@@ -202,7 +217,19 @@
       "formatting": "uv run ruff format src/ tests/",
       "pre_commit": "Runs automatically, includes emoji checking and secret detection",
       "security": "uv run bandit -r src/ -f json -o bandit-report.json",
-      "secret_detection": "Pre-commit hook scans for secrets, passwords, API keys, tokens"
+      "secret_detection": "Pre-commit hook scans for secrets, passwords, API keys, tokens",
+      "mandatory_pre_commit_rules": [
+        "ruff: Linter with --fix",
+        "ruff-format: Code formatter",
+        "trailing-whitespace: Remove trailing whitespace",
+        "end-of-file-fixer: Ensure files end with newline",
+        "check-yaml: Validate YAML syntax",
+        "check-added-large-files: Prevent large files",
+        "check-merge-conflict: Check for merge conflicts",
+        "check-json: Validate JSON syntax",
+        "check-emojis: NO EMOJIS in code files",
+        "check-secrets: NO secrets in code"
+      ]
     },
     "security_checklist": {
       "before_every_commit": [
@@ -744,6 +771,31 @@
             ],
             "user_feedback": "can you please add a note to not use emotes in the chat, I don't want to see them every",
             "status": "COMPLETED - No emotes preference documented and enforced"
+        },
+        "2025-09-11_pre_commit_rules_enforcement": {
+            "issue": "AI assistant not following pre-commit rules consistently",
+            "problem": "Pre-commit rules exist but AI assistant doesn't follow them as mandatory guidelines",
+            "solution": "Added pre-commit rules as mandatory guidelines in AI context",
+            "implementation": [
+                "Added 'mandatory_pre_commit_rules' to ai_assistant_rules",
+                "Added pre-commit rules to development_workflow code_quality section",
+                "Documented all pre-commit hooks: ruff, ruff-format, trailing-whitespace, etc.",
+                "Made pre-commit rules CRITICAL and mandatory to follow"
+            ],
+            "pre_commit_rules": [
+                "ruff: Linter with --fix",
+                "ruff-format: Code formatter",
+                "trailing-whitespace: Remove trailing whitespace",
+                "end-of-file-fixer: Ensure files end with newline",
+                "check-yaml: Validate YAML syntax",
+                "check-added-large-files: Prevent large files",
+                "check-merge-conflict: Check for merge conflicts",
+                "check-json: Validate JSON syntax",
+                "check-emojis: NO EMOJIS in code files",
+                "check-secrets: NO secrets in code"
+            ],
+            "user_feedback": "the rules what we ahve in precommit, why don't you add them as something you have to follow, seems like you don't follow those rules",
+            "status": "COMPLETED - Pre-commit rules now mandatory and enforced"
         }
   }
 }
