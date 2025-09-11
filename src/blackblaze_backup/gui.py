@@ -1820,13 +1820,18 @@ def _ensure_single_instance(app):
     import tempfile
     from pathlib import Path
 
+    current_pid = os.getpid()
+    logging.info(f"Single instance check started (PID: {current_pid})")
+
     # Create a unique lock file for this application
     lock_name = "blackblaze_backup_tool_single_instance.lock"
     temp_dir = Path(tempfile.gettempdir())
     lock_file = temp_dir / lock_name
 
     # Log the lock file path for debugging
-    logging.info(f"Checking single instance lock file: {lock_file}")
+    logging.info(
+        f"Checking single instance lock file: {lock_file} (PID: {current_pid})"
+    )
 
     # Ensure temp directory exists (Windows-specific)
     try:
@@ -1836,10 +1841,17 @@ def _ensure_single_instance(app):
 
     # Check if lock file exists
     if lock_file.exists():
+        logging.info(
+            f"Lock file exists, checking if process is still running (PID: {current_pid})"
+        )
         try:
             # Read the PID from the lock file
             with open(lock_file) as f:
                 pid = int(f.read().strip())
+
+            logging.info(
+                f"Found lock file with PID: {pid}, checking if process is still running"
+            )
 
             # Check if the process is still running
             try:
@@ -1857,13 +1869,18 @@ def _ensure_single_instance(app):
                             text=True,
                             check=False,
                         )
+                        logging.info(f"Tasklist result for PID {pid}: {result.stdout}")
                         if str(pid) not in result.stdout:
                             # Process not found, remove stale lock file
                             logging.info(
-                                f"Process {pid} not found in tasklist, removing stale lock file"
+                                f"Process {pid} not found in tasklist, removing stale lock file (PID: {current_pid})"
                             )
                             lock_file.unlink(missing_ok=True)
                             return True  # Continue with new instance
+                        else:
+                            logging.info(
+                                f"Process {pid} is still running, another instance exists"
+                            )
                     except Exception as e:
                         logging.info(f"Error checking process with tasklist: {e}")
                         # Fallback to os.kill
@@ -1882,7 +1899,9 @@ def _ensure_single_instance(app):
                     pass  # Signal failed, but that's okay
 
                 # Log that another instance is running
-                logging.info(f"Another instance is already running (PID: {pid})")
+                logging.info(
+                    f"Another instance is already running (PID: {pid}), current PID: {current_pid}"
+                )
 
                 # Try to bring existing window to focus (Windows-specific)
                 try:
@@ -1920,38 +1939,41 @@ def _ensure_single_instance(app):
                 return False
             except (OSError, ProcessLookupError):
                 # Process doesn't exist, remove stale lock file
-                logging.info(f"Stale lock file found, removing it (PID: {pid})")
+                logging.info(
+                    f"Stale lock file found, removing it (PID: {pid}, current PID: {current_pid})"
+                )
                 lock_file.unlink(missing_ok=True)
 
         except (ValueError, FileNotFoundError):
             # Invalid lock file, remove it
-            logging.info("Invalid lock file found, removing it")
+            logging.info(f"Invalid lock file found, removing it (PID: {current_pid})")
             lock_file.unlink(missing_ok=True)
 
-    # Create lock file with current PID
+    # No lock file exists, create one with current PID
+    logging.info(f"No lock file found, creating new one (PID: {current_pid})")
     try:
         with open(lock_file, "w") as f:
-            f.write(str(os.getpid()))
+            f.write(str(current_pid))
 
         # Store the lock file path for cleanup
         app._instance_lock_file = lock_file
 
         logging.info(
-            f"Single instance lock file created: {lock_file} (PID: {os.getpid()})"
+            f"Single instance lock file created: {lock_file} (PID: {current_pid})"
         )
 
         # Verify lock file was created successfully
         if lock_file.exists():
-            logging.info("Lock file verification successful")
+            logging.info(f"Lock file verification successful (PID: {current_pid})")
         else:
             logging.error(
-                "Lock file verification failed - file not found after creation"
+                f"Lock file verification failed - file not found after creation (PID: {current_pid})"
             )
 
         return True
 
     except Exception as e:
-        logging.error(f"Error creating lock file: {e}")
+        logging.error(f"Error creating lock file: {e} (PID: {current_pid})")
         return True  # Continue anyway
 
 
@@ -1971,6 +1993,12 @@ def main():
     """Main application entry point"""
     setup_logging()
 
+    # Log startup with PID
+    import os
+
+    current_pid = os.getpid()
+    logging.info(f"BlackBlaze B2 Backup Tool started (PID: {current_pid})")
+
     app = QApplication(sys.argv)
 
     # Get dynamic version
@@ -1987,8 +2015,12 @@ def main():
     app.setOrganizationName("BlackBlaze Backup")
 
     # Single instance check
+    logging.info(f"Checking single instance protection (PID: {current_pid})")
     if not _ensure_single_instance(app):
+        logging.info(f"Another instance is running, exiting (PID: {current_pid})")
         return 0  # Exit gracefully if another instance is already running
+
+    logging.info(f"Single instance check passed, continuing (PID: {current_pid})")
 
     # Create and show main window
     try:
