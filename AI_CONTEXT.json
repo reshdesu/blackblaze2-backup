@@ -9,11 +9,13 @@
     "name": "BlackBlaze B2 Backup Tool",
     "type": "Cross-platform GUI backup application",
     "tech_stack": ["Python", "PySide6", "AWS S3 (BackBlaze B2)", "uv package manager"],
-    "current_version": "1.0.94",
+    "current_version": "1.0.98",
     "entry_point": "main.py",
     "core_modules": [
       "src/blackblaze_backup/gui.py",
-      "src/blackblaze_backup/core.py"
+      "src/blackblaze_backup/core.py",
+      "src/blackblaze_backup/config.py",
+      "src/blackblaze_backup/utils.py"
     ],
     "key_features": [
       "GUI backup tool for BackBlaze B2 S3 buckets",
@@ -22,6 +24,252 @@
       "Cross-platform packages (Windows MSI, Ubuntu DEB)",
       "Performance optimization with caching and statistical benchmarks"
     ]
+  },
+  "project_architecture": {
+    "module_dependencies": {
+      "main.py": ["src/blackblaze_backup/gui.py"],
+      "gui.py": ["core.py", "config.py", "utils.py"],
+      "core.py": ["config.py", "utils.py"],
+      "config.py": ["utils.py"],
+      "utils.py": []
+    },
+    "data_flow": {
+      "user_input": "gui.py -> core.py -> s3_operations",
+      "configuration": "config.py -> all_modules",
+      "logging": "all_modules -> centralized_logging",
+      "credentials": "gui.py -> core.py -> system_keyring",
+      "backup_process": "gui.py -> core.py -> s3_upload -> progress_callback -> gui.py"
+    },
+    "key_design_patterns": {
+      "mvc_pattern": "gui.py (view) -> core.py (model) -> config.py (controller)",
+      "observer_pattern": "progress_callbacks from core.py to gui.py",
+      "singleton_pattern": "single instance protection in gui.py",
+      "factory_pattern": "s3 client creation in core.py"
+    },
+    "critical_components": {
+      "single_instance_protection": "gui.py - prevents multiple app instances",
+      "system_tray_integration": "gui.py - background operation support",
+      "credential_management": "core.py - secure storage via system keyring",
+      "backup_engine": "core.py - s3 upload with deduplication",
+      "scheduling_system": "gui.py - automatic backup scheduling"
+    }
+  },
+  "development_workflow": {
+    "feature_development_process": [
+      "1. Understand requirement and user need",
+      "2. Search entire codebase for related code (comprehensive approach)",
+      "3. Analyze impact on all modules",
+      "4. Implement with cross-platform compatibility",
+      "5. Test locally on both Windows and Ubuntu",
+      "6. Run pre-commit hooks and fix issues",
+      "7. Update AI context with learnings",
+      "8. Create release and test on target platform"
+    ],
+    "quality_gates": [
+      "Pre-commit hooks must pass (ruff, formatting, security checks)",
+      "Build must succeed without errors",
+      "Tests must pass (unit, integration, performance)",
+      "User testing required on target platform",
+      "AI context must be updated with learnings"
+    ],
+    "release_process": [
+      "1. Update version numbers in pyproject.toml and __init__.py",
+      "2. Commit changes with descriptive message",
+      "3. Create git tag for version",
+      "4. Push to trigger CI/CD pipeline",
+      "5. Monitor build status and fix any issues",
+      "6. Test released package on target platform",
+      "7. Update AI context with release status"
+    ]
+  },
+  "user_experience": {
+    "primary_use_cases": [
+      "Backup photos and documents to BackBlaze B2",
+      "Schedule automatic backups (1min to monthly)",
+      "Monitor backup progress in real-time",
+      "Manage credentials securely without plain text storage",
+      "Run backups in background with system tray integration"
+    ],
+    "user_pain_points_resolved": [
+      "Windows compatibility issues (installer, signals, system tray)",
+      "Single instance protection (prevent multiple app instances)",
+      "System tray integration (background operation)",
+      "Startup performance (75% improvement achieved)",
+      "Icon packaging issues (PyInstaller bundle fixes)"
+    ],
+    "user_pain_points_ongoing": [
+      "Windows single instance protection (window focus not working)",
+      "Cross-platform system tray reliability",
+      "Backup performance with large file sets"
+    ],
+    "user_journey": {
+      "first_time_setup": [
+        "Download and install package",
+        "Launch application",
+        "Configure BackBlaze B2 credentials",
+        "Select folders to backup",
+        "Test backup functionality",
+        "Set up automatic scheduling"
+      ],
+      "regular_usage": [
+        "Application runs in background",
+        "Scheduled backups execute automatically",
+        "User can manually trigger backups",
+        "Progress monitoring via system tray",
+        "Credential management when needed"
+      ]
+    }
+  },
+  "decision_history": {
+    "why_pyside6": "Cross-platform GUI framework with excellent Windows support and modern Qt features",
+    "why_uv": "10-100x faster package management than pip, better dependency resolution",
+    "why_system_keyring": "Secure credential storage without plain text, OS-native security",
+    "why_single_instance": "Prevent resource conflicts, user confusion, and multiple backup processes",
+    "why_s3_compatible_api": "BackBlaze B2 provides S3-compatible API for familiar boto3 integration",
+    "why_incremental_backups": "Efficiency and cost savings by only uploading changed files",
+    "why_system_tray": "Background operation without cluttering taskbar, user-friendly experience",
+    "why_comprehensive_logging": "Debugging cross-platform issues requires detailed logging with PIDs"
+  },
+  "technical_debt": {
+    "known_issues": [
+      "Windows single instance protection window focus not working",
+      "System tray icon reliability on Windows",
+      "PyInstaller bundle size optimization needed",
+      "Error handling could be more granular"
+    ],
+    "maintenance_priorities": [
+      "Fix Windows single instance protection window focus",
+      "Improve cross-platform system tray reliability",
+      "Optimize backup performance for large file sets",
+      "Enhance error handling and user feedback"
+    ],
+    "performance_optimization_areas": [
+      "Backup deduplication algorithm",
+      "S3 upload concurrency",
+      "Memory usage during large backups",
+      "Startup time optimization"
+    ]
+  },
+  "troubleshooting_guide": {
+    "common_issues": {
+      "single_instance_protection": {
+        "symptoms": "Multiple app instances can be opened",
+        "root_causes": ["Lock file not created", "Process check failing", "Window focus not working"],
+        "debugging_steps": [
+          "Check lock file creation in temp directory",
+          "Verify process existence with tasklist",
+          "Test window enumeration and focus methods",
+          "Check logs for PID tracking and error messages"
+        ],
+        "fixes_applied": [
+          "Enhanced logging with PID tracking",
+          "Windows-specific process checking with tasklist",
+          "Multiple window detection methods",
+          "Alternative focus methods with different window classes"
+        ]
+      },
+      "system_tray_issues": {
+        "symptoms": "Tray icon not showing or not working",
+        "root_causes": ["Windows tray icon initialization", "Icon scaling issues", "Tray availability check"],
+        "debugging_steps": [
+          "Check system tray availability",
+          "Test icon creation and scaling",
+          "Verify tray icon show() return value",
+          "Test alternative display methods"
+        ],
+        "fixes_applied": [
+          "Windows-specific tray availability check",
+          "Simplified icon scaling (32x32)",
+          "Multiple fallback display attempts",
+          "Enhanced error logging"
+        ]
+      },
+      "build_failures": {
+        "symptoms": "Build process fails or produces errors",
+        "root_causes": ["Syntax errors", "Import issues", "Pre-commit hook failures"],
+        "debugging_steps": [
+          "Check syntax with py_compile",
+          "Verify all imports are correct",
+          "Run pre-commit hooks manually",
+          "Check for linting and formatting issues"
+        ],
+        "fixes_applied": [
+          "Comprehensive syntax checking",
+          "Pre-commit hook integration",
+          "Automated formatting and linting",
+          "Build failure detection within 15 seconds"
+        ]
+      }
+    },
+    "debugging_tools": {
+      "logging": {
+        "location": "~/.blackblaze_backup/blackblaze_backup.log",
+        "levels": "INFO, WARNING, ERROR",
+        "key_events": ["Startup", "Single instance check", "System tray", "Backup operations"],
+        "pid_tracking": "All log messages include PID for process identification"
+      },
+      "testing_commands": [
+        "uv run python -m py_compile src/blackblaze_backup/gui.py",
+        "uv run python -m blackblaze_backup.gui",
+        "uv run pytest tests/ -v",
+        "uv run ruff check .",
+        "uv run ruff format ."
+      ],
+      "monitoring": {
+        "process_check": "tasklist /FI \"PID eq <pid>\"",
+        "lock_file": "C:\\Users\\<user>\\AppData\\Local\\Temp\\blackblaze_backup_tool_single_instance.lock",
+        "log_file": "C:\\Users\\<user>\\.blackblaze_backup\\blackblaze_backup.log"
+      }
+    }
+  },
+  "development_insights": {
+    "cross_platform_challenges": {
+      "windows_specific": [
+        "Signal handling (SIGUSR1 not available)",
+        "System tray icon behavior",
+        "Window focus and enumeration",
+        "Process management with tasklist",
+        "Path handling and temp directories"
+      ],
+      "ubuntu_specific": [
+        "Desktop entry integration",
+        "System tray availability",
+        "Signal handling for single instance",
+        "Package management with dpkg"
+      ],
+      "common_issues": [
+        "PyInstaller bundle differences",
+        "Icon packaging and scaling",
+        "Log file location handling",
+        "Configuration file paths"
+      ]
+    },
+    "performance_insights": {
+      "startup_optimization": "75% improvement achieved through smart environment detection",
+      "backup_performance": "502.4 files per second with 5k test images",
+      "memory_usage": "Efficient hash caching for deduplication",
+      "network_optimization": "S3 batch operations and connection pooling"
+    },
+    "user_feedback_patterns": {
+      "positive_feedback": [
+        "Fast startup time",
+        "Reliable backup process",
+        "Good cross-platform support",
+        "Secure credential storage"
+      ],
+      "negative_feedback": [
+        "Windows single instance protection issues",
+        "System tray reliability problems",
+        "Build failures and syntax errors",
+        "Window focus not working"
+      ],
+      "improvement_requests": [
+        "Better Windows compatibility",
+        "More reliable system tray integration",
+        "Improved error handling",
+        "Better user feedback and notifications"
+      ]
+    }
   },
   "never_delete_critical_files": {
     "performance_data_highest_priority": [
@@ -153,16 +401,69 @@
       "Scan for common secret patterns: passwords, keys, tokens, database URLs"
     ],
     "current_session_context": [
-      "Working on BlackBlaze B2 Backup Tool v1.0.94",
-      "Single instance protection: ❌ STILL NOT WORKING on Windows - user can open multiple instances",
-      "App startup slowness: ✅ FIXED and tested (0.5s startup, 75% improvement)",
-      "Icon packaging: ✅ FIXED and tested (no more 'Icon file not found' errors)",
-      "Windows installer popup: ✅ FIXED and tested (comprehensive popup elimination)",
-      "Windows signal error: ✅ FIXED and tested (complete SIGUSR1 cross-platform compatibility)",
-      "Windows system tray icon: ✅ FIXED and tested (show() returned False error resolved)",
-      "Latest release: v1.0.94 with enhanced logging for Windows single instance protection debugging",
-      "Current issue: Windows single instance protection needs debugging with enhanced PID logging"
+      "Working on BlackBlaze B2 Backup Tool v1.0.98",
+      "Single instance protection: PARTIALLY WORKING - prevents multiple instances but window focus not working",
+      "App startup slowness: FIXED and tested (0.5s startup, 75% improvement)",
+      "Icon packaging: FIXED and tested (no more 'Icon file not found' errors)",
+      "Windows installer popup: FIXED and tested (comprehensive popup elimination)",
+      "Windows signal error: FIXED and tested (complete SIGUSR1 cross-platform compatibility)",
+      "Windows system tray icon: FIXED and tested (show() returned False error resolved)",
+      "Latest release: v1.0.98 with improved window detection and focus methods",
+      "Current issue: Windows single instance protection window focus needs improvement",
+      "AI context: Enhanced with comprehensive project understanding and debugging guides"
     ],
+    "ai_effectiveness_optimization": {
+      "context_usage_patterns": {
+        "high_priority_sections": [
+          "project_architecture - for understanding module relationships",
+          "development_workflow - for following proper processes",
+          "troubleshooting_guide - for debugging issues",
+          "user_experience - for understanding user needs",
+          "decision_history - for understanding why choices were made"
+        ],
+        "reference_frequency": [
+          "troubleshooting_guide - used for every debugging session",
+          "development_workflow - used for every feature development",
+          "project_architecture - used for understanding code changes",
+          "user_experience - used for prioritizing fixes",
+          "technical_debt - used for maintenance planning"
+        ]
+      },
+      "improvement_areas": {
+        "better_understanding": [
+          "Module dependencies and data flow",
+          "Cross-platform challenges and solutions",
+          "User pain points and resolution status",
+          "Performance characteristics and optimization areas",
+          "Debugging tools and monitoring approaches"
+        ],
+        "faster_problem_solving": [
+          "Comprehensive troubleshooting guides",
+          "Common issue patterns and solutions",
+          "Debugging command references",
+          "Performance monitoring tools",
+          "Cross-platform testing approaches"
+        ],
+        "better_decision_making": [
+          "Decision history and rationale",
+          "User feedback patterns",
+          "Technical debt priorities",
+          "Performance optimization areas",
+          "Maintenance schedules and priorities"
+        ]
+      },
+      "context_maintenance": {
+        "update_triggers": [
+          "Every new feature or fix implementation",
+          "Every user feedback or issue report",
+          "Every performance optimization",
+          "Every cross-platform compatibility fix",
+          "Every build or deployment issue"
+        ],
+        "update_frequency": "After every significant change or learning",
+        "update_scope": "Comprehensive updates including architecture, workflow, and insights"
+      }
+    },
     "never_assume": [
       "Files are safe to delete just because not in git",
       "Performance test results can be easily recreated",
@@ -179,96 +480,6 @@
       "CRITICAL: Search the ENTIRE codebase for any pattern before making changes",
       "Use grep to find ALL occurrences of what you're changing",
       "Check ALL modules that might be affected, not just the obvious ones"
-    ]
-  },
-  "development_workflow": {
-    "environment": {
-      "os": "Ubuntu (primary), Windows (secondary)",
-      "package_manager": "uv (NOT pip)",
-      "command_prefix": "Always use 'uv run <command>' instead of 'python <command>'",
-      "virtual_environment": "Managed by uv automatically"
-    },
-    "testing_before_commit": {
-      "mandatory_steps": [
-        "Run 'uv run python -m blackblaze_backup.gui' to test the app",
-        "Verify the specific feature being implemented works",
-        "Check for any runtime errors or crashes",
-        "Test user experience and UI behavior",
-        "Only commit after confirming everything works"
-      ],
-      "test_commands": {
-        "run_app": "uv run python -m blackblaze_backup.gui",
-        "run_tests": "uv run python -m pytest tests/ -v",
-        "lint_check": "uv run ruff check src/ tests/",
-        "format_check": "uv run ruff format --check src/ tests/"
-      }
-    },
-    "ai_context_maintenance": {
-      "update_frequency": "After each significant interaction or when new patterns emerge",
-      "what_to_update": [
-        "conversation_learnings section with new insights",
-        "ai_assistant_rules when discovering new patterns",
-        "common_issues_solutions when solving problems",
-        "user_preferences when user provides feedback",
-        "development_workflow when processes change"
-      ],
-      "update_triggers": [
-        "User provides feedback or corrections",
-        "New problems are solved",
-        "Workflow improvements are discovered",
-        "User preferences change",
-        "New best practices emerge"
-      ]
-    },
-    "code_quality": {
-      "linting": "uv run ruff check src/ tests/",
-      "formatting": "uv run ruff format src/ tests/",
-      "pre_commit": "Runs automatically, includes emoji checking and secret detection",
-      "security": "uv run bandit -r src/ -f json -o bandit-report.json",
-      "secret_detection": "Pre-commit hook scans for secrets, passwords, API keys, tokens",
-      "mandatory_pre_commit_rules": [
-        "ruff: Linter with --fix",
-        "ruff-format: Code formatter",
-        "trailing-whitespace: Remove trailing whitespace",
-        "end-of-file-fixer: Ensure files end with newline",
-        "check-yaml: Validate YAML syntax",
-        "check-added-large-files: Prevent large files",
-        "check-merge-conflict: Check for merge conflicts",
-        "check-json: Validate JSON syntax",
-        "check-emojis: NO EMOJIS in code files",
-        "check-secrets: NO secrets in code"
-      ]
-    },
-    "security_checklist": {
-      "before_every_commit": [
-        "Check for hardcoded passwords, API keys, tokens",
-        "Verify no .env files are being committed",
-        "Scan for database connection strings with credentials",
-        "Look for AWS keys, GitHub tokens, or other secrets",
-        "Use pre-commit hooks to automate secret detection"
-      ],
-      "secret_patterns_to_avoid": [
-        "password=, passwd=, pwd=",
-        "api_key=, apikey=, access_key=",
-        "secret=, token=, auth_token=",
-        "database_url=, db_url=, connection_string=",
-        "aws_access_key, aws_secret_key",
-        "github_token, git_token"
-      ]
-    },
-    "version_management": {
-      "update_version": "Update version in pyproject.toml",
-      "sync_version": "uv run python scripts/sync_version.py (syncs to __init__.py)",
-      "detection_order": ["package metadata", "pyproject.toml", "__init__.py", "setup.py", "fallback"]
-    },
-    "release_process": [
-      "Update version in pyproject.toml",
-      "Run version sync script",
-      "Commit changes",
-      "Create git tag: git tag v1.0.XX",
-      "Push tag: git push origin v1.0.XX",
-      "Wait for GitHub Actions build",
-      "Create GitHub release with assets"
     ]
   },
   "common_issues_solutions": {
