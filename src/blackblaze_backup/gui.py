@@ -1911,28 +1911,90 @@ def _ensure_single_instance(app):
                         # Use Windows API to find and activate the existing window
                         import ctypes
 
-                        # Find window by class name or title
+                        # Define Windows constants
+                        SW_RESTORE = 9
+
+                        # Try multiple window finding methods
+                        hwnd = None
+
+                        # Method 1: Find by exact title
                         hwnd = ctypes.windll.user32.FindWindowW(
                             None, "BlackBlaze B2 Backup Tool"
                         )
                         if hwnd:
-                            # Bring window to front
-                            ctypes.windll.user32.SetForegroundWindow(hwnd)
-                            ctypes.windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
-                            logging.info("Brought existing window to focus")
+                            logging.info(f"Found window by title (HWND: {hwnd})")
                         else:
-                            # Try alternative window finding methods
+                            # Method 2: Find by Qt class name
                             hwnd = ctypes.windll.user32.FindWindowW(
                                 "Qt5QWindowIcon", "BlackBlaze B2 Backup Tool"
                             )
                             if hwnd:
-                                ctypes.windll.user32.SetForegroundWindow(hwnd)
-                                ctypes.windll.user32.ShowWindow(hwnd, 9)
-                                logging.info(
-                                    "Brought existing window to focus (alternative method)"
-                                )
+                                logging.info(f"Found window by Qt class (HWND: {hwnd})")
                             else:
-                                logging.info("Could not find existing window to focus")
+                                # Method 3: Find by partial title match
+                                hwnd = ctypes.windll.user32.FindWindowW(
+                                    None, "BlackBlaze"
+                                )
+                                if hwnd:
+                                    logging.info(
+                                        f"Found window by partial title (HWND: {hwnd})"
+                                    )
+                                else:
+                                    # Method 4: Find by process name
+                                    import subprocess
+
+                                    try:
+                                        # Get all windows for the process
+                                        result = subprocess.run(
+                                            [
+                                                "tasklist",
+                                                "/FI",
+                                                f"PID eq {pid}",
+                                                "/FO",
+                                                "CSV",
+                                            ],
+                                            capture_output=True,
+                                            text=True,
+                                            check=False,
+                                        )
+                                        if str(pid) in result.stdout:
+                                            logging.info(
+                                                f"Process {pid} is running, trying to find window"
+                                            )
+                                            # Try to find any window with our app name
+                                            hwnd = ctypes.windll.user32.FindWindowW(
+                                                None, "BlackBlaze"
+                                            )
+                                    except Exception as e:
+                                        logging.info(f"Error checking process: {e}")
+
+                        if hwnd:
+                            # Bring window to front with multiple methods
+                            try:
+                                # Method 1: SetForegroundWindow
+                                ctypes.windll.user32.SetForegroundWindow(hwnd)
+                                logging.info("SetForegroundWindow called")
+
+                                # Method 2: ShowWindow with restore
+                                ctypes.windll.user32.ShowWindow(hwnd, SW_RESTORE)
+                                logging.info("ShowWindow SW_RESTORE called")
+
+                                # Method 3: Bring to top
+                                ctypes.windll.user32.BringWindowToTop(hwnd)
+                                logging.info("BringWindowToTop called")
+
+                                # Method 4: Set active window
+                                ctypes.windll.user32.SetActiveWindow(hwnd)
+                                logging.info("SetActiveWindow called")
+
+                                logging.info(
+                                    "Successfully brought existing window to focus"
+                                )
+
+                            except Exception as e:
+                                logging.info(f"Error bringing window to focus: {e}")
+                        else:
+                            logging.info("Could not find existing window to focus")
                 except Exception as e:
                     logging.info(f"Could not bring existing window to focus: {e}")
 
@@ -2025,6 +2087,22 @@ def main():
     # Create and show main window
     try:
         window = BlackBlazeBackupApp()
+
+        # Setup signal handler for single instance communication (Unix only)
+        import signal
+
+        def signal_handler(signum, frame):
+            if hasattr(signal, "SIGUSR1") and signum == signal.SIGUSR1:
+                logging.info(
+                    "Another instance tried to start - bringing window to front"
+                )
+                window._bring_to_front()
+
+        # Only setup signal handler on Unix systems
+        if hasattr(signal, "SIGUSR1"):
+            signal.signal(signal.SIGUSR1, signal_handler)
+            logging.info("Signal handler setup for single instance communication")
+
         window.show()
 
         # Start event loop
