@@ -146,11 +146,16 @@ jobs:
         # Check if first instance is still running
         if proc1.poll() is not None:
             print('ERROR: First instance crashed during startup')
+            stdout, stderr = proc1.communicate()
+            print('STDOUT:', stdout.decode('utf-8', errors='ignore'))
+            print('STDERR:', stderr.decode('utf-8', errors='ignore'))
             exit(1)
 
         # Check if lock file was created
         if not lock_file.exists():
             print('WARNING: Lock file not created by first instance')
+            print('First instance PID:', proc1.pid)
+            print('Application might not be reaching single instance check')
 
         # Try to start second instance (should fail)
         print('Starting second instance (should fail)...')
