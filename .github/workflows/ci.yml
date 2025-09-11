@@ -139,6 +139,15 @@ jobs:
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
 
+        # Try to get some output from the first instance
+        print('Checking first instance output...')
+        try:
+            stdout, stderr = proc1.communicate(timeout=2)
+            print('First instance stdout:', stdout.decode('utf-8', errors='ignore'))
+            print('First instance stderr:', stderr.decode('utf-8', errors='ignore'))
+        except subprocess.TimeoutExpired:
+            print('First instance is still running (expected)')
+
         # Wait longer for initialization in CI environment
         print('Waiting for first instance to initialize...')
         time.sleep(5)
@@ -156,6 +165,25 @@ jobs:
             print('WARNING: Lock file not created by first instance')
             print('First instance PID:', proc1.pid)
             print('Application might not be reaching single instance check')
+
+        # Check if first instance is actually running by process name
+        print('Checking for BlackBlaze processes...')
+        try:
+            result = subprocess.run(
+                ["tasklist", "/FI", "IMAGENAME eq BlackBlaze-Backup-Tool.exe"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            print('BlackBlaze processes found:', result.stdout)
+            if "BlackBlaze-Backup-Tool.exe" in result.stdout:
+                print('SUCCESS: First instance is running')
+            else:
+                print('ERROR: First instance not found in process list')
+                proc1.terminate()
+                exit(1)
+        except Exception as e:
+            print('Error checking processes:', e)
 
         # Try to start second instance (should fail)
         print('Starting second instance (should fail)...')
