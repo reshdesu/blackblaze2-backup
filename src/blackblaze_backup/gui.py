@@ -1961,10 +1961,58 @@ def _ensure_single_instance(app):
                                             logging.info(
                                                 f"Process {pid} is running, trying to find window"
                                             )
-                                            # Try to find any window with our app name
-                                            hwnd = ctypes.windll.user32.FindWindowW(
-                                                None, "BlackBlaze"
+
+                                            # Try to find window by enumerating all windows
+                                            def enum_windows_callback(hwnd, lparam):
+                                                nonlocal hwnd
+                                                if ctypes.windll.user32.IsWindowVisible(
+                                                    hwnd
+                                                ):
+                                                    # Get window title
+                                                    length = ctypes.windll.user32.GetWindowTextLengthW(
+                                                        hwnd
+                                                    )
+                                                    if length > 0:
+                                                        buffer = ctypes.create_unicode_buffer(
+                                                            length + 1
+                                                        )
+                                                        ctypes.windll.user32.GetWindowTextW(
+                                                            hwnd, buffer, length + 1
+                                                        )
+                                                        title = buffer.value
+                                                        if "BlackBlaze" in title:
+                                                            logging.info(
+                                                                f"Found window by enumeration: {title} (HWND: {hwnd})"
+                                                            )
+                                                            hwnd = hwnd
+                                                            return False  # Stop enumeration
+                                                return True  # Continue enumeration
+
+                                            # Define the callback function type
+                                            EnumWindowsProc = ctypes.WINFUNCTYPE(
+                                                ctypes.c_bool,
+                                                ctypes.POINTER(ctypes.c_int),
+                                                ctypes.POINTER(ctypes.c_int),
                                             )
+                                            callback = EnumWindowsProc(
+                                                enum_windows_callback
+                                            )
+
+                                            # Enumerate all windows
+                                            ctypes.windll.user32.EnumWindows(
+                                                callback, 0
+                                            )
+
+                                            # If still not found, try alternative methods
+                                            if not hwnd:
+                                                # Try to find any window with our app name
+                                                hwnd = ctypes.windll.user32.FindWindowW(
+                                                    None, "BlackBlaze"
+                                                )
+                                                if hwnd:
+                                                    logging.info(
+                                                        f"Found window by fallback method (HWND: {hwnd})"
+                                                    )
                                     except Exception as e:
                                         logging.info(f"Error checking process: {e}")
 
@@ -1995,6 +2043,55 @@ def _ensure_single_instance(app):
                                 logging.info(f"Error bringing window to focus: {e}")
                         else:
                             logging.info("Could not find existing window to focus")
+
+                            # Alternative approach: Try to send a message to the existing instance
+                            try:
+                                # Try to find the window by process and send a message
+                                import subprocess
+
+                                result = subprocess.run(
+                                    ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV"],
+                                    capture_output=True,
+                                    text=True,
+                                    check=False,
+                                )
+                                if str(pid) in result.stdout:
+                                    logging.info(
+                                        f"Process {pid} is running, trying alternative focus method"
+                                    )
+
+                                    # Try to find window by class name variations
+                                    window_classes = [
+                                        "Qt5QWindowIcon",
+                                        "Qt6QWindowIcon",
+                                        "QWidget",
+                                        "BlackBlaze B2 Backup Tool",
+                                    ]
+
+                                    for class_name in window_classes:
+                                        hwnd = ctypes.windll.user32.FindWindowW(
+                                            class_name, None
+                                        )
+                                        if hwnd:
+                                            logging.info(
+                                                f"Found window by class {class_name} (HWND: {hwnd})"
+                                            )
+                                            # Try to bring it to focus
+                                            ctypes.windll.user32.SetForegroundWindow(
+                                                hwnd
+                                            )
+                                            ctypes.windll.user32.ShowWindow(
+                                                hwnd, SW_RESTORE
+                                            )
+                                            ctypes.windll.user32.BringWindowToTop(hwnd)
+                                            logging.info(
+                                                "Attempted to bring window to focus with alternative method"
+                                            )
+                                            break
+                            except Exception as e:
+                                logging.info(
+                                    f"Error with alternative focus method: {e}"
+                                )
                 except Exception as e:
                     logging.info(f"Could not bring existing window to focus: {e}")
 
