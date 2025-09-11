@@ -2,14 +2,14 @@
   "ai_context": {
     "critical_read_first": true,
     "file_purpose": "Essential context for AI assistants working on BlackBlaze B2 Backup Tool",
-    "last_updated": "2025-09-09",
-    "version": "1.0.80"
+    "last_updated": "2025-09-11",
+    "version": "1.0.94"
   },
   "project": {
     "name": "BlackBlaze B2 Backup Tool",
     "type": "Cross-platform GUI backup application",
     "tech_stack": ["Python", "PySide6", "AWS S3 (BackBlaze B2)", "uv package manager"],
-    "current_version": "1.0.80",
+    "current_version": "1.0.94",
     "entry_point": "main.py",
     "core_modules": [
       "src/blackblaze_backup/gui.py",
@@ -145,15 +145,15 @@
       "Scan for common secret patterns: passwords, keys, tokens, database URLs"
     ],
     "current_session_context": [
-      "Working on BlackBlaze B2 Backup Tool v1.0.91",
-      "Single instance protection: ✅ FIXED and working",
+      "Working on BlackBlaze B2 Backup Tool v1.0.94",
+      "Single instance protection: ❌ STILL NOT WORKING on Windows - user can open multiple instances",
       "App startup slowness: ✅ FIXED and tested (0.5s startup, 75% improvement)",
       "Icon packaging: ✅ FIXED and tested (no more 'Icon file not found' errors)",
       "Windows installer popup: ✅ FIXED and tested (comprehensive popup elimination)",
       "Windows signal error: ✅ FIXED and tested (complete SIGUSR1 cross-platform compatibility)",
       "Windows system tray icon: ✅ FIXED and tested (show() returned False error resolved)",
-      "Latest release: v1.0.91 with complete Windows signal error fix",
-      "All critical Windows compatibility issues resolved - comprehensive fix approach documented"
+      "Latest release: v1.0.94 with enhanced logging for Windows single instance protection debugging",
+      "Current issue: Windows single instance protection needs debugging with enhanced PID logging"
     ],
     "never_assume": [
       "Files are safe to delete just because not in git",
@@ -796,6 +796,28 @@
             ],
             "user_feedback": "the rules what we ahve in precommit, why don't you add them as something you have to follow, seems like you don't follow those rules",
             "status": "COMPLETED - Pre-commit rules now mandatory and enforced"
+        },
+        "2025-09-11_enhanced_logging_v1_0_94": {
+            "issue": "Windows single instance protection still not working - user can open multiple instances",
+            "problem": "Previous fixes for single instance protection not working on Windows, need debugging",
+            "solution": "Added comprehensive PID tracking and enhanced logging throughout single instance protection",
+            "implementation": [
+                "Added PID logging to main() function startup",
+                "Added PID logging to _ensure_single_instance function",
+                "Added detailed logging for lock file operations",
+                "Added logging for process checking with tasklist",
+                "Added logging for window focus operations",
+                "Added logging for all error conditions and edge cases"
+            ],
+            "enhanced_logging_features": [
+                "PID tracking in all log messages",
+                "Detailed lock file path logging",
+                "Process existence checking with tasklist output",
+                "Window focus operation logging",
+                "Error condition logging with context"
+            ],
+            "user_feedback": "same issue, didn't fix. add a pid or something to the logs if it can help you",
+            "status": "COMPLETED - Enhanced logging implemented in v1.0.94 for debugging"
         }
   }
 }
