@@ -2123,7 +2123,11 @@ def main():
 
     # Single instance check
     logging.info(f"Checking single instance protection (PID: {current_pid})")
-    if not _ensure_single_instance(app):
+    single_instance_result = _ensure_single_instance(app)
+    logging.info(
+        f"Single instance check result: {single_instance_result} (PID: {current_pid})"
+    )
+    if not single_instance_result:
         logging.info(f"Another instance is running, exiting (PID: {current_pid})")
         return 0  # Exit gracefully if another instance is already running
 

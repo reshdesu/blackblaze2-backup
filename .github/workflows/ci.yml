@@ -120,29 +120,69 @@ jobs:
         import subprocess
         import time
         import os
+        import tempfile
+        from pathlib import Path
+
+        print('Starting Windows single instance protection test...')
+
+        # Check if lock file exists before starting
+        temp_dir = Path(tempfile.gettempdir())
+        lock_file = temp_dir / 'blackblaze_backup_tool_single_instance.lock'
+        if lock_file.exists():
+            print(f'Removing existing lock file: {lock_file}')
+            lock_file.unlink(missing_ok=True)
 
         # Start first instance
+        print('Starting first instance...')
         proc1 = subprocess.Popen(['dist/BlackBlaze-Backup-Tool.exe'],
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
-        time.sleep(3)  # Let it initialize
+
+        # Wait longer for initialization in CI environment
+        print('Waiting for first instance to initialize...')
+        time.sleep(5)
+
+        # Check if first instance is still running
+        if proc1.poll() is not None:
+            print('ERROR: First instance crashed during startup')
+            exit(1)
+
+        # Check if lock file was created
+        if not lock_file.exists():
+            print('WARNING: Lock file not created by first instance')
 
         # Try to start second instance (should fail)
+        print('Starting second instance (should fail)...')
         proc2 = subprocess.Popen(['dist/BlackBlaze-Backup-Tool.exe'],
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
-        time.sleep(2)
+
+        # Wait for second instance to either exit or stabilize
+        time.sleep(3)
 
         # Check if second instance is still running
         if proc2.poll() is None:
             print('ERROR: Second instance is still running - single instance protection failed')
+            print('First instance PID:', proc1.pid)
+            print('Second instance PID:', proc2.pid)
+            print('Lock file exists:', lock_file.exists())
+            if lock_file.exists():
+                with open(lock_file, 'r') as f:
+                    lock_pid = f.read().strip()
+                    print('Lock file PID:', lock_pid)
             proc2.terminate()
+            proc1.terminate()
             exit(1)
         else:
             print('SUCCESS: Second instance exited - single instance protection working')
+            print('Second instance exit code:', proc2.returncode)
 
         # Clean up
+        print('Cleaning up...')
         proc1.terminate()
+        if lock_file.exists():
+            lock_file.unlink(missing_ok=True)
+        print('Test completed successfully')
         "
 
     - name: Test Windows System Tray
