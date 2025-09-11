@@ -10,9 +10,8 @@ from pathlib import Path
 # Add src to path for development
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from PySide6.QtWidgets import QApplication
 
-from blackblaze_backup.gui import BlackBlazeBackupApp
+from blackblaze_backup.gui import main as gui_main
 
 
 def setup_logging():
@@ -88,53 +87,9 @@ def _ensure_single_instance(app):
 
 
 def main():
-    """Main application entry point"""
-    setup_logging()
-
-    app = QApplication(sys.argv)
-
-    # Get dynamic version
-    try:
-        from blackblaze_backup import __version__
-
-        dynamic_version = __version__
-    except ImportError:
-        dynamic_version = "Unknown"
-
-    # Set application properties
-    app.setApplicationName("BlackBlaze B2 Backup Tool")
-    app.setApplicationVersion(dynamic_version)
-    app.setOrganizationName("BlackBlaze Backup")
-
-    # Single instance check
-    if not _ensure_single_instance(app):
-        return 0  # Exit gracefully if another instance is already running
-
-    # Create and show main window
-    try:
-        window = BlackBlazeBackupApp()
-
-        # Setup signal handler for single instance communication (Unix only)
-        import signal
-
-        def signal_handler(signum, frame):
-            if hasattr(signal, "SIGUSR1") and signum == signal.SIGUSR1:
-                logging.info(
-                    "Another instance tried to start - bringing window to front"
-                )
-                window._bring_to_front()
-
-        # Only setup signal handler on Unix systems
-        if hasattr(signal, "SIGUSR1"):
-            signal.signal(signal.SIGUSR1, signal_handler)
-
-        window.show()
-
-        # Start event loop
-        sys.exit(app.exec())
-    except Exception as e:
-        logging.error(f"Error starting application: {e}")
-        sys.exit(1)
+    """Main application entry point - delegates to gui.main() for enhanced single instance protection"""
+    # Use the enhanced main function from gui.py which has proper single instance protection
+    return gui_main()
 
 
 if __name__ == "__main__":
