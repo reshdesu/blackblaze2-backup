@@ -1776,17 +1776,19 @@ Skip size: {self._format_size(self.preview_results["total_skip_size"])}
         self.setWindowState(self.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
 
     def setup_signal_handler(self):
-        """Setup signal handler for single instance communication"""
+        """Setup signal handler for single instance communication (Unix only)"""
         import signal
 
         def signal_handler(signum, frame):
-            if signum == signal.SIGUSR1:
+            if hasattr(signal, "SIGUSR1") and signum == signal.SIGUSR1:
                 self.logger.info(
                     "Another instance tried to start - bringing window to front"
                 )
                 self._bring_to_front()
 
-        signal.signal(signal.SIGUSR1, signal_handler)
+        # Only setup signal handler on Unix systems
+        if hasattr(signal, "SIGUSR1"):
+            signal.signal(signal.SIGUSR1, signal_handler)
 
     def minimize_to_background(self):
         """Minimize application to background (Ubuntu compatible)"""
@@ -1834,9 +1836,10 @@ def _ensure_single_instance(app):
             try:
                 os.kill(pid, 0)  # This will raise an exception if process doesn't exist
                 # Process is still running, another instance exists
-                # Send focus signal to existing instance
+                # Send focus signal to existing instance (Unix only)
                 try:
-                    os.kill(pid, signal.SIGUSR1)  # Send signal to existing instance
+                    if hasattr(signal, "SIGUSR1"):
+                        os.kill(pid, signal.SIGUSR1)  # Send signal to existing instance
                 except (OSError, ProcessLookupError):
                     pass  # Signal failed, but that's okay
 
