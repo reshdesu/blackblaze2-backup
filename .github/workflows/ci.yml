@@ -115,6 +115,9 @@ jobs:
         pyinstaller --clean --log-level=ERROR blackblaze_backup.spec
 
     - name: Test Windows Single Instance Protection
+      env:
+        QT_QPA_PLATFORM: offscreen
+        QT_LOGGING_RULES: "*=false"
       run: |
         .venv\Scripts\activate
         python -c "
@@ -215,6 +218,9 @@ jobs:
         "
 
     - name: Test Windows System Tray
+      env:
+        QT_QPA_PLATFORM: offscreen
+        QT_LOGGING_RULES: "*=false"
       run: |
         .venv\Scripts\activate
         python -c "
@@ -237,6 +243,9 @@ jobs:
         "
 
     - name: Test Windows Window Focus
+      env:
+        QT_QPA_PLATFORM: offscreen
+        QT_LOGGING_RULES: "*=false"
       run: |
         .venv\Scripts\activate
         python -c "
@@ -268,6 +277,9 @@ jobs:
         "
 
     - name: Test Windows Performance
+      env:
+        QT_QPA_PLATFORM: offscreen
+        QT_LOGGING_RULES: "*=false"
       run: |
         .venv\Scripts\activate
         python -c "
