@@ -1949,6 +1949,34 @@ def _ensure_single_instance(app):
                         # Windows-specific process check
                         import subprocess
 
+                        # First, check for any BlackBlaze processes running
+                        try:
+                            result = subprocess.run(
+                                [
+                                    "tasklist",
+                                    "/FI",
+                                    "IMAGENAME eq BlackBlaze-Backup-Tool.exe",
+                                ],
+                                capture_output=True,
+                                text=True,
+                                check=False,
+                            )
+                            logging.info(f"All BlackBlaze processes: {result.stdout}")
+                            # If we find other BlackBlaze processes, treat as existing instance
+                            if (
+                                "BlackBlaze-Backup-Tool.ex" in result.stdout
+                                and str(current_pid) not in result.stdout
+                            ):
+                                logging.info(
+                                    "Found other BlackBlaze processes running, treating as existing instance"
+                                )
+                                return _handle_existing_instance(pid, current_pid)
+                        except Exception as e:
+                            logging.info(
+                                f"Error checking for BlackBlaze processes: {e}"
+                            )
+
+                        # If no BlackBlaze processes found, check the specific PID
                         try:
                             # Use tasklist to check if process is running
                             result = subprocess.run(
@@ -1986,6 +2014,7 @@ def _ensure_single_instance(app):
                                     f"Process {pid} not found via os.kill, removing stale lock file"
                                 )
                                 lock_file.unlink(missing_ok=True)
+
                     else:
                         # Unix/Linux process check
                         try:
@@ -2123,7 +2152,11 @@ def main():
 
     # Single instance check
     logging.info(f"Checking single instance protection (PID: {current_pid})")
-    if not _ensure_single_instance(app):
+    single_instance_result = _ensure_single_instance(app)
+    logging.info(
+        f"Single instance check result: {single_instance_result} (PID: {current_pid})"
+    )
+    if not single_instance_result:
         logging.info(f"Another instance is running, exiting (PID: {current_pid})")
         return 0  # Exit gracefully if another instance is already running
 

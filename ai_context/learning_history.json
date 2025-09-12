@@ -504,6 +504,43 @@
         "Makes project structure more professional and maintainable"
       ],
       "status": "IMPLEMENTED - Folder naming consistency restored"
+    },
+    "2025-09-12_windows_ci_single_instance_debugging": {
+      "issue": "Windows CI testing for single instance protection failing with multiple different errors",
+      "root_cause": "GUI application cannot run properly in headless CI environment, causing various startup and testing failures",
+      "solution": "Implemented multiple debugging approaches and simplified test strategy",
+      "implementation": [
+        "Added Qt offscreen mode (QT_QPA_PLATFORM: offscreen) to enable headless GUI execution",
+        "Added Qt logging suppression (QT_LOGGING_RULES: '*=false') to reduce noise",
+        "Created direct single instance protection test (test_single_instance.py) to bypass GUI startup issues",
+        "Enhanced debugging output in CI workflow to capture detailed process information",
+        "Fixed tasklist process name truncation issue (BlackBlaze-Backup-Tool.exe -> BlackBlaze-Backup-Tool.ex)"
+      ],
+      "debugging_sequence": [
+        "Initial failure: Second instance still running - single instance protection failed",
+        "Added debugging: First instance crash detection and stdout/stderr capture",
+        "Added debugging: Lock file creation verification and PID tracking",
+        "Added debugging: Process list verification with tasklist",
+        "Fixed syntax error: Simplified subprocess.run calls in YAML",
+        "Fixed process detection: Corrected tasklist truncation issue",
+        "Added headless mode: QT_QPA_PLATFORM and QT_LOGGING_RULES environment variables",
+        "Created direct test: test_single_instance.py to test core logic without full GUI app"
+      ],
+      "technical_challenges": [
+        "GUI applications cannot run in headless CI environments without proper configuration",
+        "Windows tasklist truncates process names (exe -> ex)",
+        "PID mismatch between lock file and main process (child process creates lock file)",
+        "Complex embedded Python scripts in YAML are prone to syntax errors",
+        "Single instance protection logic needs to be tested independently of GUI startup"
+      ],
+      "current_status": "Working on simplified test approach using direct function testing",
+      "next_steps": [
+        "Test the direct single instance protection test approach",
+        "If successful, apply similar approach to other Windows CI tests",
+        "Document the headless GUI testing solution for future reference"
+      ],
+      "user_feedback": "remember to add what we did and failed at to ai context frequently so we know",
+      "status": "IN_PROGRESS - Windows CI debugging with multiple approaches implemented"
     }
   }
 }
