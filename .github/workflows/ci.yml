@@ -142,18 +142,9 @@ jobs:
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
 
-        # Try to get some output from the first instance
-        print('Checking first instance output...')
-        try:
-            stdout, stderr = proc1.communicate(timeout=2)
-            print('First instance stdout:', stdout.decode('utf-8', errors='ignore'))
-            print('First instance stderr:', stderr.decode('utf-8', errors='ignore'))
-        except subprocess.TimeoutExpired:
-            print('First instance is still running (expected)')
-
-        # Wait longer for initialization in CI environment
+        # Wait for initialization
         print('Waiting for first instance to initialize...')
-        time.sleep(5)
+        time.sleep(8)  # Increased wait time
 
         # Check if first instance is still running
         if proc1.poll() is not None:
@@ -165,43 +156,44 @@ jobs:
 
         # Check if lock file was created
         if not lock_file.exists():
-            print('WARNING: Lock file not created by first instance')
+            print('ERROR: Lock file not created by first instance')
             print('First instance PID:', proc1.pid)
-            print('Application might not be reaching single instance check')
+            proc1.terminate()
+            exit(1)
+        else:
+            with open(lock_file, 'r') as f:
+                lock_pid = f.read().strip()
+                print(f'SUCCESS: Lock file created with PID: {lock_pid}')
 
-        # Check if first instance is actually running by process name
-        print('Checking for BlackBlaze processes...')
+        # Verify first instance is running
         try:
             result = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq BlackBlaze-Backup-Tool.exe'], capture_output=True, text=True, check=False)
-            print('BlackBlaze processes found:', result.stdout)
-            if 'BlackBlaze-Backup-Tool.ex' in result.stdout:
-                print('SUCCESS: First instance is running')
-            else:
+            if 'BlackBlaze-Backup-Tool.ex' not in result.stdout:
                 print('ERROR: First instance not found in process list')
                 proc1.terminate()
                 exit(1)
+            else:
+                print('SUCCESS: First instance confirmed running')
         except Exception as e:
             print('Error checking processes:', e)
+            proc1.terminate()
+            exit(1)
 
-        # Try to start second instance (should fail)
-        print('Starting second instance (should fail)...')
+        # Try to start second instance (should exit immediately)
+        print('Starting second instance (should exit immediately)...')
         proc2 = subprocess.Popen(['dist/BlackBlaze-Backup-Tool.exe'],
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
 
-        # Wait for second instance to either exit or stabilize
-        time.sleep(3)
+        # Wait for second instance to exit
+        time.sleep(5)
 
-        # Check if second instance is still running
+        # Check if second instance exited
         if proc2.poll() is None:
             print('ERROR: Second instance is still running - single instance protection failed')
             print('First instance PID:', proc1.pid)
             print('Second instance PID:', proc2.pid)
-            print('Lock file exists:', lock_file.exists())
-            if lock_file.exists():
-                with open(lock_file, 'r') as f:
-                    lock_pid = f.read().strip()
-                    print('Lock file PID:', lock_pid)
+            print('Lock file PID:', lock_pid)
             proc2.terminate()
             proc1.terminate()
             exit(1)
